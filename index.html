@@ -103,10 +103,12 @@
   .olpanel{flex:1 1 320px;background:#00000038;border:1px solid #ffffff1c;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column}
   .olpanel h4{margin:0 0 10px;font-size:16px;color:#ffca4d;text-align:left}
   #ol-players{text-align:left;font-size:15px;line-height:1.5}
-  .olrename{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12.5px;color:#b9a8d0}
-  .olrename input{flex:1;min-width:0;font-family:inherit;font-size:14px;font-weight:bold;color:#ffd54f;
-    background:#00000045;border:1px solid #ffffff26;border-radius:9px;padding:6px 9px;text-align:center}
-  .olrename input:focus{outline:none;border-color:#ffca4d}
+  .plpen{background:none;border:0;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;opacity:.55;
+    border-radius:6px;font-family:inherit}
+  .plpen:hover{opacity:1;background:#ffffff14}
+  .plname input{width:130px;font-family:inherit;font-size:14px;font-weight:bold;color:#ffd54f;
+    background:#00000055;border:1px solid #ffca4d;border-radius:7px;padding:3px 7px}
+  .plname input:focus{outline:none}
   .plrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:10px;background:#ffffff0d;margin-bottom:6px}
   .plchip{width:14px;height:14px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px #00000055}
   .plname{font-weight:bold}
@@ -194,8 +196,11 @@
   .dishicon{width:62px;height:62px;display:block;margin:1px auto 0}
   .dishicon.rsm{width:40px;height:40px;margin:0 auto}
   .ordercard .parts{font-size:14px;letter-spacing:1px;height:18px;white-space:nowrap}
-  .stst{font-size:11px;margin-left:3px;opacity:.92;letter-spacing:0}
-  .rbasics{margin-top:2px;font-size:12px;opacity:.95}
+  .ing{display:inline-flex;align-items:flex-start;margin:0 1.5px}
+  .ingst{font-size:9px;line-height:1;margin-left:-4px;margin-top:-2px;letter-spacing:-2px}
+  .rbasics{margin-top:3px;font-size:12px;opacity:.95}
+  .rbasics .ingst{font-size:11px;letter-spacing:-1px}
+  .rbasics .picon{width:22px;height:22px}
   .ordercard .parts .picon{width:17px;height:17px;margin:0 1px}
   .ordercard .nm2{font-size:10px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
     height:23px;line-height:1.13;padding:0 4px;overflow:hidden;text-align:center;width:100%}
@@ -395,11 +400,6 @@
         <div class="olpanel">
           <h4>👥 In this room <span id="ol-count"></span></h4>
           <div id="ol-players"></div>
-          <div class="olrename">
-            <label for="ol-rename">✏️ Your name</label>
-            <input id="ol-rename" maxlength="12" spellcheck="false">
-            <button class="smallbtn" id="btn-rename">Save</button>
-          </div>
           <div id="ol-hostui" style="display:none">
             <div class="tourseg" style="margin:12px 0 6px">
               <button class="tsbtn sel" data-rounds="0">Single</button>
@@ -447,24 +447,32 @@
         Move: <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span><br>
         Pick up / Put down: <span class="key">Space</span><br>
         Chop / Wash / Extinguish: <span class="key">E</span> (hold)
+      <br>
+        Dash: <span class="key">L-Shift</span> (tap, tap, tap)
       </div>
       <div class="helpcard p2">
         <h3>🟥 Player 2 (Red)</h3>
         Move: <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span><br>
         Pick up / Put down: <span class="key">Enter</span><br>
         Chop / Wash / Extinguish: <span class="key">R-Shift</span> or <span class="key">/</span> (hold)
+      <br>
+        Dash: <span class="key">, (comma)</span> (tap, tap, tap)
       </div>
       <div class="helpcard" style="border-color:#66bb6a55">
         <h3 style="color:#81c784">🟩 Player 3 (Green)</h3>
         Move: <span class="key">I</span><span class="key">J</span><span class="key">K</span><span class="key">L</span><br>
         Pick up / Put down: <span class="key">O</span><br>
         Chop / Wash / Extinguish: <span class="key">U</span> (hold)
+      <br>
+        Dash: <span class="key">Y</span> (tap, tap, tap)
       </div>
       <div class="helpcard" style="border-color:#ffb30055">
         <h3 style="color:#ffca4d">🟨 Player 4 (Amber)</h3>
         Move: <span class="key">T</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><br>
         Pick up / Put down: <span class="key">V</span><br>
         Chop / Wash / Extinguish: <span class="key">B</span> (hold)
+      <br>
+        Dash: <span class="key">R</span> (tap, tap, tap)
       </div>
     </div>
     <div class="helpcols">
@@ -473,36 +481,45 @@
         Move: <span class="key">Num 8</span><span class="key">Num 4</span><span class="key">Num 5</span><span class="key">Num 6</span><br>
         Pick up / Put down: <span class="key">Num 0</span><br>
         Chop / Wash / Extinguish: <span class="key">Num +</span> or <span class="key">Num Enter</span> (hold)
+      <br>
+        Dash: <span class="key">Num .</span> (tap, tap, tap)
       </div>
       <div class="helpcard" style="border-color:#26c6da55">
         <h3 style="color:#4dd0e1">🟦 Player 6 (Cyan · teams)</h3>
         Move: <span class="key">Home</span><span class="key">Del</span><span class="key">End</span><span class="key">PgDn</span><br>
         Pick up / Put down: <span class="key">Ins</span><br>
         Chop / Wash / Extinguish: <span class="key">PgUp</span> (hold)
+      <br>
+        Dash: <span class="key">R-Ctrl</span> (tap, tap, tap)
       </div>
       <div class="helpcard" style="border-color:#ec407a55">
         <h3 style="color:#f48fb1">🟥 Player 7 (Pink · teams)</h3>
         Move: <span class="key">[</span><span class="key">;</span><span class="key">'</span><span class="key">\</span><br>
         Pick up / Put down: <span class="key">]</span><br>
         Chop / Wash / Extinguish: <span class="key">P</span> (hold)
+      <br>
+        Dash: <span class="key">=</span> (tap, tap, tap)
       </div>
       <div class="helpcard" style="border-color:#d4e15755">
         <h3 style="color:#dce775">🟩 Player 8 (Lime · teams)</h3>
         Move: <span class="key">Q</span><span class="key">Z</span><span class="key">X</span><span class="key">C</span><br>
         Pick up / Put down: <span class="key">1</span><br>
         Chop / Wash / Extinguish: <span class="key">2</span> (hold)
+      <br>
+        Dash: <span class="key">3</span> (tap, tap, tap)
       </div>
     </div>
     <div class="helpflow">
       ⚔️ <b>Versus (1v1 up to 4v4 &amp; 2v2v2v2):</b> every krew cooks in its <b>own copy of the kitchen</b> with the <b>same order sequence</b> — your kitchen fills the screen and rival kitchens show in live picture-in-picture windows with their scores. Highest kitchen total when time runs out takes the crown. Couch tip: <span class="key">Tab</span> switches which kitchen is on the big screen.<br>
       💬 <b>Online chat:</b> talk in the room lobby, and press <span class="key">T</span> in-game to send a message to your krew.<br>
       ⌨️ 7–8 chefs on one board is tight — plug in a <b>second USB keyboard</b> (the computer merges them) so each krew gets its own side.<br>
-      🧺 Grab ingredients from crates → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
+      🧺 Grab ingredients from crates (and you can rest anything back on a crate lid) → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
       🍤 Shrimp &amp; noodles cook in the golden <b>deep fryer</b>; meat &amp; fish go on the <b>grill</b>.<br>
-      🥟 <b>Buns, curries &amp; soups are built, not found:</b> an order card always shows the <b>raw crate ingredients</b> plus the stations you'll need (🔪 board, 🍤 fryer, 🔥 grill, 🍲 pot, ♨️ steamer). Chicken Bao = roll a wrapper 🥟 + chopped 🍗 on the same tile, then steam it ♨️. Kabocha Curry = cubed 🎃 + julienned 🥕 simmered in the pot 🍲. Full steps live in the 📖 Recipe Book (also on the pause menu).<br>
+      🥟 <b>Buns, curries &amp; soups are built, not found:</b> an order card lists the <b>raw crate ingredients</b>, and each one carries little badges for the prep <i>it</i> needs — 🔪 board, 🍤 fryer, 🔥 grill, 🍲 pot, ♨️ steamer. A chilli with a 🔪 means slice it; no badge means use it as-is. Chicken Bao = roll a wrapper 🥟 + chopped 🍗 on the same tile, then steam it ♨️. Kabocha Curry = cubed 🎃 + julienned 🥕 simmered in the pot 🍲. Full steps live in the 📖 Recipe Book (also on the pause menu).<br>
       ⚠️ <b>One method per item:</b> the moment an ingredient starts cooking or being chopped it is committed to that station — take a half-fried shrimp to the grill and the grill will refuse it. Put it back where it started and it carries on from where it left off. A badge (🔪🔥🍤🍲♨️) on the item shows what it is committed to.<br>
       🧪 <b>Experiment freely:</b> you can mince anything on a board and drop anything in the grill or fryer — but nonsense turns into a <b>Minced Mess</b> or a <b>Fried Mystery</b>, and no customer will ever accept it. Bin it and start over.<br>
+      🏃 <b>Dash:</b> tap your dash key for a quick burst forward — it only lasts a moment, so tap it again and again to sprint across the kitchen. A little ring under your chef shows when the next dash is ready.<br>
       🥏 <b>Throw!</b> Tap your chop key while carrying an ingredient to hurl it the way you're facing — teammates catch it mid-air, and good aim lands it on counters, in pots, even into the fryer. (Plates &amp; assembled dishes are too precious to throw.)<br>
       ⚠️ Don't leave food on the grill or in the fryer too long — it burns (and in fiery kitchens like the Dumpling Den, Neon Rooftop, Banquet Hall &amp; Snow Festival it catches <b>fire</b> 🔥 — grab the extinguisher 🧯).<br>
       ❄️ At the Ice Market, Onsen Ryokan &amp; Snow Festival the floors are ice — you'll slide! &nbsp;🧼 Dirty plates come back at the sink — hold your action key there to wash them. &nbsp;⏸ <span class="key">Esc</span> pauses.
@@ -600,6 +617,7 @@ const Snd={ctx:null,on:true,
   ding(){this.tone(880,.22,'sine',.14);this.tone(1320,.3,'sine',.07);},
   serve(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,.16,'triangle',.13),i*70));},
   bad(){this.tone(170,.22,'sawtooth',.11,-50);},
+  dash(){this.tone(300,.10,'triangle',.09,260);},
   alarm(){this.tone(720,.14,'square',.09);setTimeout(()=>this.tone(720,.14,'square',.09),190);},
   fire(){this.tone(520,.3,'sawtooth',.09,-200);},
   tick(){this.tone(1050,.04,'sine',.05);},
@@ -709,15 +727,15 @@ const Music={
 
 /* ---------------- input --------------------------------------------- */
 const Keys={down:{}};
-const P1K={up:['KeyW'],dn:['KeyS'],lf:['KeyA'],rt:['KeyD'],pick:['Space'],work:['KeyE']};
+const P1K={up:['KeyW'],dn:['KeyS'],lf:['KeyA'],rt:['KeyD'],pick:['Space'],work:['KeyE'],dash:['ShiftLeft']};
 const P2K={up:['ArrowUp'],dn:['ArrowDown'],lf:['ArrowLeft'],rt:['ArrowRight'],
-           pick:['Enter','NumpadEnter'],work:['ShiftRight','Slash','Period']};
-const P3K={up:['KeyI'],dn:['KeyK'],lf:['KeyJ'],rt:['KeyL'],pick:['KeyO'],work:['KeyU']};
-const P4K={up:['KeyT'],dn:['KeyG'],lf:['KeyF'],rt:['KeyH'],pick:['KeyV'],work:['KeyB']};
-const P5K={up:['Numpad8'],dn:['Numpad5'],lf:['Numpad4'],rt:['Numpad6'],pick:['Numpad0'],work:['NumpadAdd','NumpadEnter']};
-const P6K={up:['Home'],dn:['End'],lf:['Delete'],rt:['PageDown'],pick:['Insert'],work:['PageUp']};
-const P7K={up:['BracketLeft'],dn:['Quote'],lf:['Semicolon'],rt:['Backslash'],pick:['BracketRight'],work:['KeyP']};
-const P8K={up:['KeyQ'],dn:['KeyX'],lf:['KeyZ'],rt:['KeyC'],pick:['Digit1'],work:['Digit2']};
+           pick:['Enter','NumpadEnter'],work:['ShiftRight','Slash','Period'],dash:['Comma']};
+const P3K={up:['KeyI'],dn:['KeyK'],lf:['KeyJ'],rt:['KeyL'],pick:['KeyO'],work:['KeyU'],dash:['KeyY']};
+const P4K={up:['KeyT'],dn:['KeyG'],lf:['KeyF'],rt:['KeyH'],pick:['KeyV'],work:['KeyB'],dash:['KeyR']};
+const P5K={up:['Numpad8'],dn:['Numpad5'],lf:['Numpad4'],rt:['Numpad6'],pick:['Numpad0'],work:['NumpadAdd','NumpadEnter'],dash:['NumpadDecimal']};
+const P6K={up:['Home'],dn:['End'],lf:['Delete'],rt:['PageDown'],pick:['Insert'],work:['PageUp'],dash:['ControlRight']};
+const P7K={up:['BracketLeft'],dn:['Quote'],lf:['Semicolon'],rt:['Backslash'],pick:['BracketRight'],work:['KeyP'],dash:['Equal']};
+const P8K={up:['KeyQ'],dn:['KeyX'],lf:['KeyZ'],rt:['KeyC'],pick:['Digit1'],work:['Digit2'],dash:['Digit3']};
 const CTRLS=[P1K,P2K,P3K,P4K,P5K,P6K,P7K,P8K];
 const PCOLS=[['#42a5f5','#1565c0'],['#ef5350','#b71c1c'],['#66bb6a','#2e7d32'],['#ffb300','#b26a00'],['#ab47bc','#6a1b9a'],['#26c6da','#00838f'],['#ec407a','#880e4f'],['#d4e157','#827717']];
 const TEAM_DEFS=[{n:'Blue',e:'🔵',c:'#42a5f5',c2:'#1565c0'},{n:'Red',e:'🔴',c:'#ef5350',c2:'#b71c1c'},{n:'Green',e:'🟢',c:'#66bb6a',c2:'#2e7d32'},{n:'Amber',e:'🟡',c:'#ffb300',c2:'#b26a00'}];
@@ -739,7 +757,7 @@ const teamsFor=m=>MODES[m].teams?MODES[m].teams.map(t=>t.slice()):null;
 const modeName=m=>MODES[m].n+(MODES[m].teams?' Versus':'');
 const MERGED={up:[...P1K.up,...P2K.up],dn:[...P1K.dn,...P2K.dn],
   lf:[...P1K.lf,...P2K.lf],rt:[...P1K.rt,...P2K.rt],
-  pick:[...P1K.pick,...P2K.pick],work:[...P1K.work,...P2K.work]};
+  pick:[...P1K.pick,...P2K.pick],work:[...P1K.work,...P2K.work],dash:[...P1K.dash,...P2K.dash]};
 function anyDown(list){for(const k of list)if(Keys.down[k])return true;return false;}
 window.addEventListener('keydown',e=>{
   Snd.init();
@@ -2177,6 +2195,20 @@ function tryMove(p,others,dx,dy){
   }
   p.x=nx;p.y=ny;return true;
 }
+const DASH_T=0.22,DASH_CD=0.40,DASH_MULT=3.0;
+function tryDash(p){
+  if(!G||G.state!=='play'||p.gone)return false;
+  if((p.dashCd||0)>0||(p.dashT||0)>0)return false;
+  let dx=p.ivx||0,dy=p.ivy||0;
+  if(!dx&&!dy){dx=p.fx;dy=p.fy;}
+  if(!dx&&!dy)dy=-1;
+  const L=Math.hypot(dx,dy)||1;
+  p.ddx=dx/L;p.ddy=dy/L;
+  p.dashT=DASH_T;p.dashCd=DASH_CD;
+  p.dashPuff=[];
+  Snd.dash();
+  return true;
+}
 function movePlayer(p,o,dt,ctrl){
   const k=ctrl||p.ctrl;let vx=0,vy=0;
   if(anyDown(k.up))vy--;if(anyDown(k.dn))vy++;
@@ -2186,6 +2218,20 @@ function movePlayer(p,o,dt,ctrl){
     if(vx&&!vy){p.fx=Math.sign(vx);p.fy=0;}
     else if(vy&&!vx){p.fx=0;p.fy=Math.sign(vy);}
     p.walkT+=dt*6;
+  }
+  p.ivx=vx;p.ivy=vy;
+  if(p.dashCd>0)p.dashCd-=dt;
+  if(p.dashT>0){
+    p.dashT-=dt;
+    /* a short committed burst — tap again the moment it ends to keep sprinting */
+    p.mx=p.ddx*SPD*DASH_MULT;
+    p.my=p.ddy*SPD*DASH_MULT;
+    if(p.ddx&&!p.ddy){p.fx=Math.sign(p.ddx);p.fy=0;}
+    else if(p.ddy&&!p.ddx){p.fx=0;p.fy=Math.sign(p.ddy);}
+    p.walkT+=dt*14;
+    if(Math.abs(p.mx)>1&&!tryMove(p,o,p.mx*dt,0)){p.mx=0;p.dashT=0;}
+    if(Math.abs(p.my)>1&&!tryMove(p,o,0,p.my*dt)){p.my=0;p.dashT=0;}
+    return;
   }
   if(p.working){vx*=0.35;vy*=0.35;}
   const acc=Math.min(1,(G.world.ice?3.0:28)*dt);
@@ -2247,6 +2293,7 @@ function keyPressed(code){
   if(G.state!=='play')return;
   if(G.mode===1){
     if(MERGED.pick.includes(code))actPick(G.players[0]);
+    else if(MERGED.dash.includes(code))tryDash(G.players[0]);
     else if(MERGED.work.includes(code))tryThrow(G.players[0]);
   } else {
     const worlds=VS?VS.kitchens:[G];
@@ -2254,8 +2301,10 @@ function keyPressed(code){
     for(const w of worlds){
       G=w;
       for(const p of w.players){
-        if(!p.remote&&p.ctrl.pick.includes(code))actPick(p);
-        else if(!p.remote&&p.ctrl.work.includes(code))tryThrow(p);
+        if(p.remote)continue;
+        if(p.ctrl.pick.includes(code))actPick(p);
+        else if(p.ctrl.dash&&p.ctrl.dash.includes(code))tryDash(p);
+        else if(p.ctrl.work.includes(code))tryThrow(p);
       }
     }
     G=g0;
@@ -2284,7 +2333,10 @@ function actPick(p){
   if(t.fire){Snd.bad();return;}
   const h=p.held;
   if(!h){
-    if(t.type==='crate'){p.held={id:t.ing};Snd.pick();}
+    if(t.type==='crate'){
+      if(t.item){p.held=t.item;t.item=null;resetSt(t);Snd.pick();}
+      else{p.held={id:t.ing};Snd.pick();}
+    }
     else if(t.type==='plates'){
       if(G.plates>0){G.plates--;p.held={id:'plate',parts:[]};Snd.pick();}
       else {Snd.bad();showToast('🧼 No clean plates — wash up at the sink!');}
@@ -2315,7 +2367,6 @@ function actPick(p){
       else Snd.bad();
       return;
     }
-    if(t.type==='crate'){Snd.bad();return;}
     if(t.type==='sink'){Snd.bad();return;}
     if(t.type==='stove'||t.type==='fryer'){
       const M=stMap(t);
@@ -2420,7 +2471,7 @@ function throwDepositFor(t,it){
   if(t.type==='trash')return {k:'trash'};
   if(t.type==='pot'&&!t.item&&potCanAdd(t.parts,it.id)&&!methBlocked(it,'pot'))return {k:'pot',tile:t};
   if((t.type==='stove'||t.type==='fryer')&&!t.item&&it.id!=='plate'&&it.id!=='ext'&&!methBlocked(it,methOf(t)))return {k:'cook',tile:t};
-  if((t.type==='counter'||t.type==='board'||t.type==='belt')&&!t.item)return {k:'tile',tile:t};
+  if((t.type==='counter'||t.type==='board'||t.type==='belt'||t.type==='crate')&&!t.item)return {k:'tile',tile:t};
   return null;
 }
 function tryThrow(p){
@@ -3692,7 +3743,8 @@ function drawSolidTile(tl,t){
       for(let i=1;i<4;i++){const wy=y+9+i*(TS-20)/4;
         ctx.beginPath();ctx.moveTo(x+10,wy);ctx.quadraticCurveTo(x+TS/2,wy+3,x+TS-10,wy);ctx.stroke();}
       rr(x+8,y+9,TS-16,TS-20,9);ctx.stroke();
-      drawIngredient(cx,cy,tl.ing,0.85);
+      if(tl.item){ctx.globalAlpha=0.28;drawIngredient(cx,cy+3,tl.ing,0.62);ctx.globalAlpha=1;}
+      else drawIngredient(cx,cy,tl.ing,0.85);
       break;}
     case 'board':{
       ctx.fillStyle='#e6d3ae';rr(x+9,y+9,TS-18,TS-24,6);ctx.fill();
@@ -3925,6 +3977,26 @@ function drawPlayer(p,t){
   const moving=(Math.abs(p.mx||0)+Math.abs(p.my||0))>40;
   const bob=(p.working?Math.sin(t*18)*2.5:0)-(moving?Math.abs(Math.sin(p.walkT*1.7))*2.4:0);
   const x=p.x,y=p.y+bob;
+  /* dash trail, drawn behind the chef */
+  if((p.dashT||0)>0){
+    const dx=p.ddx||0,dy=p.ddy||0;
+    ctx.lineCap='round';
+    for(let i=1;i<=4;i++){
+      const d=6+i*13;
+      ctx.globalAlpha=0.42-i*0.07;
+      ctx.strokeStyle=p.col;ctx.lineWidth=7-i*1.1;
+      ctx.beginPath();
+      ctx.moveTo(x-dx*d,y-2-dy*d);
+      ctx.lineTo(x-dx*(d+11),y-2-dy*(d+11));
+      ctx.stroke();
+    }
+    ctx.globalAlpha=0.35;ctx.fillStyle='#ffffff';
+    for(let i=0;i<3;i++){
+      const d=14+i*13;
+      ctx.beginPath();ctx.ellipse(x-dx*d,p.y+13-dy*d*0.35,7-i*1.6,3.2-i*0.6,0,0,7);ctx.fill();
+    }
+    ctx.globalAlpha=1;ctx.lineCap='butt';
+  }
   /* layered soft shadow */
   ctx.fillStyle='#00000022';ctx.beginPath();ctx.ellipse(x,p.y+16,18,8,0,0,7);ctx.fill();
   ctx.fillStyle='#00000033';ctx.beginPath();ctx.ellipse(x,p.y+16,13,5.5,0,0,7);ctx.fill();
@@ -3998,6 +4070,14 @@ function drawPlayer(p,t){
     ctx.fillStyle='rgba(0,0,0,0.10)';ctx.fillRect(x-9,y-15,18,2.5);
   }
   ctx.globalAlpha=1;
+  /* recharge pip */
+  if((p.dashT||0)<=0&&(p.dashCd||0)>0){
+    const f=1-p.dashCd/DASH_CD;
+    ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=4;
+    ctx.beginPath();ctx.arc(x,y+19,8,0,6.283);ctx.stroke();
+    ctx.strokeStyle=f>0.92?'#9dffb0':'rgba(255,255,255,0.75)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(x,y+19,8,-1.57,-1.57+6.283*f);ctx.stroke();
+  }
   /* badge */
   if(p.gone){
     ctx.font='bold 10px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -4114,24 +4194,29 @@ function srcOf(pid){
   const ov=OVEN_RECIPES.find(r=>r.out===pid);if(ov)return {from:ov.needs.slice(),st:'oven'};
   return null;
 }
-function baseOf(pid,out,sts,d){
+function baseOf(pid,acc,chain,d){
   const s=srcOf(pid);
-  if(!s||d>6){out.push(pid);return;}
-  sts.add(s.st);
-  s.from.forEach(f=>baseOf(f,out,sts,d+1));
+  if(!s||d>6){acc.push({id:pid,sts:chain});return;}
+  s.from.forEach(f=>baseOf(f,acc,chain.concat([s.st]),d+1));
 }
 function dishBasics(k){
   if(BASIC_CACHE[k])return BASIC_CACHE[k];
-  const raw=[],sts=new Set();
-  DISHES[k].parts.forEach(p=>baseOf(p,raw,sts,0));
-  const seen=new Set(),ing=[];
-  raw.forEach(p=>{if(!seen.has(p)){seen.add(p);ing.push(p);}});
-  return BASIC_CACHE[k]={ing,sts:ST_ORDER.filter(s=>sts.has(s))};
+  const acc=[];
+  DISHES[k].parts.forEach(p=>baseOf(p,acc,[],0));
+  const order=[],map=new Map();
+  acc.forEach(e=>{
+    if(!map.has(e.id)){map.set(e.id,new Set());order.push(e.id);}
+    e.sts.forEach(s=>map.get(e.id).add(s));
+  });
+  const list=order.map(id=>({id,sts:ST_ORDER.filter(s=>map.get(id).has(s))}));
+  return BASIC_CACHE[k]={list,ing:order,sts:ST_ORDER.filter(s=>list.some(e=>e.sts.includes(s)))};
 }
+/* each ingredient carries the prep it personally needs */
 function basicsHTML(k){
-  const b=dishBasics(k);
-  return b.ing.map(partIcon).join('')+
-    (b.sts.length?'<span class="stst">'+b.sts.map(s=>ST_EMO[s]).join('')+'</span>':'');
+  return dishBasics(k).list.map(e=>
+    '<span class="ing">'+partIcon(e.id)+
+    (e.sts.length?'<sup class="ingst">'+e.sts.map(s=>ST_EMO[s]).join('')+'</sup>':'')+
+    '</span>').join('');
 }
 function stepHTML(k){return (DISH_STEPS[k]||'').replace(/\{(\w+)\}/g,(m,id)=>ING[id]?partIcon(id):m);}
 function partIcon(pid){ return '<img class="picon" src="'+iconURL(pid)+'" alt="">'; }
@@ -4430,6 +4515,14 @@ function netOnGame(from,d){
         G=g0;
       }
     }
+    else if(d.t==='dsh'){
+      const ws=VS?VS.kitchens:[G];const g0=G;
+      for(const w of ws){
+        const p=w.players.find(pl=>pl.slot===slot);
+        if(p&&w.state==='play'){G=w;tryDash(p);}
+      }
+      G=g0;
+    }
     else if(d.t==='pk'){
       const ws=VS?VS.kitchens:[G];const g0=G;
       for(const w of ws){
@@ -4468,9 +4561,40 @@ function netLobbyShow(){
   $('#ol-entry').style.display='none';
   $('#ol-lobby').style.display='';
   $('#ol-roomcode').textContent=NET.code||'----';
-  $('#ol-rename').value=SAVE.pname||'CHEF';
   $('#ol-hostui').style.display=NET.role==='host'?'':'none';
   $('#ol-waitui').style.display=NET.role==='client'?'':'none';
+  netLobbyRender();
+}
+let RENAMING=false;
+function startRename(){
+  const row=document.querySelector('#ol-players .plrow .plname');
+  const rows=document.querySelectorAll('#ol-players .plrow');
+  let target=null;
+  rows.forEach(r=>{if(r.querySelector('.plpen'))target=r.querySelector('.plname');});
+  if(!target)return;
+  RENAMING=true;
+  target.innerHTML='<input id="ol-inline" maxlength="12" spellcheck="false">';
+  const inp=$('#ol-inline');
+  inp.value=SAVE.pname||'CHEF';
+  inp.focus();inp.select();
+  inp.onkeydown=e=>{
+    e.stopPropagation();
+    if(e.key==='Enter'){e.preventDefault();commitRename(inp.value);}
+    else if(e.key==='Escape'){RENAMING=false;netLobbyRender();}
+  };
+  inp.onblur=()=>{if(RENAMING)commitRename(inp.value);};
+}
+function commitRename(v){
+  if(!RENAMING)return;
+  RENAMING=false;
+  v=(v||'').trim().slice(0,12);
+  if(v&&v!==SAVE.pname){
+    SAVE.pname=v;SaveIO.save(SAVE);
+    if(NET.role==='host')NET.names[0]=v;
+    if(NET.ws&&NET.ws.readyState===1)netSendWS({t:'rename',name:v});
+    if(NET.roster){const meId=NET.role==='host'?0:NET.myId;
+      NET.roster=NET.roster.map(p=>p.id===meId?Object.assign({},p,{name:v}):p);}
+  }
   netLobbyRender();
 }
 function netLobbyRender(){
@@ -4482,14 +4606,18 @@ function netLobbyRender(){
       ? [{id:0,name:SAVE.pname||'Host',host:true},...[...NET.peers.keys()].map(id=>({id,name:NET.names[id]||('Chef '+id)}))]
       : [{id:0,name:'Host',host:true},{id:NET.myId,name:SAVE.pname||'CHEF'}];
   }
+  if(RENAMING)return;
   const meId=NET.role==='host'?0:NET.myId;
   el.innerHTML=list.map((p,i)=>{
     const col=PCOLS[i%PCOLS.length][0];
-    const tags=[];if(p.host)tags.push('HOST');if(p.id===meId)tags.push('YOU');
+    const me=p.id===meId;
+    const tags=[];if(p.host)tags.push('HOST');if(me)tags.push('YOU');
     return `<div class="plrow"><span class="plchip" style="background:${col}"></span>`+
       `<span class="plname">${escHtml(p.name||('Chef '+p.id))}</span>`+
+      (me?'<button class="plpen" id="btn-pen" title="Change your name">✏️</button>':'')+
       `<span class="pltag">${tags.join(' · ')}</span></div>`;
   }).join('');
+  const pen=$('#btn-pen');if(pen)pen.onclick=startRename;
   const n=list.length;
   const cnt=$('#ol-count');if(cnt)cnt.textContent='('+n+'/8)';
   if(NET.role==='host'){
@@ -4564,7 +4692,7 @@ function snapWorld(w){
   }
   return {st:w.state,cd:Math.round((w.cd||0)*10),tl:Math.round(w.timeLeft*10),
     sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
-    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0]),
+    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0,(p.dashT||0)>0?1:0,p.ddx||0,p.ddy||0]),
     ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),
     pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),tls};
 }
@@ -4595,6 +4723,7 @@ function applyWorldSnap(w,s,viewed){
   w.projRender=s.pj||[];
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
     p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
+    p.dashT=a[7]?0.12:0;p.ddx=a[8]||0;p.ddy=a[9]||0;
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
   });
   if(viewed&&w.score>oldSc)Snd.serve();
@@ -4629,9 +4758,11 @@ const CLIENT_MAP={};
   P1K[a].concat(P2K[a]).forEach(code=>CLIENT_MAP[code]={k});
 });
 P1K.pick.concat(P2K.pick).forEach(code=>CLIENT_MAP[code]={pick:true});
+P1K.dash.concat(P2K.dash).forEach(code=>CLIENT_MAP[code]={dash:true});
 function netClientKey(code,down){
   const m=CLIENT_MAP[code];if(!m)return false;
   if(m.pick){if(down)netToHost({t:'pk'});return true;}
+  if(m.dash){if(down)netToHost({t:'dsh'});return true;}
   netToHost({t:'in',k:m.k,v:down?1:0});
   return true;
 }
@@ -4657,16 +4788,6 @@ $('#btn-copy').onclick=()=>{
   const b=$('#btn-copy');b.textContent='✅ Copied!';
   setTimeout(()=>b.textContent='📋 Copy invite',1600);
 };
-$('#btn-rename').onclick=()=>{
-  const v=$('#ol-rename').value.trim().slice(0,12);
-  if(!v||v===SAVE.pname)return;
-  SAVE.pname=v;SaveIO.save(SAVE);
-  if(NET.role==='host')NET.names[0]=v;
-  if(NET.ws&&NET.ws.readyState===1)netSendWS({t:'rename',name:v});
-  const b=$('#btn-rename');b.textContent='✅';setTimeout(()=>b.textContent='Save',1200);
-  netLobbyRender();
-};
-$('#ol-rename').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')$('#btn-rename').click();};
 $('#btn-chatsend').onclick=()=>chatSend('#ol-chatin');
 $('#ol-chatin').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')chatSend('#ol-chatin');};
 $('#gchatin').onkeydown=e=>{
