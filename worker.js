@@ -33,6 +33,13 @@ export class Hub {
 
   send(ws, o) { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); } catch (e) {} }
 
+  roster(r) {
+    return [{ id: 0, name: r.hostName || 'Host', host: true },
+      ...[...r.peers.values()].map(p => ({ id: p.pid, name: p.pname || 'Chef' }))];
+  }
+  sendAll(r, o) { this.send(r.host, o); for (const p of r.peers.values()) this.send(p, o); }
+  pushRoster(r) { this.sendAll(r, { t: 'roster', list: this.roster(r) }); }
+
   mkCode() {
     let c;
     do { c = Array.from({ length: 4 }, () => ALPHA[Math.random() * ALPHA.length | 0]).join(''); }
@@ -46,17 +53,22 @@ export class Hub {
       if (m.t === 'create') {
         const code = this.mkCode();
         ws.room = code; ws.pid = 0; ws.isHost = true;
-        this.rooms.set(code, { host: ws, peers: new Map(), nextId: 1 });
+        ws.pname = String(m.name || 'Host').slice(0, 12);
+        this.rooms.set(code, { host: ws, peers: new Map(), nextId: 1, hostName: ws.pname });
         this.send(ws, { t: 'room', code });
+        this.pushRoster(this.rooms.get(code));
       } else if (m.t === 'join') {
         const r = this.rooms.get(String(m.code || '').toUpperCase());
         if (!r) return this.send(ws, { t: 'err', m: 'Room not found' });
         if (r.peers.size >= 7) return this.send(ws, { t: 'err', m: 'Room full' });
         if (r.started) return this.send(ws, { t: 'err', m: 'Game already started' });
         ws.room = String(m.code).toUpperCase(); ws.pid = r.nextId++;
+        ws.pname = String(m.name || 'CHEF').slice(0, 12);
         r.peers.set(ws.pid, ws);
-        this.send(ws, { t: 'joined', id: ws.pid });
-        this.send(r.host, { t: 'peer', id: ws.pid, name: String(m.name || 'CHEF').slice(0, 12), style: String(m.style || 'classic').slice(0, 12) });
+        this.send(ws, { t: 'joined', id: ws.pid, code: ws.room });
+        this.send(r.host, { t: 'peer', id: ws.pid, name: ws.pname, style: String(m.style || 'classic').slice(0, 12) });
+        this.pushRoster(r);
+        this.sendAll(r, { t: 'chat', sys: 1, msg: ws.pname + ' joined the krew' });
       } else if (m.t === 'sig' || m.t === 'rly') {
         const r = this.rooms.get(ws.room); if (!r) return;
         if (m.to === 0) this.send(r.host, { t: m.t, from: ws.pid, d: m.d });
@@ -64,6 +76,11 @@ export class Hub {
       } else if (m.t === 'bc') {
         const r = this.rooms.get(ws.room); if (!r || ws !== r.host) return;
         for (const p of r.peers.values()) this.send(p, { t: 'rly', from: 0, d: m.d });
+      } else if (m.t === 'chat') {
+        const r = this.rooms.get(ws.room); if (!r) return;
+        const txt = String(m.msg || '').slice(0, 160);
+        if (!txt.trim()) return;
+        this.sendAll(r, { t: 'chat', from: ws.pid, name: ws.pname || 'Chef', msg: txt });
       } else if (m.t === 'lock') {
         const r = this.rooms.get(ws.room); if (r && ws === r.host) r.started = true;
       }
@@ -77,6 +94,8 @@ export class Hub {
         r.peers.delete(ws.pid);
         this.send(r.host, { t: 'gone', id: ws.pid });
         for (const p of r.peers.values()) this.send(p, { t: 'gone', id: ws.pid });
+        this.pushRoster(r);
+        this.sendAll(r, { t: 'chat', sys: 1, msg: (ws.pname || 'A chef') + ' left the room' });
       }
     };
     ws.addEventListener('close', bye);

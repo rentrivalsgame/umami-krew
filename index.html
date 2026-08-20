@@ -71,6 +71,56 @@
   .bigbtn.vsb{background:linear-gradient(#b06ad6,#8e44ad 60%,#6a1b9a);box-shadow:0 5px 0 #4a1070,0 8px 16px rgba(0,0,0,.4)}
   .bigbtn.vsb:active{box-shadow:0 2px 0 #4a1070}
   .lvlbtn.needpair{opacity:.55;filter:saturate(.6)}
+  #scr-online{justify-content:center}
+  .olwrap{width:min(960px,95vw);margin:0 auto}
+  .olname{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 16px;font-size:15px;color:#d9cbe8}
+  .olname input{width:180px;font-family:inherit;font-size:18px;font-weight:bold;color:#ffd54f;background:#00000045;
+    border:1px solid #ffffff30;border-radius:10px;padding:8px 12px;text-align:center}
+  .olcards{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+  .olcard{flex:1 1 300px;max-width:400px;background:#00000038;border:1px solid #ffffff1c;border-radius:18px;
+    padding:20px 22px 22px;text-align:center}
+  .olcard.host{box-shadow:inset 0 3px 0 #f4692a55}
+  .olcard.join{box-shadow:inset 0 3px 0 #42a5f555}
+  .olicon{font-size:38px;line-height:1}
+  .olcard h3{margin:6px 0 6px;font-size:22px;color:#ffca4d}
+  .olcard p{margin:0 0 18px;font-size:14px;line-height:1.65;color:#b9a8d0;min-height:72px}
+  .olcard .bigbtn{width:100%;margin:0;font-size:19px;padding:13px 0}
+  .oljoinrow{display:flex;gap:8px}
+  .oljoinrow input{width:120px;font-family:inherit;font-size:22px;font-weight:bold;letter-spacing:6px;
+    text-transform:uppercase;color:#ffd54f;background:#00000045;border:1px solid #ffffff30;border-radius:12px;text-align:center}
+  .oljoinrow .bigbtn{flex:1;margin:0;font-size:19px;padding:13px 0}
+  .olmsg{min-height:20px;margin:12px 0 4px;font-size:14px;color:#ff9d8a;font-weight:bold}
+  .olroom{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+  .olroomlbl{font-size:12px;letter-spacing:2px;color:#9b8ab5}
+  #ol-roomcode{font-size:38px;font-weight:bold;letter-spacing:9px;color:#ffd54f;text-shadow:0 3px 0 #00000060}
+  .ollobbygrid{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;min-height:min(58vh,430px)}
+  .olpanel{flex:1 1 320px;background:#00000038;border:1px solid #ffffff1c;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column}
+  .olpanel h4{margin:0 0 10px;font-size:16px;color:#ffca4d;text-align:left}
+  #ol-players{text-align:left;font-size:15px;line-height:1.5}
+  .plrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:10px;background:#ffffff0d;margin-bottom:6px}
+  .plchip{width:14px;height:14px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px #00000055}
+  .plname{font-weight:bold}
+  .pltag{margin-left:auto;font-size:11px;color:#b9a8d0;letter-spacing:.5px}
+  .olwait{display:flex;gap:6px;justify-content:center;margin:16px 0 8px}
+  .olwait .dot{width:9px;height:9px;border-radius:50%;background:#ffca4d;animation:bounce 1.1s infinite}
+  .olwait .dot:nth-child(2){animation-delay:.15s}
+  .olwait .dot:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-6px)}}
+  .chatlog{flex:1;min-height:150px;max-height:min(46vh,340px);overflow-y:auto;text-align:left;font-size:13.5px;
+    line-height:1.55;background:#00000030;border-radius:10px;padding:8px 10px;margin-bottom:8px}
+  .chatlog .cm{margin-bottom:3px;word-wrap:break-word}
+  .chatlog .cw{color:#ffca4d;font-weight:bold}
+  .chatlog .cs{color:#8fbf8a;font-style:italic}
+  .chatrow{display:flex;gap:6px}
+  .chatrow input{flex:1;font-family:inherit;font-size:14px;color:#f2ead6;background:#00000045;
+    border:1px solid #ffffff26;border-radius:9px;padding:8px 10px}
+  .chatrow input:focus{outline:none;border-color:#ffca4d}
+  #gchat{position:absolute;left:10px;bottom:10px;width:290px;z-index:7;display:none}
+  #gchat .chatlog{min-height:0;max-height:104px;background:#0e0a16aa;font-size:12.5px;margin-bottom:5px}
+  #gchat .chatrow input{font-size:12.5px;padding:6px 9px;background:#0e0a16aa}
+  #gchat.dim{opacity:.5;transition:opacity .2s}
+  #gchat.dim .chatlog{max-height:58px}
+  #gchat.dim:hover{opacity:1}
   .tourseg{display:flex;gap:8px;justify-content:center;align-items:center;margin:0 auto 6px}
   .tslbl{font-size:13.5px;color:#b9a8d0;font-weight:bold}
   .tsbtn{font-family:inherit;font-size:13.5px;font-weight:bold;color:#d9cbe8;background:#00000038;
@@ -295,33 +345,71 @@
 
   <!-- ONLINE -->
   <div class="scr" id="scr-online">
-    <h2>🌐 Play Online</h2>
-    <div id="ol-entry">
-      <div class="lbtop">Chef name: <input id="ol-name" maxlength="12" spellcheck="false"></div>
-      <button class="bigbtn" id="btn-host" style="margin-top:4px">🏠 &nbsp;Host a Game</button>
-      <div class="lbtop" style="margin-top:14px">Room code:
-        <input id="ol-code" maxlength="4" spellcheck="false" style="width:84px;text-transform:uppercase;letter-spacing:4px">
-        <button class="smallbtn" id="btn-join" style="margin-left:6px">Join →</button>
+    <h2 style="margin-bottom:4px">🌐 Play Online</h2>
+
+    <div id="ol-entry" class="olwrap">
+      <div class="olname">
+        <label for="ol-name">👨‍🍳 Your chef name</label>
+        <input id="ol-name" maxlength="12" spellcheck="false" placeholder="CHEF">
       </div>
-      <div id="ol-msg" class="lbhint" style="display:block;margin-top:10px"></div>
-    </div>
-    <div id="ol-lobby" style="display:none">
-      <div id="ol-roomline" style="font-size:20px;margin-bottom:8px">Room <b id="ol-roomcode" style="color:#ffd54f;letter-spacing:5px;font-size:26px"></b></div>
-      <div id="ol-players" style="max-width:420px;margin:0 auto 12px;background:#00000030;border:1px solid #ffffff15;border-radius:12px;padding:10px 16px;font-size:15px;line-height:1.9"></div>
-      <div id="ol-hostui" style="display:none">
-        <div class="tourseg" style="margin-bottom:6px">
-          <button class="tsbtn sel" data-rounds="0">Single</button>
-          <button class="tsbtn" data-rounds="5">×5</button>
-          <button class="tsbtn" data-rounds="10">×10</button>
-          <button class="tsbtn" data-rounds="15">×15</button>
+      <div class="olcards">
+        <div class="olcard host">
+          <div class="olicon">🏠</div>
+          <h3>Host a Game</h3>
+          <p>Start a fresh room and get a 4-letter code to share. You pick the mode and the kitchen.</p>
+          <button class="bigbtn" id="btn-host">Create Room</button>
         </div>
-        <div class="grplbl" style="text-align:center">pick a mode for this krew count</div>
-        <div class="modebtns" id="ol-modes" style="margin-bottom:10px"></div>
-        <div class="lbhint" id="ol-hosthint" style="display:block">then choose a kitchen — the level starts for everyone</div>
+        <div class="olcard join">
+          <div class="olicon">🚪</div>
+          <h3>Join a Game</h3>
+          <p>Got a code from a friend? Type it in and drop straight into their krew.</p>
+          <div class="oljoinrow">
+            <input id="ol-code" maxlength="4" spellcheck="false" placeholder="CODE">
+            <button class="bigbtn alt" id="btn-join">Join →</button>
+          </div>
+        </div>
       </div>
-      <div id="ol-waitui" class="lbhint" style="display:none;font-size:14px">waiting for the host to start… keep this tab focused 🍳</div>
+      <div id="ol-msg" class="olmsg"></div>
+      <div class="lbhint" style="display:block">Everyone plays on their own computer with their own keyboard · up to 8 chefs</div>
     </div>
-    <button class="smallbtn" id="btn-online-back" style="margin-top:14px">← Leave</button>
+
+    <div id="ol-lobby" class="olwrap" style="display:none">
+      <div class="olroom">
+        <div class="olroomlbl">ROOM CODE</div>
+        <div id="ol-roomcode">----</div>
+        <button class="smallbtn" id="btn-copy">📋 Copy invite</button>
+      </div>
+      <div class="ollobbygrid">
+        <div class="olpanel">
+          <h4>👥 In this room <span id="ol-count"></span></h4>
+          <div id="ol-players"></div>
+          <div id="ol-hostui" style="display:none">
+            <div class="tourseg" style="margin:12px 0 6px">
+              <button class="tsbtn sel" data-rounds="0">Single</button>
+              <button class="tsbtn" data-rounds="5">🏆×5</button>
+              <button class="tsbtn" data-rounds="10">×10</button>
+              <button class="tsbtn" data-rounds="15">×15</button>
+            </div>
+            <div class="grplbl" style="text-align:center">pick a mode for this krew</div>
+            <div class="modebtns" id="ol-modes" style="margin-bottom:6px"></div>
+            <div class="lbhint" id="ol-hosthint" style="display:block">then choose a kitchen — it starts for everyone</div>
+          </div>
+          <div id="ol-waitui" style="display:none">
+            <div class="olwait"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <div class="lbhint" style="display:block">You're in! Waiting for the host to pick a mode and kitchen…</div>
+          </div>
+        </div>
+        <div class="olpanel">
+          <h4>💬 Room chat</h4>
+          <div id="ol-chat" class="chatlog"></div>
+          <div class="chatrow">
+            <input id="ol-chatin" maxlength="160" spellcheck="false" placeholder="Say something…">
+            <button class="smallbtn" id="btn-chatsend">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="smallbtn" id="btn-online-back" style="margin-top:12px">← Leave</button>
   </div>
 
   <!-- LEADERBOARD -->
@@ -390,6 +478,7 @@
     </div>
     <div class="helpflow">
       ⚔️ <b>Versus (1v1 up to 4v4 &amp; 2v2v2v2):</b> every krew cooks in its <b>own copy of the kitchen</b> with the <b>same order sequence</b> — your kitchen fills the screen and rival kitchens show in live picture-in-picture windows with their scores. Highest kitchen total when time runs out takes the crown. Couch tip: <span class="key">Tab</span> switches which kitchen is on the big screen.<br>
+      💬 <b>Online chat:</b> talk in the room lobby, and press <span class="key">T</span> in-game to send a message to your krew.<br>
       ⌨️ 7–8 chefs on one board is tight — plug in a <b>second USB keyboard</b> (the computer merges them) so each krew gets its own side.<br>
       🧺 Grab ingredients from crates → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
@@ -418,6 +507,12 @@
     <div id="stage">
       <canvas id="cv" width="936" height="592"></canvas>
       <div id="toastwrap"><div id="toast"></div></div>
+      <div id="gchat">
+        <div id="gchatlog" class="chatlog game"></div>
+        <div class="chatrow">
+          <input id="gchatin" maxlength="160" spellcheck="false" placeholder="Press T to chat…">
+        </div>
+      </div>
 
       <div class="overlay" id="countdown"><div id="cdnum">3</div></div>
 
@@ -631,6 +726,9 @@ window.addEventListener('keydown',e=>{
   Snd.init();
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Slash','Tab'].includes(e.code))e.preventDefault();
   if(e.target&&e.target.tagName==='INPUT')return;
+  if(NET.role&&screen==='game'&&e.code==='KeyT'){
+    e.preventDefault();$('#gchatin').focus();return;
+  }
   if(NET.started&&NET.role==='client'&&G&&G.state!=='done'){
     if(!Keys.down[e.code]){Keys.down[e.code]=true;if(netClientKey(e.code,true))return;}
     return;
@@ -4006,6 +4104,8 @@ function showScreen(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
   $('#scr-'+id).classList.add('active');
   screen=id;
+  const gc=$('#gchat');
+  if(gc){gc.style.display=(id==='game'&&NET.role)?'block':'none';gc.classList.add('dim');}
   fit();
   Music.play(id==='game'&&G?('w'+G.L.w):'menu');
 }
@@ -4119,11 +4219,31 @@ function netToPeer(id,o,unreliable){ // host -> one client
 }
 function netBroadcast(o,unreliable){for(const id of NET.peers.keys())if(id!==0)netToPeer(id,o,unreliable);}
 function olMsg(s){const e=$('#ol-msg');if(e){e.textContent=s;}}
+const CHAT=[];
+function chatPush(name,msg,sys){
+  CHAT.push({name,msg,sys});
+  if(CHAT.length>60)CHAT.shift();
+  const html=CHAT.map(c=>c.sys
+    ?`<div class="cm cs">• ${escHtml(c.msg)}</div>`
+    :`<div class="cm"><span class="cw">${escHtml(c.name)}:</span> ${escHtml(c.msg)}</div>`).join('');
+  for(const id of ['#ol-chat','#gchatlog']){
+    const el=$(id);if(!el)continue;
+    el.innerHTML=html;el.scrollTop=el.scrollHeight;
+  }
+}
+function chatSend(inputId){
+  const el=$(inputId);if(!el)return;
+  const txt=el.value.trim();el.value='';
+  if(!txt)return;
+  if(NET.ws&&NET.ws.readyState===1)netSendWS({t:'chat',msg:txt});
+  else chatPush(SAVE.pname||'CHEF',txt);
+}
+function chatReset(){CHAT.length=0;['#ol-chat','#gchatlog'].forEach(i=>{const e=$(i);if(e)e.innerHTML='';});}
 function netReset(){
   if(NET.ws){try{NET.ws.close();}catch(e){}}
   for(const pr of NET.peers.values()){try{pr.pc&&pr.pc.close();}catch(e){}}
   NET.role=null;NET.ws=null;NET.code=null;NET.peers=new Map();NET.names={};NET.styles={};
-  NET.keys={};NET.started=false;NET.cur=null;NET.lastSeq=-1;NET.seq=0;NET.myId=0;NET.mySlot=0;
+  NET.keys={};NET.started=false;NET.cur=null;NET.lastSeq=-1;NET.seq=0;NET.myId=0;NET.mySlot=0;NET.roster=null;
 }
 function netConnect(cb){
   const ws=new WebSocket(netURL());
@@ -4172,8 +4292,13 @@ function clientHandleSig(d){
 }
 function netOnWS(m){
   if(m.t==='room'){NET.code=m.code;NET.role='host';NET.names[0]=SAVE.pname||'CHEF';NET.styles[0]=chefStyle(1);netLobbyShow();}
-  else if(m.t==='joined'){NET.myId=m.id;NET.role='client';NET.names[0]='Host';netLobbyShow();}
+  else if(m.t==='joined'){NET.myId=m.id;NET.role='client';NET.code=m.code||NET.code;NET.names[0]='Host';netLobbyShow();}
   else if(m.t==='err'){olMsg(m.m);}
+  else if(m.t==='roster'){NET.roster=m.list;netLobbyRender();}
+  else if(m.t==='chat'){
+    chatPush(m.name||'',m.msg,m.sys);
+    if(screen==='game'&&!m.sys)showToast('💬 '+(m.name||'')+': '+m.msg);
+  }
   else if(m.t==='peer'){hostAddPeer(m.id,m.name,m.style);}
   else if(m.t==='gone'){
     const slot=NET.slots?NET.slots.indexOf(m.id):-1;
@@ -4261,7 +4386,6 @@ function netLobbyShow(){
   $('#ol-entry').style.display='none';
   $('#ol-lobby').style.display='';
   $('#ol-roomcode').textContent=NET.code||'----';
-  $('#ol-roomline').style.display=NET.role==='host'?'':'none';
   $('#ol-hostui').style.display=NET.role==='host'?'':'none';
   $('#ol-waitui').style.display=NET.role==='client'?'':'none';
   netLobbyRender();
@@ -4269,21 +4393,32 @@ function netLobbyShow(){
 function netLobbyRender(){
   if(!NET.role)return;
   const el=$('#ol-players');if(!el)return;
-  const ids=NET.role==='host'?[0,...NET.peers.keys()].filter((v,i,a)=>a.indexOf(v)===i):[NET.myId];
+  let list=NET.roster;
+  if(!list||!list.length){
+    list=NET.role==='host'
+      ? [{id:0,name:SAVE.pname||'Host',host:true},...[...NET.peers.keys()].map(id=>({id,name:NET.names[id]||('Chef '+id)}))]
+      : [{id:0,name:'Host',host:true},{id:NET.myId,name:SAVE.pname||'CHEF'}];
+  }
+  const meId=NET.role==='host'?0:NET.myId;
+  el.innerHTML=list.map((p,i)=>{
+    const col=PCOLS[i%PCOLS.length][0];
+    const tags=[];if(p.host)tags.push('HOST');if(p.id===meId)tags.push('YOU');
+    return `<div class="plrow"><span class="plchip" style="background:${col}"></span>`+
+      `<span class="plname">${escHtml(p.name||('Chef '+p.id))}</span>`+
+      `<span class="pltag">${tags.join(' · ')}</span></div>`;
+  }).join('');
+  const n=list.length;
+  const cnt=$('#ol-count');if(cnt)cnt.textContent='('+n+'/8)';
   if(NET.role==='host'){
-    el.innerHTML=ids.map((id,i)=>`👨‍🍳 <b>${escHtml(NET.names[id]||('Chef '+id))}</b>${id===0?' (you · host)':''}`).join('<br>');
-    const n=ids.length;
     $('#ol-modes').innerHTML=Object.keys(MODES).filter(k=>MODES[k].chefs===n)
       .map(k=>`<button class="modebtn ${MODES[k].teams?'vs':''}" data-olmode="${k}" style="width:104px;padding:7px 2px"><b>${MODES[k].n}</b><i>${MODES[k].teams?'versus':'co-op'}</i></button>`).join('')
-      ||'<span class="lbhint">no modes fit '+n+' chef'+(n>1?'s':'')+' — invite more!</span>';
+      ||'<span class="lbhint" style="display:block">no mode fits '+n+' chef'+(n>1?'s':'')+' yet — share the code!</span>';
     document.querySelectorAll('[data-olmode]').forEach(b=>b.onclick=()=>{
       setMode(+b.dataset.olmode);TOURN=null;
       if(TOURN_PICK>0){startTournament(TOURN_PICK);return;}
       buildMap();showScreen('map');
       showToast('🌐 pick a kitchen — it starts for everyone');
     });
-  }else{
-    el.innerHTML='🌐 joined room — you are <b>'+escHtml(SAVE.pname||'CHEF')+'</b>';
   }
 }
 /* ---- host: start hook, slot wiring, snapshots ---- */
@@ -4417,13 +4552,29 @@ $('#btn-online-back').onclick=()=>{netReset();showScreen('title');};
 $('#ol-name').oninput=e=>{SAVE.pname=e.target.value.slice(0,12);SaveIO.save(SAVE);};
 $('#btn-host').onclick=()=>{
   SAVE.pname=$('#ol-name').value.slice(0,12)||'CHEF';SaveIO.save(SAVE);
-  olMsg('Connecting…');
+  chatReset();olMsg('Creating room…');
   netConnect(err=>{if(err)return olMsg(err);netSendWS({t:'create',name:SAVE.pname});});
 };
+$('#btn-copy').onclick=()=>{
+  const txt=location.origin+' — room code '+(NET.code||'');
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>olMsg('Invite copied!'),()=>{});
+  const b=$('#btn-copy');b.textContent='✅ Copied!';
+  setTimeout(()=>b.textContent='📋 Copy invite',1600);
+};
+$('#btn-chatsend').onclick=()=>chatSend('#ol-chatin');
+$('#ol-chatin').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')chatSend('#ol-chatin');};
+$('#gchatin').onkeydown=e=>{
+  e.stopPropagation();
+  if(e.key==='Enter'){chatSend('#gchatin');$('#gchatin').blur();}
+  else if(e.key==='Escape')$('#gchatin').blur();
+};
+$('#gchatin').onfocus=()=>{Keys.down={};$('#gchat').classList.remove('dim');};
+$('#gchatin').onblur=()=>$('#gchat').classList.add('dim');
 $('#btn-join').onclick=()=>{
   SAVE.pname=$('#ol-name').value.slice(0,12)||'CHEF';SaveIO.save(SAVE);
+  chatReset();
   const code=$('#ol-code').value.trim().toUpperCase();
-  if(code.length!==4)return olMsg('Enter the 4-letter room code.');
+  if(code.length!==4)return olMsg('Enter the 4-letter room code from your host.');
   olMsg('Connecting…');
   netConnect(err=>{if(err)return olMsg(err);netSendWS({t:'join',code,name:SAVE.pname,style:chefStyle(1)});});
 };

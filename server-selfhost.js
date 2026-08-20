@@ -32,6 +32,10 @@ const rooms = new Map();          // code -> {host, peers:Map(id->ws), nextId}
 const ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const mkCode = () => { let c = ''; do { c = Array.from({ length: 4 }, () => ALPHA[Math.random() * ALPHA.length | 0]).join(''); } while (rooms.has(c)); return c; };
 const send = (ws, o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
+const roster = r => [{ id: 0, name: r.hostName || 'Host', host: true },
+  ...[...r.peers.values()].map(p => ({ id: p.pid, name: p.pname || 'Chef' }))];
+const sendAll = (r, o) => { send(r.host, o); for (const p of r.peers.values()) send(p, o); };
+const pushRoster = r => sendAll(r, { t: 'roster', list: roster(r) });
 
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 64 * 1024 });
 wss.on('connection', ws => {
@@ -42,17 +46,22 @@ wss.on('connection', ws => {
     if (m.t === 'create') {
       const code = mkCode();
       ws.room = code; ws.pid = 0; ws.isHost = true;
-      rooms.set(code, { host: ws, peers: new Map(), nextId: 1 });
+      ws.pname = String(m.name || 'Host').slice(0, 12);
+      rooms.set(code, { host: ws, peers: new Map(), nextId: 1, hostName: ws.pname });
       send(ws, { t: 'room', code });
+      pushRoster(rooms.get(code));
     } else if (m.t === 'join') {
       const r = rooms.get(String(m.code || '').toUpperCase());
       if (!r) return send(ws, { t: 'err', m: 'Room not found' });
       if (r.peers.size >= 7) return send(ws, { t: 'err', m: 'Room full' });
       if (r.started) return send(ws, { t: 'err', m: 'Game already started' });
       ws.room = ws.roomCode = String(m.code).toUpperCase(); ws.pid = r.nextId++;
+      ws.pname = String(m.name || 'CHEF').slice(0, 12);
       r.peers.set(ws.pid, ws);
-      send(ws, { t: 'joined', id: ws.pid });
-      send(r.host, { t: 'peer', id: ws.pid, name: String(m.name || 'CHEF').slice(0, 12), style: String(m.style || 'classic').slice(0, 12) });
+      send(ws, { t: 'joined', id: ws.pid, code: ws.room });
+      send(r.host, { t: 'peer', id: ws.pid, name: ws.pname, style: String(m.style || 'classic').slice(0, 12) });
+      pushRoster(r);
+      sendAll(r, { t: 'chat', sys: 1, msg: ws.pname + ' joined the krew' });
     } else if (m.t === 'sig' || m.t === 'rly') {
       // targeted relay: WebRTC signaling, or game messages when P2P is unavailable
       const r = rooms.get(ws.room); if (!r) return;
@@ -62,6 +71,11 @@ wss.on('connection', ws => {
       // host broadcast fallback (snapshots when P2P fails)
       const r = rooms.get(ws.room); if (!r || ws !== r.host) return;
       for (const p of r.peers.values()) send(p, { t: 'rly', from: 0, d: m.d });
+    } else if (m.t === 'chat') {
+      const r = rooms.get(ws.room); if (!r) return;
+      const txt = String(m.msg || '').slice(0, 160);
+      if (!txt.trim()) return;
+      sendAll(r, { t: 'chat', from: ws.pid, name: ws.pname || 'Chef', msg: txt });
     } else if (m.t === 'lock') {
       const r = rooms.get(ws.room); if (r && ws === r.host) r.started = true;
     }
@@ -75,6 +89,8 @@ wss.on('connection', ws => {
       r.peers.delete(ws.pid);
       send(r.host, { t: 'gone', id: ws.pid });
       for (const p of r.peers.values()) send(p, { t: 'gone', id: ws.pid });
+      pushRoster(r);
+      sendAll(r, { t: 'chat', sys: 1, msg: (ws.pname || 'A chef') + ' left the room' });
     }
   });
 });
