@@ -501,6 +501,7 @@
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
       🍤 Shrimp &amp; noodles cook in the golden <b>deep fryer</b>; meat &amp; fish go on the <b>grill</b>.<br>
       🥟 <b>Buns, curries &amp; soups are built, not found:</b> an order card always shows the <b>raw crate ingredients</b> plus the stations you'll need (🔪 board, 🍤 fryer, 🔥 grill, 🍲 pot, ♨️ steamer). Chicken Bao = roll a wrapper 🥟 + chopped 🍗 on the same tile, then steam it ♨️. Kabocha Curry = cubed 🎃 + julienned 🥕 simmered in the pot 🍲. Full steps live in the 📖 Recipe Book (also on the pause menu).<br>
+      ⚠️ <b>One method per item:</b> the moment an ingredient starts cooking or being chopped it is committed to that station — take a half-fried shrimp to the grill and the grill will refuse it. Put it back where it started and it carries on from where it left off. A badge (🔪🔥🍤🍲♨️) on the item shows what it is committed to.<br>
       🧪 <b>Experiment freely:</b> you can mince anything on a board and drop anything in the grill or fryer — but nonsense turns into a <b>Minced Mess</b> or a <b>Fried Mystery</b>, and no customer will ever accept it. Bin it and start over.<br>
       🥏 <b>Throw!</b> Tap your chop key while carrying an ingredient to hurl it the way you're facing — teammates catch it mid-air, and good aim lands it on counters, in pots, even into the fryer. (Plates &amp; assembled dishes are too precious to throw.)<br>
       ⚠️ Don't leave food on the grill or in the fryer too long — it burns (and in fiery kitchens like the Dumpling Den, Neon Rooftop, Banquet Hall &amp; Snow Festival it catches <b>fire</b> 🔥 — grab the extinguisher 🧯).<br>
@@ -799,6 +800,15 @@ const ING={
   ext:{e:'🧯',n:'Extinguisher'}
 };
 const RUINED=id=>id==='mush'||id==='friedmess';
+const METH_N={chop:'the chopping board',grill:'the grill',fry:'the fryer',pot:'the pot',oven:'the steamer'};
+const METH_E={chop:'🔪',grill:'🔥',fry:'🍤',pot:'🍲',oven:'♨️'};
+const methOf=t=>t.type==='fryer'?'fry':t.type==='stove'?'grill':t.type==='board'?'chop':t.type==='pot'?'pot':t.type==='oven'?'oven':null;
+/* an item that has already started down one path can only continue on that path */
+function methBlocked(it,meth){return !!(it&&it.pm&&it.pm!==meth&&(it.p||0)>0.3);}
+function methRefuse(it,meth){
+  Snd.bad();
+  showToast('🚫 Already started in '+METH_N[it.pm]+' '+METH_E[it.pm]+' — only that will take it now. Bin it!');
+}
 const canChop=it=>!!it&&!['plate','pizzaraw','ext','mush'].includes(it.id);
 const CHOP={apple:'apple_c',banana:'banana_c',berry:'berry_c',cheese:'cheese_c',
   tomato:'tomato_c',chicken:'chicken_raw',potato:'potato_c',carrot:'carrot_c',
@@ -2309,11 +2319,13 @@ function actPick(p){
     if(t.type==='sink'){Snd.bad();return;}
     if(t.type==='stove'||t.type==='fryer'){
       const M=stMap(t);
-      if(!t.item&&M[h.id]){t.item=h;p.held=null;resetSt(t);Snd.place();}
+      const meth=methOf(t);
+      if(!t.item&&h.id!=='plate'&&h.id!=='ext'&&methBlocked(h,meth)){methRefuse(h,meth);return;}
+      if(!t.item&&M[h.id]){t.item=h;p.held=null;resetSt(t);t.cook=(h.pm===meth?(h.p||0):0);Snd.place();}
       else if(t.item&&h.id==='plate'&&GRILL_OUTS.includes(t.item.id)&&canAdd(h,t.item.id)){
         h.parts.push(t.item.id);t.item=null;resetSt(t);Snd.place();}
       else if(!t.item&&h.id!=='plate'&&h.id!=='ext'){
-        t.item=h;p.held=null;resetSt(t);Snd.place();
+        t.item=h;p.held=null;resetSt(t);t.cook=(h.pm===meth?(h.p||0):0);Snd.place();
         if(CHOP[h.id]&&M[CHOP[h.id]])showToast('🔪 Chop it first — as-is it will just ruin!');
         else if(GRILL[h.id]||FRY[h.id])showToast(t.type==='fryer'?'🔥 That belongs on the grill — it will ruin in the oil!':'🍤 That goes in the fryer — it will ruin on the grill!');
         else showToast('🤔 That is never going to be edible…');
@@ -2322,6 +2334,7 @@ function actPick(p){
       return;
     }
     if(t.type==='oven'){
+      if(!t.item&&methBlocked(h,'oven')){methRefuse(h,'oven');return;}
       if(!t.item&&h.id==='pizzaraw'){
         if(ovenReady(h)){t.item=h;p.held=null;resetSt(t);Snd.place();}
         else {Snd.bad();showToast('♨️ The steamer needs a rolled wrapper + one filling!');}
@@ -2337,13 +2350,16 @@ function actPick(p){
         if(h.id==='plate'&&t.item.id!=='burnt'&&canAdd(h,t.item.id)){
           h.parts.push(t.item.id);t.item=null;resetSt(t);Snd.place();}
         else Snd.bad();
-      } else if(potCanAdd(t.parts,h.id)){t.parts.push(h.id);p.held=null;resetSt(t);Snd.place();}
+      } else if(methBlocked(h,'pot')){methRefuse(h,'pot');}
+      else if(potCanAdd(t.parts,h.id)){t.parts.push(h.id);p.held=null;resetSt(t);Snd.place();}
       else Snd.bad();
       return;
     }
     /* counter / board / belt / ext stand */
     if(!t.item){
-      t.item=h;p.held=null;Snd.place();
+      t.item=h;p.held=null;
+      if(t.type==='board')t.chopT=(h.pm==='chop'?(h.p||0):0);
+      Snd.place();
       return;
     }
     mergeHeld(p,h,t);
@@ -2370,7 +2386,7 @@ function mergeHeld(p,h,t){
 }
 function actWork(p,dt,ctrl){
   p.working=false;
-  if(!anyDown((ctrl||p.ctrl).work))return;
+  if(!anyDown((ctrl||p.ctrl).work)){p.warnedChop=0;p.chopDone=0;p.chopDoneItem=null;return;}
   const t=frontTile(p);if(!t)return;
   if(t.fire){
     if(p.held&&p.held.id==='ext'){
@@ -2380,12 +2396,17 @@ function actWork(p,dt,ctrl){
     return;
   }
   if(p.held)return;
+  if(t.type==='board'&&canChop(t.item)&&methBlocked(t.item,'chop')){
+    if(!p.warnedChop){p.warnedChop=1;methRefuse(t.item,'chop');}
+    return;
+  }
+  if(t.type==='board'&&canChop(t.item)&&p.chopDone&&p.chopDoneItem===t.item)return;
   if(t.type==='board'&&canChop(t.item)){
-    t.chopT+=dt;p.working=true;t.chopAnimT=performance.now()/1000;
+    t.chopT+=dt;t.item.p=t.chopT;t.item.pm='chop';p.working=true;t.chopAnimT=performance.now()/1000;
     p.chopSnd+=dt;if(p.chopSnd>0.19){p.chopSnd=0;Snd.chop();}
     if(t.chopT>=1.6){
       const out=CHOP[t.item.id];
-      t.item={id:out||'mush'};t.chopT=0;
+      t.item={id:out||'mush'};t.chopT=0;p.chopDone=1;p.chopDoneItem=t.item;
       if(out)Snd.ding();else{Snd.bad();showToast('🥣 Minced beyond recognition — nobody will order that!');}
     }
   } else if(t.type==='sink'&&G.dirty>0){
@@ -2397,8 +2418,8 @@ const canThrow=it=>it&&it.id!=='plate'&&it.id!=='pizzaraw'&&it.id!=='ext';
 function throwDepositFor(t,it){
   if(t.fire)return null;
   if(t.type==='trash')return {k:'trash'};
-  if(t.type==='pot'&&!t.item&&potCanAdd(t.parts,it.id))return {k:'pot',tile:t};
-  if((t.type==='stove'||t.type==='fryer')&&!t.item&&it.id!=='plate'&&it.id!=='ext')return {k:'cook',tile:t};
+  if(t.type==='pot'&&!t.item&&potCanAdd(t.parts,it.id)&&!methBlocked(it,'pot'))return {k:'pot',tile:t};
+  if((t.type==='stove'||t.type==='fryer')&&!t.item&&it.id!=='plate'&&it.id!=='ext'&&!methBlocked(it,methOf(t)))return {k:'cook',tile:t};
   if((t.type==='counter'||t.type==='board'||t.type==='belt')&&!t.item)return {k:'tile',tile:t};
   return null;
 }
@@ -2464,7 +2485,7 @@ function updateProjs(dt){
       if(d.k==='trash')Snd.place();
       else if(d.k==='haz'){Snd.bad();showToast({lava:'🔥 Yeeted into the coals!',water:'🌊 Splash!',sky:'☁️ Off it goes!',void:'🕳️ Gone!'}[G.world.haz]||'💨 Gone!');}
       else if(d.k==='pot'&&!d.tile.item&&potCanAdd(d.tile.parts,it.id)){d.tile.parts.push(it.id);resetSt(d.tile);Snd.place();}
-      else if(d.k==='cook'&&!d.tile.item){d.tile.item=it;resetSt(d.tile);Snd.place();}
+      else if(d.k==='cook'&&!d.tile.item){d.tile.item=it;resetSt(d.tile);d.tile.cook=(it.pm===methOf(d.tile)?(it.p||0):0);Snd.place();}
       else if(d.k==='tile'&&!d.tile.item&&!d.tile.fire){d.tile.item=it;resetSt(d.tile);Snd.place();}
       else if(d.k==='floor')landFallback(Math.floor(pr.ty/TS),Math.floor(pr.tx/TS),it);
       else landFallback(pr.fb.r,pr.fb.c,it);
@@ -2517,10 +2538,11 @@ function updateStations(dt){
     const it=t.item;
     if((t.type==='stove'||t.type==='fryer')&&it){
       const g=stMap(t)[it.id];
-      if(g){t.cook+=dt;if(t.cook>=g.t){t.item={id:g.out};t.cook=0;Snd.ding();}}
+      const meth=methOf(t);
+      if(g){t.cook+=dt;it.p=t.cook;it.pm=meth;if(t.cook>=g.t){t.item={id:g.out};t.cook=0;Snd.ding();}}
       else if(it.id==='burnt'){if(G.world.fire){t.fireT+=dt;if(t.fireT>=8)ignite(t);}}
       else if(GRILL_OUTS.includes(it.id)||it.id==='friedmess'){t.burn+=dt;if(t.burn>=8){t.item={id:'burnt'};t.burn=0;Snd.alarm();}}
-      else {t.cook+=dt;if(t.cook>=5){t.item={id:'friedmess'};t.cook=0;Snd.alarm();}}
+      else {t.cook+=dt;it.p=t.cook;it.pm=meth;if(t.cook>=5){t.item={id:'friedmess'};t.cook=0;Snd.alarm();}}
     } else if(t.type==='oven'&&it){
       if(it.id==='pizzaraw'){t.cook+=dt;
         if(t.cook>=8){const rc=G.ovenR.find(rc=>rc.needs.length===it.parts.length&&rc.needs.every(x=>it.parts.includes(x)));
@@ -2875,6 +2897,12 @@ function drawItem(x,y,it,s){
     return;
   }
   drawIngredient(x,y,it.id,s);
+  if(it.pm&&(it.p||0)>0.15){
+    ctx.fillStyle='rgba(20,14,30,0.82)';
+    ctx.beginPath();ctx.arc(x+11*s,y-11*s,7.5*s,0,7);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=1.2*s;ctx.stroke();
+    em(9.5*s);ctx.fillText(METH_E[it.pm]||'?',x+11*s,y-11*s);
+  }
 }
 /* state-aware ingredient art: chopped = cut pieces, cooked = transformed + steam */
 function drawSteam(x,y,s){if(typeof ICON_MODE!=='undefined'&&ICON_MODE)return;
@@ -4511,8 +4539,21 @@ function netApplyRemoteKeys(){
     Keys.down['@'+slot+'w']=!!ks.w;
   }
 }
-function serIt(it){return it?(it.id+(it.parts&&it.parts.length?'|'+it.parts.join(','):'')):'';}
-function desIt(s){if(!s)return null;const[a,b]=s.split('|');const it={id:a};if(b!=null)it.parts=b?b.split(','):[];else if(a==='plate'||a==='pizzaraw')it.parts=[];return it;}
+function serIt(it){
+  if(!it)return '';
+  let s=it.id;
+  if((it.parts&&it.parts.length)||it.pm)s+='|'+((it.parts||[]).join(','));
+  if(it.pm)s+='|'+it.pm+'|'+Math.round((it.p||0)*10);
+  return s;
+}
+function desIt(s){
+  if(!s)return null;
+  const p=s.split('|'),it={id:p[0]};
+  if(p.length>1)it.parts=p[1]?p[1].split(','):[];
+  else if(p[0]==='plate'||p[0]==='pizzaraw')it.parts=[];
+  if(p[2]){it.pm=p[2];it.p=(+p[3]||0)/10;}
+  return it;
+}
 function snapWorld(w){
   const tls=[];
   const now=performance.now()/1000;
