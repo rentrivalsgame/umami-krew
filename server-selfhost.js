@@ -71,6 +71,15 @@ wss.on('connection', ws => {
       // host broadcast fallback (snapshots when P2P fails)
       const r = rooms.get(ws.room); if (!r || ws !== r.host) return;
       for (const p of r.peers.values()) send(p, { t: 'rly', from: 0, d: m.d });
+    } else if (m.t === 'rename') {
+      const r = rooms.get(ws.room); if (!r) return;
+      const nn = String(m.name || '').slice(0, 12).trim();
+      if (!nn || nn === ws.pname) return;
+      const old = ws.pname || 'Chef';
+      ws.pname = nn;
+      if (ws.isHost) r.hostName = nn;
+      pushRoster(r);
+      sendAll(r, { t: 'chat', sys: 1, msg: old + ' is now ' + nn });
     } else if (m.t === 'chat') {
       const r = rooms.get(ws.room); if (!r) return;
       const txt = String(m.msg || '').slice(0, 160);

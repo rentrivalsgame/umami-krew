@@ -15,7 +15,13 @@
   #viewport{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   #bgcv{position:fixed;inset:0;z-index:0}
   #app{width:960px;height:740px;position:relative;transform-origin:center center;flex:0 0 auto;z-index:1}
-  .scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center}
+  .scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+    overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#6a5a8a transparent}
+  .scr::-webkit-scrollbar{width:9px}
+  .scr::-webkit-scrollbar-thumb{background:#6a5a8a;border-radius:6px}
+  .scr::-webkit-scrollbar-track{background:transparent}
+  #scr-help{padding-bottom:6px}
+  #scr-help #btn-help-back{position:sticky;bottom:6px;z-index:4;box-shadow:0 4px 14px #1d142899}
   .scr.active{display:flex}
 
   /* ---------- Title ---------- */
@@ -97,6 +103,10 @@
   .olpanel{flex:1 1 320px;background:#00000038;border:1px solid #ffffff1c;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column}
   .olpanel h4{margin:0 0 10px;font-size:16px;color:#ffca4d;text-align:left}
   #ol-players{text-align:left;font-size:15px;line-height:1.5}
+  .olrename{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12.5px;color:#b9a8d0}
+  .olrename input{flex:1;min-width:0;font-family:inherit;font-size:14px;font-weight:bold;color:#ffd54f;
+    background:#00000045;border:1px solid #ffffff26;border-radius:9px;padding:6px 9px;text-align:center}
+  .olrename input:focus{outline:none;border-color:#ffca4d}
   .plrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:10px;background:#ffffff0d;margin-bottom:6px}
   .plchip{width:14px;height:14px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px #00000055}
   .plname{font-weight:bold}
@@ -155,7 +165,7 @@
   .lbnote2{width:110px;text-align:left;font-size:12.5px;color:#b9a8d0}
   .lbdate{width:40px;color:#8a7aa5;font-size:12px}
   .lbempty{padding:20px;color:#9b8ab5}
-  .helpcols{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;max-width:680px}
+  .helpcols{display:flex;gap:11px;margin-bottom:11px;flex-wrap:wrap;justify-content:center;max-width:700px}
   .helpcard{background:#00000035;border:1px solid #ffffff18;border-radius:14px;padding:12px 16px;width:315px;font-size:13.5px;line-height:1.5}
   .helpcard h3{font-size:18px;margin-bottom:8px}
   .helpcard.p1 h3{color:#64b5f6}.helpcard.p2 h3{color:#f48fb1}
@@ -183,7 +193,9 @@
     box-shadow:inset 0 0.14em 0 #ffffff,0 0.1em 0.12em rgba(0,0,0,0.15)}
   .dishicon{width:62px;height:62px;display:block;margin:1px auto 0}
   .dishicon.rsm{width:40px;height:40px;margin:0 auto}
-  .ordercard .parts{font-size:14px;letter-spacing:1px;height:18px}
+  .ordercard .parts{font-size:14px;letter-spacing:1px;height:18px;white-space:nowrap}
+  .stst{font-size:11px;margin-left:3px;opacity:.92;letter-spacing:0}
+  .rbasics{margin-top:2px;font-size:12px;opacity:.95}
   .ordercard .parts .picon{width:17px;height:17px;margin:0 1px}
   .ordercard .nm2{font-size:10px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
     height:23px;line-height:1.13;padding:0 4px;overflow:hidden;text-align:center;width:100%}
@@ -383,6 +395,11 @@
         <div class="olpanel">
           <h4>👥 In this room <span id="ol-count"></span></h4>
           <div id="ol-players"></div>
+          <div class="olrename">
+            <label for="ol-rename">✏️ Your name</label>
+            <input id="ol-rename" maxlength="12" spellcheck="false">
+            <button class="smallbtn" id="btn-rename">Save</button>
+          </div>
           <div id="ol-hostui" style="display:none">
             <div class="tourseg" style="margin:12px 0 6px">
               <button class="tsbtn sel" data-rounds="0">Single</button>
@@ -483,6 +500,7 @@
       🧺 Grab ingredients from crates → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
       🍤 Shrimp &amp; noodles cook in the golden <b>deep fryer</b>; meat &amp; fish go on the <b>grill</b>.<br>
+      🥟 <b>Buns, curries &amp; soups are built, not found:</b> an order card always shows the <b>raw crate ingredients</b> plus the stations you'll need (🔪 board, 🍤 fryer, 🔥 grill, 🍲 pot, ♨️ steamer). Chicken Bao = roll a wrapper 🥟 + chopped 🍗 on the same tile, then steam it ♨️. Kabocha Curry = cubed 🎃 + julienned 🥕 simmered in the pot 🍲. Full steps live in the 📖 Recipe Book (also on the pause menu).<br>
       🧪 <b>Experiment freely:</b> you can mince anything on a board and drop anything in the grill or fryer — but nonsense turns into a <b>Minced Mess</b> or a <b>Fried Mystery</b>, and no customer will ever accept it. Bin it and start over.<br>
       🥏 <b>Throw!</b> Tap your chop key while carrying an ingredient to hurl it the way you're facing — teammates catch it mid-air, and good aim lands it on counters, in pots, even into the fryer. (Plates &amp; assembled dishes are too precious to throw.)<br>
       ⚠️ Don't leave food on the grill or in the fryer too long — it burns (and in fiery kitchens like the Dumpling Den, Neon Rooftop, Banquet Hall &amp; Snow Festival it catches <b>fire</b> 🔥 — grab the extinguisher 🧯).<br>
@@ -4057,6 +4075,36 @@ function dishIconURL(k){
   }finally{ctx=old;ICON_MODE=false;}
   return DISH_ICON_CACHE[k]=oc.toDataURL();
 }
+const ST_EMO={chop:'🔪',fry:'🍤',grill:'🔥',pot:'🍲',oven:'♨️'};
+const ST_ORDER=['chop','fry','grill','pot','oven'];
+const BASIC_CACHE={};
+function srcOf(pid){
+  for(const k in CHOP)if(CHOP[k]===pid)return {from:[k],st:'chop'};
+  for(const k in GRILL)if(GRILL[k].out===pid)return {from:[k],st:'grill'};
+  for(const k in FRY)if(FRY[k].out===pid)return {from:[k],st:'fry'};
+  const pr=POT_RECIPES.find(r=>r.out===pid);if(pr)return {from:pr.needs.slice(),st:'pot'};
+  const ov=OVEN_RECIPES.find(r=>r.out===pid);if(ov)return {from:ov.needs.slice(),st:'oven'};
+  return null;
+}
+function baseOf(pid,out,sts,d){
+  const s=srcOf(pid);
+  if(!s||d>6){out.push(pid);return;}
+  sts.add(s.st);
+  s.from.forEach(f=>baseOf(f,out,sts,d+1));
+}
+function dishBasics(k){
+  if(BASIC_CACHE[k])return BASIC_CACHE[k];
+  const raw=[],sts=new Set();
+  DISHES[k].parts.forEach(p=>baseOf(p,raw,sts,0));
+  const seen=new Set(),ing=[];
+  raw.forEach(p=>{if(!seen.has(p)){seen.add(p);ing.push(p);}});
+  return BASIC_CACHE[k]={ing,sts:ST_ORDER.filter(s=>sts.has(s))};
+}
+function basicsHTML(k){
+  const b=dishBasics(k);
+  return b.ing.map(partIcon).join('')+
+    (b.sts.length?'<span class="stst">'+b.sts.map(s=>ST_EMO[s]).join('')+'</span>':'');
+}
 function stepHTML(k){return (DISH_STEPS[k]||'').replace(/\{(\w+)\}/g,(m,id)=>ING[id]?partIcon(id):m);}
 function partIcon(pid){ return '<img class="picon" src="'+iconURL(pid)+'" alt="">'; }
 function fmtTime(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
@@ -4085,7 +4133,7 @@ function updateHUD(){
       const icon=`<img class="dishicon" src="${dishIconURL(o.dish)}" alt="">`;
       return `<div class="ordercard" data-i="${i}">
         ${icon}
-        <div class="parts">${d.parts.map(partIcon).join('')}</div>
+        <div class="parts">${basicsHTML(o.dish)}</div>
         <div class="nm2${d.n.length>=18?' nmL':''}">${d.n}</div>
         <div class="patbar"></div></div>`;
     }).join('');
@@ -4168,6 +4216,7 @@ function showToast2(msg){/* toast outside game screen: reuse alert-free quick fl
 }
 function startLevel(li){
   buildLevel(li);
+  fit();
   if(NET.role==='host'){
     const styles=netHostStart(li);
     netHostWire();
@@ -4192,7 +4241,7 @@ function buildRecipes(){
     [...dishSet].map(k=>{
       const d=DISHES[k];
       const ric=`<div class="re"><img class="dishicon rsm" src="${dishIconURL(k)}" alt=""></div>`;
-      return `<div class="rline">${ric}<div class="rn">${d.n} <span style="color:#ffb300">·${d.score}</span></div>
+      return `<div class="rline">${ric}<div class="rn">${d.n} <span style="color:#ffb300">·${d.score}</span><div class="rbasics">${basicsHTML(k)}</div></div>
         <div class="rsteps">${stepHTML(k)}</div></div>`;
     }).join('');
 }
@@ -4294,7 +4343,12 @@ function netOnWS(m){
   if(m.t==='room'){NET.code=m.code;NET.role='host';NET.names[0]=SAVE.pname||'CHEF';NET.styles[0]=chefStyle(1);netLobbyShow();}
   else if(m.t==='joined'){NET.myId=m.id;NET.role='client';NET.code=m.code||NET.code;NET.names[0]='Host';netLobbyShow();}
   else if(m.t==='err'){olMsg(m.m);}
-  else if(m.t==='roster'){NET.roster=m.list;netLobbyRender();}
+  else if(m.t==='roster'){
+    NET.roster=m.list;
+    m.list.forEach(p=>{NET.names[p.id]=p.name;});
+    if(NET.started&&NET.slots)NET.slotNames=NET.slots.map(id=>NET.names[id]||'Chef');
+    netLobbyRender();
+  }
   else if(m.t==='chat'){
     chatPush(m.name||'',m.msg,m.sys);
     if(screen==='game'&&!m.sys)showToast('💬 '+(m.name||'')+': '+m.msg);
@@ -4386,6 +4440,7 @@ function netLobbyShow(){
   $('#ol-entry').style.display='none';
   $('#ol-lobby').style.display='';
   $('#ol-roomcode').textContent=NET.code||'----';
+  $('#ol-rename').value=SAVE.pname||'CHEF';
   $('#ol-hostui').style.display=NET.role==='host'?'':'none';
   $('#ol-waitui').style.display=NET.role==='client'?'':'none';
   netLobbyRender();
@@ -4561,6 +4616,16 @@ $('#btn-copy').onclick=()=>{
   const b=$('#btn-copy');b.textContent='✅ Copied!';
   setTimeout(()=>b.textContent='📋 Copy invite',1600);
 };
+$('#btn-rename').onclick=()=>{
+  const v=$('#ol-rename').value.trim().slice(0,12);
+  if(!v||v===SAVE.pname)return;
+  SAVE.pname=v;SaveIO.save(SAVE);
+  if(NET.role==='host')NET.names[0]=v;
+  if(NET.ws&&NET.ws.readyState===1)netSendWS({t:'rename',name:v});
+  const b=$('#btn-rename');b.textContent='✅';setTimeout(()=>b.textContent='Save',1200);
+  netLobbyRender();
+};
+$('#ol-rename').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')$('#btn-rename').click();};
 $('#btn-chatsend').onclick=()=>chatSend('#ol-chatin');
 $('#ol-chatin').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')chatSend('#ol-chatin');};
 $('#gchatin').onkeydown=e=>{
@@ -4695,7 +4760,7 @@ function drawMarginMinis(w,h,ax,ay,aw,ah){
   if(!others.length)return;
   const rmX=ax+aw+16,rmW=w-rmX-16;
   if(rmW<150)return;
-  const maxH=(h-90)/others.length-42;
+  const maxH=(h-70)/others.length-40;
   const msc=Math.min(rmW/936,maxH/608);
   if(msc<0.15)return;
   MARGIN_MINIS=true;
@@ -5337,7 +5402,7 @@ function drawAmbient(t){
   const S=inGame?(SCENES[G.L.w]||SCENES[0]):TITLE_SCENE;
   const W={fl1:S.f1,fl2:S.f2,ct:S.tc,cs:S.wall,haz:inGame?G.world.haz:null,ice:inGame?G.world.ice:false};
   bctx.clearRect(0,0,w,h);
-  const ax=w/2,ay=h/2,aw=APPW*appScale/2+24,ah=740*appScale/2+18;
+  const ax=w/2+APPDX,ay=h/2,aw=APPW*appScale/2+24,ah=740*appScale/2+18;
 
   /* ---------- the building: one interior holding kitchen + dining ---------- */
   const mL=Math.max(0,ax-aw),mR=Math.max(0,w-(ax+aw)),mT=Math.max(0,ay-ah),mB=Math.max(0,h-(ay+ah));
@@ -5479,7 +5544,7 @@ function drawAmbient(t){
 }
 /* ---------------- scaling ---------------- */
 let RS=1;
-let CW=936,APPW=960;
+let CW=936,APPW=960,APPDX=0;
 function fit(){
   const wide=(typeof VS!=='undefined'&&VS&&!NET.started&&screen==='game');
   const s=wide?Math.min(window.innerHeight/765,1.35)
@@ -5489,7 +5554,11 @@ function fit(){
   APPW=CW+24;
   const app=$('#app');
   app.style.width=APPW+'px';
-  app.style.transform='scale('+s+')';
+  /* online versus: slide the kitchen left so the rival view owns the right margin */
+  const onlineVS=(typeof VS!=='undefined'&&VS&&NET.started&&VS.kitchens&&VS.kitchens.length>1&&screen==='game');
+  const free=window.innerWidth-APPW*s;
+  APPDX=(onlineVS&&free>260)?-(free/2-14):0;
+  app.style.transform=(APPDX?'translateX('+APPDX+'px) ':'')+'scale('+s+')';
   const hud=$('#hud');if(hud)hud.style.width=APPW+'px';
   const nrs=Math.min(2.5,Math.max(1,(window.devicePixelRatio||1)*s));
   if(Math.abs(nrs-RS)>0.01||cv.width!==Math.round(CW*RS)){

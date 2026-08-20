@@ -76,6 +76,15 @@ export class Hub {
       } else if (m.t === 'bc') {
         const r = this.rooms.get(ws.room); if (!r || ws !== r.host) return;
         for (const p of r.peers.values()) this.send(p, { t: 'rly', from: 0, d: m.d });
+      } else if (m.t === 'rename') {
+        const r = this.rooms.get(ws.room); if (!r) return;
+        const nn = String(m.name || '').slice(0, 12).trim();
+        if (!nn || nn === ws.pname) return;
+        const old = ws.pname || 'Chef';
+        ws.pname = nn;
+        if (ws.isHost) r.hostName = nn;
+        this.pushRoster(r);
+        this.sendAll(r, { t: 'chat', sys: 1, msg: old + ' is now ' + nn });
       } else if (m.t === 'chat') {
         const r = this.rooms.get(ws.room); if (!r) return;
         const txt = String(m.msg || '').slice(0, 160);
