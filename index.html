@@ -2745,15 +2745,10 @@ function drawItem(x,y,it,s){
   s=s||1;
   if(!it)return;
   if(it.id==='plate'){
-    ctx.fillStyle='#00000030';ctx.beginPath();ctx.ellipse(x,y+6*s,15*s,6*s,0,0,7);ctx.fill();
-    ctx.fillStyle='#f7f3ea';ctx.beginPath();ctx.arc(x,y,15*s,0,7);ctx.fill();
-    ctx.strokeStyle='#c9c2b4';ctx.lineWidth=2;ctx.stroke();
-    const P=it.parts;
-    if(P.length===1)drawPartMini(x,y,P[0],0.62*s);
-    else{
-      const pos=[[0,-6],[-7,4],[7,4],[-8,-5],[8,-5]];
-      P.forEach((pid,i)=>{const o=pos[i]||[0,0];drawPartMini(x+o[0]*s,y+o[1]*s,pid,0.45*s);});
-    }
+    ctx.fillStyle='#00000030';ctx.beginPath();ctx.ellipse(x,y+7*s,15*s,6*s,0,0,7);ctx.fill();
+    ctx.save();ctx.translate(x,y);
+    drawPlateArt(it.parts,16*s,false);
+    ctx.restore();
     return;
   }
   if(it.id==='pizzaraw'){
@@ -3906,27 +3901,25 @@ function iconURL(pid){
   return ICON_CACHE[pid]=url;
 }
 const DISH_ICON_CACHE={};
-function dishIconURL(k){
-  if(DISH_ICON_CACHE[k])return DISH_ICON_CACHE[k];
-  const d=DISHES[k];
-  const oc=document.createElement('canvas');oc.width=240;oc.height=240;
-  const old=ctx;ctx=oc.getContext('2d');ICON_MODE=true;
+const PLATE_FILLC={cheese_c:'#f2c14e',tomato_c:'#7fb069',apple_c:'#7fae52',berry_c:'#8a5a3a',
+  choc_melt:'#5a3a24',banana_c:'#f4f0e2',fish_ck:'#e8845a',chicken_ck:'#9c5a20',
+  bean_c:'#6fbf62',pepper_c:'#d84a3a',corn_ck:'#e8b054',fish_s:'#f0a0a8'};
+function drawPlateArt(P,R,shadow){
+  const prev=ICON_MODE;ICON_MODE=true;
+  ctx.save();ctx.scale(R/52,R/52);
   try{
-    ctx.scale(2,2);
-    ctx.fillStyle='rgba(0,0,0,0.10)';ctx.beginPath();ctx.ellipse(60,112,46,7,0,0,7);ctx.fill();
-    ctx.fillStyle='#fdfbf5';ctx.beginPath();ctx.arc(60,62,52,0,7);ctx.fill();
+    if(shadow){ctx.fillStyle='rgba(0,0,0,0.10)';ctx.beginPath();ctx.ellipse(0,50,46,7,0,0,7);ctx.fill();}
+    ctx.fillStyle='#fdfbf5';ctx.beginPath();ctx.arc(0,0,52,0,7);ctx.fill();
     ctx.strokeStyle='#cfc8b8';ctx.lineWidth=3;ctx.stroke();
-    ctx.fillStyle='#f1ece0';ctx.beginPath();ctx.arc(60,62,41,0,7);ctx.fill();
-    const P=d.parts;
-    const FILLC={cheese_c:'#f2c14e',tomato_c:'#7fb069',apple_c:'#7fae52',berry_c:'#8a5a3a',
-      choc_melt:'#5a3a24',banana_c:'#f4f0e2',fish_ck:'#e8845a',chicken_ck:'#9c5a20',
-      bean_c:'#6fbf62',pepper_c:'#d84a3a',corn_ck:'#e8b054',fish_s:'#f0a0a8'};
+    ctx.fillStyle='#f1ece0';ctx.beginPath();ctx.arc(0,0,41,0,7);ctx.fill();
+    if(!P||!P.length)return;
+    const FILLC=PLATE_FILLC;
     if(P.length===1){
-      drawIngredient(60,60,P[0],2.3);
+      drawIngredient(0,-2,P[0],2.3);
     }else if(P[0]==='bread'){ /* maki rounds: nori ring, rice, filling core */
       const fills=P.slice(1).map(p=>FILLC[p]||'#c9986a');
       for(const o of [[-18,-8],[6,-15],[-6,11],[17,5]]){
-        const mx=60+o[0],my=62+o[1];
+        const mx=o[0],my=o[1];
         ctx.fillStyle='#24402a';ctx.beginPath();ctx.arc(mx,my,11.5,0,7);ctx.fill();oL(1.6);
         ctx.fillStyle='#f8f5ea';ctx.beginPath();ctx.arc(mx,my,8.2,0,7);ctx.fill();
         if(fills.length===1){ctx.fillStyle=fills[0];ctx.beginPath();ctx.arc(mx,my,4.4,0,7);ctx.fill();}
@@ -3943,16 +3936,26 @@ function dishIconURL(k){
         ctx.fillStyle='rgba(255,255,255,0.55)';rr(-15,-7.5,30,4.5,3);ctx.fill();
         ctx.restore();
       };
-      roll(54,54);roll(67,71);
+      roll(-6,-8);roll(7,9);
     }else{
       const MIX7=[[1,-19,0.05],[-17,-9,-0.4],[16,-10,0.35],[-2,0,0.12],[-18,10,0.5],[16,9,-0.3],[-1,17,-0.1]];
-      const nDraws=P.length===2?6:P.length<=3?6:P.length;
+      const nDraws=P.length<=3?6:Math.min(P.length,7);
       const draws=[];
       for(let i=0;i<nDraws;i++)draws.push({pid:P[i%P.length],o:MIX7[i]});
       draws.sort((a,b)=>a.o[1]-b.o[1]);
-      draws.forEach(dr=>{ctx.save();ctx.translate(60+dr.o[0],62+dr.o[1]);ctx.rotate(dr.o[2]);
+      draws.forEach(dr=>{ctx.save();ctx.translate(dr.o[0],dr.o[1]);ctx.rotate(dr.o[2]);
         drawIngredient(0,0,dr.pid,0.85);ctx.restore();});
     }
+  }finally{ctx.restore();ICON_MODE=prev;}
+}
+function dishIconURL(k){
+  if(DISH_ICON_CACHE[k])return DISH_ICON_CACHE[k];
+  const d=DISHES[k];
+  const oc=document.createElement('canvas');oc.width=240;oc.height=240;
+  const old=ctx;ctx=oc.getContext('2d');ICON_MODE=true;
+  try{
+    ctx.scale(2,2);ctx.translate(60,62);
+    drawPlateArt(d.parts,52,true);
   }finally{ctx=old;ICON_MODE=false;}
   return DISH_ICON_CACHE[k]=oc.toDataURL();
 }
