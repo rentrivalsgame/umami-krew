@@ -2494,7 +2494,11 @@ function actPick(p){
       }
       return;
     }
-    /* floor: drop or pick up */
+    /* floor: drop or pick up — a plate never goes on the floor */
+    if(p.held&&p.held.id==='plate'){
+      Snd.bad();showToastOnce('🍽️ Plates stay off the floor — set it on a counter.');
+      return;
+    }
     if(p.held&&!ft.item){ft.item=p.held;p.held=null;Snd.place();}
     else if(!p.held&&ft.item){p.held=ft.item;ft.item=null;Snd.pick();}
     else if(p.held&&ft.item)Snd.bad();
@@ -3876,7 +3880,7 @@ function renderWorld(){
       rr(ft.c*TS+3,ft.r*TS+3-e2,TS-6,TS-6,8);ctx.stroke();
     } else {
       const fa=frontAnyTile(p);
-      if(fa&&fa.type==='floor'&&(fa.item||p.held)){
+      if(fa&&fa.type==='floor'&&(fa.item||(p.held&&p.held.id!=='plate'))){
         ctx.strokeStyle=p.col+'66';ctx.lineWidth=2;
         ctx.setLineDash([6,5]);
         rr(fa.c*TS+5,fa.r*TS+5,TS-10,TS-10,8);ctx.stroke();
@@ -4447,14 +4451,6 @@ function drawPlayer(p,t){
     ctx.fillStyle='rgba(0,0,0,0.10)';ctx.fillRect(x-9,y-15,18,2.5);
   }
   ctx.globalAlpha=1;
-  /* recharge pip */
-  if((p.dashT||0)<=0&&(p.dashCd||0)>0){
-    const f=1-p.dashCd/DASH_CD;
-    ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=4;
-    ctx.beginPath();ctx.arc(x,y+19,8,0,6.283);ctx.stroke();
-    ctx.strokeStyle=f>0.92?'#9dffb0':'rgba(255,255,255,0.75)';ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(x,y+19,8,-1.57,-1.57+6.283*f);ctx.stroke();
-  }
   /* badge */
   if(p.gone){
     ctx.font='bold 10px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
