@@ -519,6 +519,8 @@
       🥟 <b>Buns, curries &amp; soups are built, not found:</b> an order card lists the <b>raw crate ingredients</b>, and each one carries little badges for the prep <i>it</i> needs — 🔪 board, 🍤 fryer, 🔥 grill, 🍲 pot, ♨️ steamer. A chilli with a 🔪 means slice it; no badge means use it as-is. Chicken Bao = roll a wrapper 🥟 + chopped 🍗 on the same tile, then steam it ♨️. Kabocha Curry = cubed 🎃 + julienned 🥕 simmered in the pot 🍲. Full steps live in the 📖 Recipe Book (also on the pause menu).<br>
       ⚠️ <b>One method per item:</b> the moment an ingredient starts cooking or being chopped it is committed to that station — take a half-fried shrimp to the grill and the grill will refuse it. Put it back where it started and it carries on from where it left off. A badge (🔪🔥🍤🍲♨️) on the item shows what it is committed to.<br>
       🧪 <b>Experiment freely:</b> you can mince anything on a board and drop anything in the grill or fryer — but nonsense turns into a <b>Minced Mess</b> or a <b>Fried Mystery</b>, and no customer will ever accept it. Bin it and start over.<br>
+      🌊 <b>Mind the edge:</b> water, lava, sky and void tiles are open — walk or dash into one and your chef goes in, dropping whatever they were carrying. They climb back out at their starting spot after 5 seconds.<br>
+      🫗 <b>Wrong mix in the pot?</b> Hold your chop key at the pot to tip it out and start over.<br>
       🏃 <b>Dash:</b> tap your dash key for a quick burst forward — it only lasts a moment, so tap it again and again to sprint across the kitchen. A little ring under your chef shows when the next dash is ready.<br>
       🥏 <b>Throw!</b> Tap your chop key while carrying an ingredient to hurl it the way you're facing — teammates catch it mid-air, and good aim lands it on counters, in pots, even into the fryer. (Plates &amp; assembled dishes are too precious to throw.)<br>
       ⚠️ Don't leave food on the grill or in the fryer too long — it burns (and in fiery kitchens like the Dumpling Den, Neon Rooftop, Banquet Hall &amp; Snow Festival it catches <b>fire</b> 🔥 — grab the extinguisher 🧯).<br>
@@ -729,7 +731,7 @@ const Music={
 const Keys={down:{}};
 const P1K={up:['KeyW'],dn:['KeyS'],lf:['KeyA'],rt:['KeyD'],pick:['Space'],work:['KeyE'],dash:['ShiftLeft']};
 const P2K={up:['ArrowUp'],dn:['ArrowDown'],lf:['ArrowLeft'],rt:['ArrowRight'],
-           pick:['Enter','NumpadEnter'],work:['ShiftRight','Slash','Period'],dash:['Comma']};
+           pick:['Enter'],work:['ShiftRight','Slash','Period'],dash:['Comma']};
 const P3K={up:['KeyI'],dn:['KeyK'],lf:['KeyJ'],rt:['KeyL'],pick:['KeyO'],work:['KeyU'],dash:['KeyY']};
 const P4K={up:['KeyT'],dn:['KeyG'],lf:['KeyF'],rt:['KeyH'],pick:['KeyV'],work:['KeyB'],dash:['KeyR']};
 const P5K={up:['Numpad8'],dn:['Numpad5'],lf:['Numpad4'],rt:['Numpad6'],pick:['Numpad0'],work:['NumpadAdd','NumpadEnter'],dash:['NumpadDecimal']};
@@ -2173,12 +2175,12 @@ function buildLevel(li){
 }
 function mkPlayer(idx,sp,col,col2,slot){
   const s=(slot==null)?idx:slot;
-  return {idx,slot:s,x:sp.c*TS+TS/2,y:sp.r*TS+TS/2,fx:0,fy:-1,held:null,
+  return {idx,slot:s,x:sp.c*TS+TS/2,y:sp.r*TS+TS/2,spawnX:sp.c*TS+TS/2,spawnY:sp.r*TS+TS/2,fallT:0,fx:0,fy:-1,held:null,
     ctrl:CTRLS[s],col,col2,working:false,walkT:0,chopSnd:0,mx:0,my:0,
     style:chefStyle(s+1)};
 }
 const SPD=250,PR=19;
-function solidAt(r,c){if(r<0||c<0||r>=GROWS||c>=GCOLS)return true;return G.grid[r][c].type!=='floor';}
+function solidAt(r,c){if(r<0||c<0||r>=GROWS||c>=GCOLS)return true;const ty=G.grid[r][c].type;return ty!=='floor'&&ty!=='hazard';}
 function collides(x,y){
   for(const o of [[-PR,-PR],[PR,-PR],[-PR,PR],[PR,PR]])
     if(solidAt(Math.floor((y+o[1])/TS),Math.floor((x+o[0])/TS)))return true;
@@ -2195,9 +2197,42 @@ function tryMove(p,others,dx,dy){
   }
   p.x=nx;p.y=ny;return true;
 }
-const DASH_T=0.22,DASH_CD=0.40,DASH_MULT=3.0;
+const DASH_T=0.15,DASH_CD=0.34,DASH_MULT=2.1;
+const FALL_T=5;
+const HAZ_MSG={water:'🌊 Overboard! Fished out in',lava:'🔥 Into the coals! Back in',
+  sky:'☁️ Off the mountain! Back in',void:'🕳️ Down it goes! Back in'};
+function hazardAt(x,y){
+  const r=Math.floor(y/TS),c=Math.floor(x/TS);
+  if(r<0||c<0||r>=GROWS||c>=GCOLS)return false;
+  return G.grid[r][c].type==='hazard';
+}
+function fallIn(p){
+  if(p.fallT>0)return;
+  p.fallT=FALL_T;p.fx=0;p.fy=-1;p.mx=0;p.my=0;p.dashT=0;p.dashCd=0;p.working=false;
+  p.fellAt={x:p.x,y:p.y};
+  if(p.held){
+    if(p.held.id==='plate')G.returns.push(9);
+    p.held=null;
+  }
+  Snd.bad();G.shake=0.35;
+  showToast((HAZ_MSG[G.world.haz]||'💨 Gone! Back in')+' '+FALL_T+'s…');
+}
+function respawnPoint(p){
+  const taken=G.players.filter(q=>q!==p&&q.fallT<=0).map(q=>({r:Math.floor(q.y/TS),c:Math.floor(q.x/TS)}));
+  const home={r:Math.floor((p.spawnY||p.y)/TS),c:Math.floor((p.spawnX||p.x)/TS)};
+  const seen=new Set(),dq=[home];
+  while(dq.length){
+    const n=dq.shift(),k=n.r+','+n.c;
+    if(seen.has(k))continue;seen.add(k);
+    if(n.r>=0&&n.c>=0&&n.r<GROWS&&n.c<GCOLS&&G.grid[n.r][n.c].type==='floor'
+       &&!taken.some(s=>s.r===n.r&&s.c===n.c))return n;
+    for(const d of [[1,0],[-1,0],[0,1],[0,-1]])dq.push({r:n.r+d[0],c:n.c+d[1]});
+    if(seen.size>200)break;
+  }
+  return home;
+}
 function tryDash(p){
-  if(!G||G.state!=='play'||p.gone)return false;
+  if(!G||G.state!=='play'||p.gone||p.fallT>0)return false;
   if((p.dashCd||0)>0||(p.dashT||0)>0)return false;
   let dx=p.ivx||0,dy=p.ivy||0;
   if(!dx&&!dy){dx=p.fx;dy=p.fy;}
@@ -2210,6 +2245,16 @@ function tryDash(p){
   return true;
 }
 function movePlayer(p,o,dt,ctrl){
+  if(p.fallT>0){
+    p.fallT-=dt;p.mx=0;p.my=0;p.working=false;
+    if(p.fallT<=0){
+      p.fallT=0;
+      const s=respawnPoint(p);
+      p.x=s.c*TS+TS/2;p.y=s.r*TS+TS/2;p.fx=0;p.fy=-1;
+      Snd.pick();
+    }
+    return;
+  }
   const k=ctrl||p.ctrl;let vx=0,vy=0;
   if(anyDown(k.up))vy--;if(anyDown(k.dn))vy++;
   if(anyDown(k.lf))vx--;if(anyDown(k.rt))vx++;
@@ -2231,6 +2276,7 @@ function movePlayer(p,o,dt,ctrl){
     p.walkT+=dt*14;
     if(Math.abs(p.mx)>1&&!tryMove(p,o,p.mx*dt,0)){p.mx=0;p.dashT=0;}
     if(Math.abs(p.my)>1&&!tryMove(p,o,0,p.my*dt)){p.my=0;p.dashT=0;}
+    if(hazardAt(p.x,p.y))fallIn(p);
     return;
   }
   if(p.working){vx*=0.35;vy*=0.35;}
@@ -2239,6 +2285,7 @@ function movePlayer(p,o,dt,ctrl){
   p.my+=(vy*SPD-p.my)*acc;
   if(Math.abs(p.mx)>1&&!tryMove(p,o,p.mx*dt,0))p.mx=0;
   if(Math.abs(p.my)>1&&!tryMove(p,o,0,p.my*dt))p.my=0;
+  if(hazardAt(p.x,p.y))fallIn(p);
 }
 function frontAnyTile(p){
   const c=Math.floor(p.x/TS),r=Math.floor(p.y/TS);
@@ -2250,7 +2297,7 @@ function frontTile(p){
   const t=frontAnyTile(p);
   return (!t||t.type==='floor'||t.type==='hazard')?null:t;
 }
-function resetSt(t){t.cook=0;t.burn=0;t.fireT=0;t.chopT=0;}
+function resetSt(t){t.cook=0;t.burn=0;t.fireT=0;t.chopT=0;t.dumpT=0;}
 
 /* ---------------- recipe helpers ---------------- */
 function canAdd(plate,pid){
@@ -2311,6 +2358,7 @@ function keyPressed(code){
   }
 }
 function actPick(p){
+  if(p.fallT>0)return;
   const t=frontTile(p);
   if(!t){
     const ft=frontAnyTile(p);
@@ -2345,6 +2393,8 @@ function actPick(p){
       if(t.item){
         if(t.item.id==='burnt'){p.held=t.item;t.item=null;resetSt(t);Snd.pick();}
         else showToast('🍽️ Use a plate to serve from the pot!');
+      } else if(t.parts&&t.parts.length){
+        showToastOnce('🫗 Hold your chop key here to tip the pot out.');
       } else Snd.bad();
     }
     else if(t.item){
@@ -2437,6 +2487,7 @@ function mergeHeld(p,h,t){
 }
 function actWork(p,dt,ctrl){
   p.working=false;
+  if(p.fallT>0)return;
   if(!anyDown((ctrl||p.ctrl).work)){p.warnedChop=0;p.chopDone=0;p.chopDoneItem=null;return;}
   const t=frontTile(p);if(!t)return;
   if(t.fire){
@@ -2463,6 +2514,10 @@ function actWork(p,dt,ctrl){
   } else if(t.type==='sink'&&G.dirty>0){
     t.washT+=dt;p.working=true;
     if(t.washT>=2.2){t.washT=0;G.dirty--;G.plates++;Snd.ding();}
+  } else if(t.type==='pot'&&!t.item&&t.parts&&t.parts.length){
+    /* tip the pot out — the only way to undo a bad mix */
+    t.dumpT=(t.dumpT||0)+dt;p.working=true;
+    if(t.dumpT>=1.4){t.dumpT=0;t.parts=[];t.cook=0;t.burn=0;Snd.place();showToast('🫗 Pot tipped out — start again.');}
   }
 }
 const canThrow=it=>it&&it.id!=='plate'&&it.id!=='pizzaraw'&&it.id!=='ext';
@@ -2525,7 +2580,7 @@ function updateProjs(dt){
     pr.z=Math.sin(f*Math.PI)*26;
     let caught=false;
     for(const q of G.players){
-      if(q.held||q.gone)continue;
+      if(q.held||q.gone||q.fallT>0)continue;
       if(q===pr.thrower&&pr.age<0.22)continue;
       if(Math.hypot(q.x-pr.cx,(q.y-16)-pr.cy)<24){q.held=pr.it;caught=true;Snd.pick();break;}
     }
@@ -3933,6 +3988,7 @@ function drawTileOverlay(tl,t){
     }
   }
   if(tl.type==='sink'&&tl.washT>0)drawBar(x+8,y+4,TS-16,tl.washT/2.2,'#80deea');
+  if(tl.type==='pot'&&tl.dumpT>0)drawBar(x+8,y+4,TS-16,tl.dumpT/1.4,'#b0653a');
   if(tl.fire){
     em(30+Math.sin(t*11+tl.c)*5);ctx.fillText('🔥',cx,cy-4);
     em(17+Math.sin(t*13+tl.r)*4);ctx.fillText('🔥',cx+12,cy-16);
@@ -3973,6 +4029,27 @@ function warnBar(tl,x,y,frac,t){
     ctx.fillStyle=flash?'#ff5252':'#ffd54f';ctx.fillText('!',x+TS-10,y+14);}
 }
 function drawPlayer(p,t){
+  if(p.fallT>0){
+    const ph=1-(p.fallT/FALL_T);
+    if(p.fellAt&&p.fallT>FALL_T-1.1){
+      const s2=(FALL_T-p.fallT)/1.1;
+      ctx.strokeStyle='rgba(255,255,255,'+(0.6*(1-s2)).toFixed(2)+')';ctx.lineWidth=3;
+      ctx.beginPath();ctx.ellipse(p.fellAt.x,p.fellAt.y+6,10+26*s2,5+13*s2,0,0,7);ctx.stroke();
+    }
+    const sx=p.spawnX||p.x,sy=p.spawnY||p.y;
+    ctx.globalAlpha=0.30+0.18*Math.sin(t*6);
+    ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.ellipse(sx,sy-4,17,20,0,0,7);ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.font='bold 17px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.strokeStyle='#00000090';ctx.lineWidth=4;
+    const secs=Math.ceil(p.fallT);
+    ctx.strokeText(secs,sx,sy-4);
+    ctx.fillStyle='#fff';ctx.fillText(secs,sx,sy-4);
+    ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(sx,sy-4,24,-1.57,-1.57+6.283*ph);ctx.stroke();
+    return;
+  }
   if(p.gone)ctx.globalAlpha=0.45;
   const moving=(Math.abs(p.mx||0)+Math.abs(p.my||0))>40;
   const bob=(p.working?Math.sin(t*18)*2.5:0)-(moving?Math.abs(Math.sin(p.walkT*1.7))*2.4:0);
@@ -3981,19 +4058,19 @@ function drawPlayer(p,t){
   if((p.dashT||0)>0){
     const dx=p.ddx||0,dy=p.ddy||0;
     ctx.lineCap='round';
-    for(let i=1;i<=4;i++){
-      const d=6+i*13;
-      ctx.globalAlpha=0.42-i*0.07;
-      ctx.strokeStyle=p.col;ctx.lineWidth=7-i*1.1;
+    for(let i=1;i<=3;i++){
+      const d=5+i*9;
+      ctx.globalAlpha=0.38-i*0.08;
+      ctx.strokeStyle=p.col;ctx.lineWidth=6-i*1.1;
       ctx.beginPath();
       ctx.moveTo(x-dx*d,y-2-dy*d);
-      ctx.lineTo(x-dx*(d+11),y-2-dy*(d+11));
+      ctx.lineTo(x-dx*(d+8),y-2-dy*(d+8));
       ctx.stroke();
     }
     ctx.globalAlpha=0.35;ctx.fillStyle='#ffffff';
-    for(let i=0;i<3;i++){
-      const d=14+i*13;
-      ctx.beginPath();ctx.ellipse(x-dx*d,p.y+13-dy*d*0.35,7-i*1.6,3.2-i*0.6,0,0,7);ctx.fill();
+    for(let i=0;i<2;i++){
+      const d=12+i*10;
+      ctx.beginPath();ctx.ellipse(x-dx*d,p.y+13-dy*d*0.35,6-i*1.6,2.8-i*0.6,0,0,7);ctx.fill();
     }
     ctx.globalAlpha=1;ctx.lineCap='butt';
   }
@@ -4692,7 +4769,7 @@ function snapWorld(w){
   }
   return {st:w.state,cd:Math.round((w.cd||0)*10),tl:Math.round(w.timeLeft*10),
     sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
-    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0,(p.dashT||0)>0?1:0,p.ddx||0,p.ddy||0]),
+    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0,(p.dashT||0)>0?1:0,p.ddx||0,p.ddy||0,Math.round((p.fallT||0)*10)]),
     ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),
     pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),tls};
 }
@@ -4723,7 +4800,7 @@ function applyWorldSnap(w,s,viewed){
   w.projRender=s.pj||[];
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
     p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
-    p.dashT=a[7]?0.12:0;p.ddx=a[8]||0;p.ddy=a[9]||0;
+    p.dashT=a[7]?0.12:0;p.ddx=a[8]||0;p.ddy=a[9]||0;p.fallT=(a[10]||0)/10;
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
   });
   if(viewed&&w.score>oldSc)Snd.serve();
