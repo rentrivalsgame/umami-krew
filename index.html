@@ -262,7 +262,7 @@
       </div>
     </div>
     <div class="modegrp">
-      <div class="grplbl">⚔️ VERSUS <span>race for the same orders — first serve banks the points</span></div>
+      <div class="grplbl">⚔️ VERSUS <span>separate kitchens · identical orders · highest total wins</span></div>
       <div class="modebtns">
         <button class="modebtn vs" data-mode="5">⚔️<b>1v1</b><i>2 chefs · duel</i></button>
         <button class="modebtn vs" data-mode="6">⚔️<b>1v1v1</b><i>3 chefs · triple threat</i></button>
@@ -367,7 +367,7 @@
       </div>
     </div>
     <div class="helpflow">
-      ⚔️ <b>Versus (1v1 up to 4v4 &amp; 2v2v2v2):</b> krews share one kitchen and race for the same orders — whoever serves a dish first banks the points for their team. Combos build per team; the crown goes to the highest total when time runs out.<br>
+      ⚔️ <b>Versus (1v1 up to 4v4 &amp; 2v2v2v2):</b> every krew cooks in its <b>own copy of the kitchen</b> with the <b>same order sequence</b> — your kitchen fills the screen and rival kitchens show in live picture-in-picture windows with their scores. Highest kitchen total when time runs out takes the crown. Couch tip: <span class="key">Tab</span> switches which kitchen is on the big screen.<br>
       ⌨️ 7–8 chefs on one board is tight — plug in a <b>second USB keyboard</b> (the computer merges them) so each krew gets its own side.<br>
       🧺 Grab ingredients from crates → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
@@ -1874,7 +1874,7 @@ function cycleStyle(slot){
 }
 function setMode(m){playerMode=m;SAVE.mode=m;SaveIO.save(SAVE);}
 
-function buildLevel(li){
+function buildKitchen(li,members,teamIdx){
   const L=LEVELS[li];
   const grid=[];const spawns=[{r:2,c:2},{r:4,c:2}];
   for(let r=0;r<GROWS;r++){grid[r]=[];
@@ -1903,8 +1903,8 @@ function buildLevel(li){
     }}
   let hasSink=false,hasExt=false;
   for(const row of grid)for(const t of row){if(t.type==='sink')hasSink=true;if(t.type==='ext')hasExt=true;}
-  const MODE_MULT={1:0.6,2:1,3:1.25,4:1.45,6:1.7,8:1.95};
-  const nchefs=chefCount(playerMode);
+  const MODE_MULT={1:0.6,2:1,3:1.25,4:1.45,5:1.55,6:1.7,7:1.8,8:1.95};
+  const nchefs=members.length;
   const thr=starThresholds(L).map(v=>Math.max(20,Math.round(v*MODE_MULT[nchefs]/10)*10));
   const lvlParts=new Set();
   L.dishes.forEach(d=>DISHES[d].parts.forEach(p=>lvlParts.add(p)));
@@ -1926,25 +1926,41 @@ function buildLevel(li){
     return base;
   }
   const players=[];
-  const tms=teamsFor(playerMode);
-  for(let i=0;i<nchefs;i++){
+  members.forEach((slot,i)=>{
     const sp=nearSpawn(spawns[i%2]);
     taken.push(sp);
-    let c1=PCOLS[i][0],c2=PCOLS[i][1];
-    if(tms){const ti=tms.findIndex(t=>t.includes(i));
-      const mem=tms[ti].indexOf(i);
-      c1=mem?shade(TEAM_DEFS[ti].c,13*mem):TEAM_DEFS[ti].c;c2=TEAM_DEFS[ti].c2;}
-    players.push(mkPlayer(i,sp,c1,c2));
-  }
-  G={li,L,grid,thr,mode:playerMode,teams:tms,tscore:[0,0,0,0],tcombo:[0,0,0,0],world:WORLDS[L.w],potR,ovenR,
+    let c1,c2;
+    if(teamIdx>=0){c1=i?shade(TEAM_DEFS[teamIdx].c,13*i):TEAM_DEFS[teamIdx].c;c2=TEAM_DEFS[teamIdx].c2;}
+    else{c1=PCOLS[slot][0];c2=PCOLS[slot][1];}
+    players.push(mkPlayer(i,sp,c1,c2,slot));
+  });
+  G={li,L,grid,thr,mode:playerMode,teamIdx,orderIdx:0,world:WORLDS[L.w],potR,ovenR,
     players,
     orders:[],orderT:0,score:0,combo:0,timeLeft:L.time,plates:4,dirty:0,returns:[],
     served:0,missed:0,state:'countdown',cd:3.6,hasSink,hasExt,popups:[],ordersDirty:true,beltT:0,shake:0};
 }
-function mkPlayer(idx,sp,col,col2){
-  return {idx,x:sp.c*TS+TS/2,y:sp.r*TS+TS/2,fx:0,fy:-1,held:null,
-    ctrl:CTRLS[idx],col,col2,working:false,walkT:0,chopSnd:0,mx:0,my:0,
-    style:chefStyle(idx+1)};
+let VS=null;
+function makeOrderSeq(L){
+  const a=[];for(let i=0;i<400;i++)a.push(L.dishes[(Math.random()*L.dishes.length)|0]);
+  return a;
+}
+function buildLevel(li){
+  VS=null;
+  const tms=teamsFor(playerMode);
+  if(!tms){
+    buildKitchen(li,Array.from({length:chefCount(playerMode)},(_,i)=>i),-1);
+    return;
+  }
+  const kitchens=[];
+  for(let t=0;t<tms.length;t++){buildKitchen(li,tms[t],t);kitchens.push(G);}
+  VS={kitchens,view:0,seq:makeOrderSeq(LEVELS[li]),finished:false};
+  G=kitchens[0];
+}
+function mkPlayer(idx,sp,col,col2,slot){
+  const s=(slot==null)?idx:slot;
+  return {idx,slot:s,x:sp.c*TS+TS/2,y:sp.r*TS+TS/2,fx:0,fy:-1,held:null,
+    ctrl:CTRLS[s],col,col2,working:false,walkT:0,chopSnd:0,mx:0,my:0,
+    style:chefStyle(s+1)};
 }
 const SPD=250,PR=19;
 function solidAt(r,c){if(r<0||c<0||r>=GROWS||c>=GCOLS)return true;return G.grid[r][c].type!=='floor';}
@@ -2021,16 +2037,28 @@ function potMatch(parts){
 /* ---------------- interactions ---------------- */
 function keyPressed(code){
   if(screen!=='game'||!G)return;
-  if(code==='Escape'||code==='KeyP'){
+  if(code==='Escape'||(code==='KeyP'&&chefCount(playerMode)<7)){
     if(G.state==='play'||G.state==='paused')togglePause();
+    return;
+  }
+  if(code==='Tab'&&VS&&!NET.started){
+    VS.view=(VS.view+1)%VS.kitchens.length;
+    G=VS.kitchens[VS.view];G.ordersDirty=true;
+    showToast('👀 Watching '+TEAM_DEFS[G.teamIdx].n+' kitchen');
     return;
   }
   if(G.state!=='play')return;
   if(G.mode===1){
     if(MERGED.pick.includes(code))actPick(G.players[0]);
   } else {
-    for(let i=0;i<G.players.length;i++)
-      if(!G.players[i].remote&&G.players[i].ctrl.pick.includes(code))actPick(G.players[i]);
+    const worlds=VS?VS.kitchens:[G];
+    const g0=G;
+    for(const w of worlds){
+      G=w;
+      for(const p of w.players)
+        if(!p.remote&&p.ctrl.pick.includes(code))actPick(p);
+    }
+    G=g0;
   }
 }
 function actPick(p){
@@ -2277,7 +2305,7 @@ function updateOrders(dt){
   const L=G.L;
   G.orderT-=dt;
   if(G.orders.length<5&&G.orderT<=0){
-    const dish=L.dishes[(Math.random()*L.dishes.length)|0];
+    const dish=VS?VS.seq[G.orderIdx++%VS.seq.length]:L.dishes[(Math.random()*L.dishes.length)|0];
     G.orders.push({dish,pat:L.pat,pat0:L.pat});
     G.orderT=L.intv;G.ordersDirty=true;Snd.tick();
   }
@@ -2303,14 +2331,25 @@ let lastTickSec=-1;
 function update(dt){
   if(G.netClient){netClientFrame(dt);return;}
   if(NET.role==='host'&&NET.started)netApplyRemoteKeys();
+  if(VS){
+    for(const k of VS.kitchens){G=k;updateCore(dt);}
+    G=VS.kitchens[VS.view];
+    return;
+  }
+  updateCore(dt);
+}
+function updateCore(dt){
+  const lead=!VS||G===VS.kitchens[0];
   if(G.state==='countdown'){
     G.cd-=dt;
-    const el=$('#cdnum');
-    const n=Math.ceil(G.cd-0.4);
-    el.textContent=n>0?n:'GO!';
+    if(lead){
+      const el=$('#cdnum');
+      const n=Math.ceil(G.cd-0.4);
+      el.textContent=n>0?n:'GO!';
+    }
     if(G.cd<=0){
-      G.state='play';$('#countdown').classList.remove('active');
-      Snd.go();
+      G.state='play';
+      if(lead){$('#countdown').classList.remove('active');Snd.go();}
       const L=G.L;
       G.orders.push({dish:L.dishes[0],pat:L.pat,pat0:L.pat});
       if(L.dishes.length>1)G.orders.push({dish:L.dishes[1],pat:L.pat+10,pat0:L.pat+10});
@@ -2341,8 +2380,11 @@ function update(dt){
   G.timeLeft-=dt;
   Music.tempoMult=(G.timeLeft<=20)?1.18:1;
   const s=Math.ceil(G.timeLeft);
-  if(G.timeLeft<=10&&s!==lastTickSec){lastTickSec=s;Snd.tick();}
-  if(G.timeLeft<=0)finishLevel();
+  if(lead&&G.timeLeft<=10&&s!==lastTickSec){lastTickSec=s;Snd.tick();}
+  if(G.timeLeft<=0){
+    if(VS){if(lead)finishVersus();}
+    else finishLevel();
+  }
 }
 function starsEarned(score){
   let n=0;for(const t of G.thr)if(score>=t)n++;
@@ -2393,12 +2435,52 @@ function finishLevel(){
   $('#ov-results').classList.add('active');
   if(n>0)Snd.serve();else Snd.bad();
 }
+function finishVersus(){
+  if(!VS||VS.finished)return;
+  VS.finished=true;
+  VS.kitchens.forEach(k=>{k.state='done';k.timeLeft=0;});
+  const scores=VS.kitchens.map(k=>k.score);
+  let ld=0;for(let i=1;i<scores.length;i++)if(scores[i]>scores[ld])ld=i;
+  const tie=scores.every(s=>s===scores[0]);
+  const K=VS.kitchens[ld];
+  const g0=G;G=K;
+  const n=starsEarned(K.score);
+  G=g0;
+  const li=K.li;
+  const prev=SAVE.stars[li]||0;
+  if(!SAVE.best)SAVE.best={};
+  const best=SAVE.best[li]||0;
+  if(K.score>best)SAVE.best[li]=K.score;
+  if(n>prev)SAVE.stars[li]=n;
+  if(!SAVE.lb)SAVE.lb=[];
+  const entry={name:SAVE.pname||'CHEF',mode:MODES[playerMode].n,lvl:K.L.name,w:K.world.n,
+    score:K.score,stars:n,note:tie?'🤝 Tie':TEAM_DEFS[K.teamIdx].e+' '+TEAM_DEFS[K.teamIdx].n+' won',ts:Date.now()};
+  SAVE.lb.push(entry);SAVE.lb.sort((a,b)=>b.score-a.score||a.ts-b.ts);
+  if(SAVE.lb.length>50)SAVE.lb.length=50;
+  const rank=SAVE.lb.indexOf(entry);
+  SaveIO.save(SAVE);
+  $('#res-title').textContent=tie?'🤝 Dead Heat!':('🏆 Team '+TEAM_DEFS[K.teamIdx].n+' Wins!');
+  $('#resstars').innerHTML=[0,1,2].map(i=>`<span class="${i<n?'on':'off'}">★</span>`).join('');
+  $('#res-detail').innerHTML=
+    VS.kitchens.map(k=>`${TEAM_DEFS[k.teamIdx].e} <b style="color:${TEAM_DEFS[k.teamIdx].c}">${k.score}</b>`).join(' &nbsp;vs&nbsp; ')+
+    `<br>${K.world.e} ${K.L.name} — winning kitchen served ${K.served} · lost ${K.missed}`+
+    `<br>⭐ ${K.thr[0]} &nbsp; ⭐⭐ ${K.thr[1]} &nbsp; ⭐⭐⭐ ${K.thr[2]} &nbsp;·&nbsp; Best: ${Math.max(best,K.score)}`+
+    (rank>=0&&rank<10?`<br>🏆 <b style="color:#ffd54f">#${rank+1}</b> on your leaderboard!`:'');
+  const nextBtn=$('#btn-res-next');
+  nextBtn.style.display=(li<LEVELS.length-1&&(SAVE.stars[li]||0)>0)?'block':'none';
+  if(G.netClient){nextBtn.style.display='none';$('#btn-res-retry').style.display='none';}
+  else if(!NET.started)$('#btn-res-retry').style.display='';
+  $('#ov-results').classList.add('active');
+  Snd.serve();
+}
 function togglePause(){
   if(G.state==='play'){
+    if(VS)VS.kitchens.forEach(k=>k.state='paused');
     G.state='paused';
     $('#pause-lvlname').textContent=`${G.world.e} ${G.L.name} · ${modeName(G.mode)}`;
     $('#ov-pause').classList.add('active');
   } else if(G.state==='paused'){
+    if(VS)VS.kitchens.forEach(k=>k.state='play');
     G.state='play';
     $('#ov-pause').classList.remove('active');
   }
@@ -2406,6 +2488,7 @@ function togglePause(){
 /* ---------------- toasts ---------------- */
 let toastT=null,lastToast='',lastToastAt=0;
 function showToast(txt){
+  if(VS&&G!==VS.kitchens[VS.view])return;
   const el=$('#toast');el.textContent=txt;el.style.opacity=1;
   clearTimeout(toastT);toastT=setTimeout(()=>{el.style.opacity=0;},1800);
 }
@@ -2970,13 +3053,56 @@ function drawFloor(x,y,r,c,t){
       break;}
   }
 }
+let VIEW={s:1,x:0,y:0,mini:false};
+let MINI_CV=null;
+function renderMiniWorld(k){
+  if(!MINI_CV){MINI_CV=document.createElement('canvas');MINI_CV.width=936;MINI_CV.height=608;}
+  const mc=MINI_CV.getContext('2d');
+  mc.setTransform(1,0,0,1,0,0);mc.clearRect(0,0,936,608);
+  const oldCtx=ctx,oldG=G,oldView=VIEW;
+  ctx=mc;G=k;VIEW={s:1/RS,x:0,y:0,mini:true};
+  try{renderWorld();}finally{ctx=oldCtx;G=oldG;VIEW=oldView;}
+  return MINI_CV;
+}
 function render(){
+  if(!VS){VIEW={s:1,x:0,y:0,mini:false};renderWorld();return;}
+  const act=VS.kitchens[VS.view];
+  G=act;VIEW={s:1,x:0,y:0,mini:false};renderWorld();
+  const others=VS.kitchens.filter(k=>k!==act);
+  const ms=others.length>2?0.20:0.24;
+  const mw=936*ms,mh=608*ms;
+  others.forEach((k,i)=>{
+    const mx=936-mw-8,my=592-((others.length-i)*(mh+30))-6;
+    const covered=act.players.some(p=>p.x>mx-34&&p.x<mx+mw+34&&p.y>my-56&&p.y<my+mh+34);
+    const img=renderMiniWorld(k);
+    ctx.setTransform(RS,0,0,RS,0,0);
+    ctx.globalAlpha=covered?0.25:0.94;
+    ctx.fillStyle='#0e0a16';
+    ctx.beginPath();ctx.roundRect(mx-5,my-24,mw+10,mh+31,8);ctx.fill();
+    ctx.drawImage(img,mx,my,mw,mh);
+    ctx.strokeStyle=TEAM_DEFS[k.teamIdx].c;ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.roundRect(mx-5,my-24,mw+10,mh+31,8);ctx.stroke();
+    ctx.font='bold 13px "Trebuchet MS",sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillStyle=TEAM_DEFS[k.teamIdx].c;
+    ctx.fillText(TEAM_DEFS[k.teamIdx].e+' '+TEAM_DEFS[k.teamIdx].n+' kitchen',mx+2,my-12);
+    ctx.textAlign='right';ctx.fillStyle='#ffd54f';
+    ctx.fillText('🪙 '+k.score,mx+mw-2,my-12);
+    ctx.globalAlpha=1;
+  });
+  G=act;VIEW={s:1,x:0,y:0,mini:false};
+  ctx.setTransform(RS,0,0,RS,0,0);
+  if(!NET.started){
+    ctx.font='11px "Trebuchet MS",sans-serif';ctx.textAlign='right';ctx.fillStyle='rgba(255,255,255,0.45)';
+    ctx.fillText('Tab: switch kitchen view',928,10);
+  }
+}
+function renderWorld(){
   const t=performance.now()/1000;
   const W=G.world;
   ctx.save();
   ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.setTransform(RS,0,0,RS,0,0);
+  if(!VIEW.mini)ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.setTransform(RS*VIEW.s,0,0,RS*VIEW.s,VIEW.x*RS,VIEW.y*RS);
   ctx.translate(0,EX);
   if(G.shake>0)ctx.translate((Math.random()-0.5)*6,(Math.random()-0.5)*6);
   /* floors + hazards */
@@ -3413,8 +3539,8 @@ function drawPlayer(p,t){
     ctx.font='bold 11px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=p.col;
     ctx.strokeStyle='#00000080';ctx.lineWidth=3;
-    let tag='P'+(p.idx+1);
-    if(G.teams){const ti=teamOf(p.idx);tag=TEAM_DEFS[ti].n[0]+(G.teams[ti].indexOf(p.idx)+1);}
+    let tag='P'+(p.slot+1);
+    if(G.teamIdx>=0)tag=TEAM_DEFS[G.teamIdx].n[0]+(p.idx+1);
     ctx.strokeText(tag,x,y-34);
     ctx.fillText(tag,x,y-34);
   }
@@ -3503,12 +3629,15 @@ function fmtTime(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+Strin
 function updateHUD(){
   $('#timer').textContent=fmtTime(G.timeLeft);
   $('#timer').classList.toggle('low',G.timeLeft<=15&&G.state==='play');
-  if(G.teams){
-    $('#score').innerHTML=G.teams.map((t,i)=>
-      `<span style="color:${TEAM_DEFS[i].c}">${TEAM_DEFS[i].e}${G.tscore[i]}</span>`).join(' ');
-    let ld=0;for(let i=1;i<G.teams.length;i++)if(G.tscore[i]>G.tscore[ld])ld=i;
-    const tie=G.teams.every((t,i)=>G.tscore[i]===G.tscore[0]);
-    $('#combo').textContent=tie?'':('🏆 Team '+TEAM_DEFS[ld].n+' leads!');
+  if(VS){
+    $('#score').innerHTML=VS.kitchens.map((k,i)=>{
+      const me=i===VS.view;
+      return `<span style="color:${TEAM_DEFS[k.teamIdx].c};${me?'font-size:22px':'opacity:.7;font-size:15px'}">${TEAM_DEFS[k.teamIdx].e}${k.score}</span>`;
+    }).join(' ');
+    const scores=VS.kitchens.map(k=>k.score);
+    let ld=0;for(let i=1;i<scores.length;i++)if(scores[i]>scores[ld])ld=i;
+    const tie=scores.every(s=>s===scores[0]);
+    $('#combo').textContent=tie?'':('🏆 '+TEAM_DEFS[VS.kitchens[ld].teamIdx].n+' leads!');
   }else{
     $('#score').textContent='🪙 '+G.score;
     $('#combo').textContent=G.combo>1?('🔥 COMBO ×'+G.combo+'  (+'+(G.combo*10)+'%)'):'';
@@ -3601,7 +3730,8 @@ function startLevel(li){
   if(NET.role==='host'){
     const styles=netHostStart(li);
     netHostWire();
-    G.players.forEach((p,i)=>{if(styles[i])p.style=styles[i];});
+    const ws=VS?VS.kitchens:[G];
+    for(const w of ws)for(const p of w.players)if(styles[p.slot])p.style=styles[p.slot];
   }
   lastTickSec=-1;
   showScreen('game');
@@ -3724,13 +3854,28 @@ function netOnGame(from,d){
     const slot=NET.slotOf?NET.slotOf[from]:null;
     if(slot==null||!G)return;
     if(d.t==='in'){NET.keys[slot]=NET.keys[slot]||{};NET.keys[slot][d.k]=d.v;}
-    else if(d.t==='pk'&&G.state==='play'){const p=G.players[slot];if(p)actPick(p);}
+    else if(d.t==='pk'){
+      const ws=VS?VS.kitchens:[G];const g0=G;
+      for(const w of ws){
+        const p=w.players.find(pl=>pl.slot===slot);
+        if(p&&w.state==='play'){G=w;actPick(p);}
+      }
+      G=g0;
+    }
   }else{
     if(d.t==='start'){
       NET.started=true;NET.slots=d.slots;NET.mySlot=d.slots.indexOf(NET.myId);
       setMode(d.mode);startLevel(d.li);
-      if(d.styles)G.players.forEach((p,i)=>{if(d.styles[i])p.style=d.styles[i];});
-      G.netClient=true;
+      const ws=VS?VS.kitchens:[G];
+      for(const w of ws){
+        w.netClient=true;
+        if(d.styles)for(const p of w.players)if(d.styles[p.slot])p.style=d.styles[p.slot];
+      }
+      if(VS){
+        const tms=MODES[d.mode].teams;
+        const ti=tms?Math.max(0,tms.findIndex(t=>t.includes(NET.mySlot))):0;
+        VS.view=ti;G=VS.kitchens[ti];G.ordersDirty=true;
+      }
     }
     else if(d.t==='snap'){if(d.q>NET.lastSeq){NET.lastSeq=d.q;NET.cur=d;}}
     else if(d.t==='end'){/* results come via snap state */}
@@ -3777,8 +3922,10 @@ function netHostStart(li){
 }
 function netHostWire(){
   if(!G||NET.role!=='host')return;
-  for(let slot=1;slot<G.players.length;slot++){
-    const p=G.players[slot];
+  const ws=VS?VS.kitchens:[G];
+  for(const w of ws)for(const p of w.players){
+    if(p.slot===0)continue;
+    const slot=p.slot;
     p.ctrl={up:['@'+slot+'u'],dn:['@'+slot+'d'],lf:['@'+slot+'l'],rt:['@'+slot+'r'],pick:['@'+slot+'p'],work:['@'+slot+'w']};
     p.remote=true;
   }
@@ -3786,8 +3933,10 @@ function netHostWire(){
 const NKEY={u:'u',d:'d',l:'l',r:'r',w:'w'};
 function netApplyRemoteKeys(){
   if(NET.role!=='host'||!G)return;
-  for(let slot=1;slot<G.players.length;slot++){
-    const ks=NET.keys[slot]||{};
+  const ws=VS?VS.kitchens:[G];
+  for(const w of ws)for(const p of w.players){
+    if(!p.remote)continue;
+    const slot=p.slot,ks=NET.keys[slot]||{};
     Keys.down['@'+slot+'u']=!!ks.u;Keys.down['@'+slot+'d']=!!ks.d;
     Keys.down['@'+slot+'l']=!!ks.l;Keys.down['@'+slot+'r']=!!ks.r;
     Keys.down['@'+slot+'w']=!!ks.w;
@@ -3795,48 +3944,63 @@ function netApplyRemoteKeys(){
 }
 function serIt(it){return it?(it.id+(it.parts&&it.parts.length?'|'+it.parts.join(','):'')):'';}
 function desIt(s){if(!s)return null;const[a,b]=s.split('|');const it={id:a};if(b!=null)it.parts=b?b.split(','):[];else if(a==='plate'||a==='pizzaraw')it.parts=[];return it;}
-function netSnap(){
+function snapWorld(w){
   const tls=[];
   for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
-    const t=G.grid[r][c];
+    const t=w.grid[r][c];
     if(t.item||(t.parts&&t.parts.length)||t.fire||(t.chop&&t.chop>0)||t.st==='cook')
       tls.push([r,c,serIt(t.item),(t.parts||[]).join(','),Math.round((t.cook||0)*10),Math.round((t.burn||0)*10),Math.round((t.chop||0)*10),t.fire?1:0,t.st||'',Math.round((t.chopAnimT||0)*10)]);
   }
-  return {t:'snap',q:NET.seq++,st:G.state,cd:Math.round((G.cd||0)*10),tl:Math.round(G.timeLeft*10),
-    sc:G.score,ts:G.tscore,cb:G.combo,tcb:G.tcombo,sv:G.served,ms:G.missed,pl:G.plates,dt:G.dirty,
-    ps:G.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held)]),
-    ords:G.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),tls};
+  return {st:w.state,cd:Math.round((w.cd||0)*10),tl:Math.round(w.timeLeft*10),
+    sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
+    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held)]),
+    ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),tls};
 }
-function netApplySnap(s){
-  if(!G)return;
-  const oldSc=G.score,oldSt=G.state;
-  G.state=s.st;G.cd=s.cd/10;G.timeLeft=s.tl/10;
-  G.score=s.sc;G.tscore=s.ts;G.combo=s.cb;G.tcombo=s.tcb;G.served=s.sv;G.missed=s.ms;G.plates=s.pl;G.dirty=s.dt;
-  const od=G.orders.map(o=>o.dish).join(',');
-  G.orders=s.ords.map(o=>({dish:o[0],pat:o[1]/10,pat0:o[2]}));
-  if(G.orders.map(o=>o.dish).join(',')!==od)G.ordersDirty=true;
+function netSnap(){
+  if(VS)return {t:'snap',q:NET.seq++,vs:1,ks:VS.kitchens.map(snapWorld)};
+  return Object.assign({t:'snap',q:NET.seq++},snapWorld(G));
+}
+function applyWorldSnap(w,s,viewed){
+  const oldSc=w.score,oldSt=w.state;
+  w.state=s.st;w.cd=s.cd/10;w.timeLeft=s.tl/10;
+  w.score=s.sc;w.combo=s.cb;w.served=s.sv;w.missed=s.ms;w.plates=s.pl;w.dirty=s.dt;
+  const od=w.orders.map(o=>o.dish).join(',');
+  w.orders=s.ords.map(o=>({dish:o[0],pat:o[1]/10,pat0:o[2]}));
+  if(viewed&&w.orders.map(o=>o.dish).join(',')!==od)w.ordersDirty=true;
   for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
-    const t=G.grid[r][c];
+    const t=w.grid[r][c];
     if(t.netTouched){t.item=null;if(t.parts)t.parts=[];t.fire=false;t.chop=0;t.cook=0;t.burn=0;t.st='';t.chopAnimT=0;t.netTouched=false;}
   }
   for(const e of s.tls){
-    const t=G.grid[e[0]][e[1]];if(!t)continue;
+    const t=w.grid[e[0]][e[1]];if(!t)continue;
     t.item=desIt(e[2]);
     if(t.parts)t.parts=e[3]?e[3].split(','):[];else if(e[3])t.parts=e[3].split(',');
     t.cook=e[4]/10;t.burn=e[5]/10;t.chop=e[6]/10;t.fire=!!e[7];t.st=e[8]||'';t.chopAnimT=e[9]/10;
     t.netTouched=true;
   }
-  s.ps.forEach((a,i)=>{const p=G.players[i];if(!p)return;
+  s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
     p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
   });
-  if(G.score>oldSc)Snd.serve();
+  if(viewed&&w.score>oldSc)Snd.serve();
+  return oldSt;
+}
+function netApplySnap(s){
+  if(!G)return;
+  if(s.vs&&VS){
+    let was0='';
+    VS.kitchens.forEach((k,i)=>{const o=applyWorldSnap(k,s.ks[i],k===VS.kitchens[VS.view]);if(i===0)was0=o;});
+    if(was0!=='done'&&s.ks[0].st==='done')finishVersus();
+    return;
+  }
+  const oldSt=applyWorldSnap(G,s,true);
   if(oldSt!=='done'&&s.st==='done'){finishLevel();}
 }
 function netClientFrame(dt){
   if(!G)return;
   if(NET.cur){netApplySnap(NET.cur);NET.cur=null;}
-  for(const p of G.players){
+  const ws=VS?VS.kitchens:[G];
+  for(const w of ws)for(const p of w.players){
     if(p.nx!=null){const k=Math.min(1,dt*14);p.x+=(p.nx-p.x)*k;p.y+=(p.ny-p.y)*k;}
     p.walkT=(Math.abs((p.nx||p.x)-p.x)+Math.abs((p.ny||p.y)-p.y)>2)?(p.walkT||0)+dt:0;
   }
