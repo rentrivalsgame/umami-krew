@@ -393,6 +393,7 @@
       🧺 Grab ingredients from crates → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
       🍤 Shrimp &amp; noodles cook in the golden <b>deep fryer</b>; meat &amp; fish go on the <b>grill</b>.<br>
+      🥏 <b>Throw!</b> Tap your chop key while carrying an ingredient to hurl it the way you're facing — teammates catch it mid-air, and good aim lands it on counters, in pots, even into the fryer. (Plates &amp; assembled dishes are too precious to throw.)<br>
       ⚠️ Don't leave food on the grill or in the fryer too long — it burns (and in fiery kitchens like the Dumpling Den, Neon Rooftop, Banquet Hall &amp; Snow Festival it catches <b>fire</b> 🔥 — grab the extinguisher 🧯).<br>
       ❄️ At the Ice Market, Onsen Ryokan &amp; Snow Festival the floors are ice — you'll slide! &nbsp;🧼 Dirty plates come back at the sink — hold your action key there to wash them. &nbsp;⏸ <span class="key">Esc</span> pauses.
       Serve dishes back-to-back to build a <b>combo</b> for bonus points!<br>
@@ -1957,7 +1958,7 @@ function buildKitchen(li,members,teamIdx){
   });
   G={li,L,grid,thr,mode:playerMode,teamIdx,orderIdx:0,world:WORLDS[L.w],potR,ovenR,
     players,
-    orders:[],orderT:0,score:0,combo:0,timeLeft:L.time,plates:4,dirty:0,returns:[],
+    orders:[],orderT:0,score:0,combo:0,timeLeft:L.time,plates:4,dirty:0,returns:[],projs:[],
     served:0,missed:0,state:'countdown',cd:3.6,hasSink,hasExt,popups:[],ordersDirty:true,beltT:0,shake:0};
 }
 let VS=null,TOURN=null,TOURN_PICK=0;
@@ -2086,13 +2087,16 @@ function keyPressed(code){
   if(G.state!=='play')return;
   if(G.mode===1){
     if(MERGED.pick.includes(code))actPick(G.players[0]);
+    else if(MERGED.work.includes(code))tryThrow(G.players[0]);
   } else {
     const worlds=VS?VS.kitchens:[G];
     const g0=G;
     for(const w of worlds){
       G=w;
-      for(const p of w.players)
+      for(const p of w.players){
         if(!p.remote&&p.ctrl.pick.includes(code))actPick(p);
+        else if(!p.remote&&p.ctrl.work.includes(code))tryThrow(p);
+      }
     }
     G=g0;
   }
@@ -2227,6 +2231,84 @@ function actWork(p,dt,ctrl){
   } else if(t.type==='sink'&&G.dirty>0){
     t.washT+=dt;p.working=true;
     if(t.washT>=2.2){t.washT=0;G.dirty--;G.plates++;Snd.ding();}
+  }
+}
+const canThrow=it=>it&&it.id!=='plate'&&it.id!=='pizzaraw'&&it.id!=='ext';
+function throwDepositFor(t,it){
+  if(t.fire)return null;
+  if(t.type==='trash')return {k:'trash'};
+  if(t.type==='pot'&&!t.item&&potCanAdd(t.parts,it.id))return {k:'pot',tile:t};
+  if((t.type==='stove'||t.type==='fryer')&&!t.item&&stMap(t)[it.id])return {k:'cook',tile:t};
+  if((t.type==='counter'||t.type==='board'||t.type==='belt')&&!t.item)return {k:'tile',tile:t};
+  return null;
+}
+function tryThrow(p){
+  if(G.state!=='play'||!p.held||!canThrow(p.held))return false;
+  let dx=p.fx,dy=p.fy;
+  if(!dx&&!dy)dy=-1;
+  if(dx&&dy)dy=0;
+  const tr=Math.floor(p.y/TS),tc=Math.floor(p.x/TS);
+  let lastF={r:tr,c:tc},dep=null,endR=tr,endC=tc;
+  for(let i=1;i<=4;i++){
+    const r=tr+dy*i,c=tc+dx*i;
+    if(r<0||c<0||r>=GROWS||c>=GCOLS)break;
+    const t=G.grid[r][c];
+    if(t.type==='floor'){
+      if(!t.item)lastF={r,c};
+      if(i===4){dep={k:'floor'};endR=lastF.r;endC=lastF.c;}
+      continue;
+    }
+    if(t.type==='hazard'){
+      if(i===4){dep={k:'haz'};endR=r;endC=c;}
+      continue;
+    }
+    dep=throwDepositFor(t,p.held);
+    if(dep){endR=r;endC=c;}
+    else{dep={k:'floor'};endR=lastF.r;endC=lastF.c;}
+    break;
+  }
+  if(!dep){dep={k:'floor'};endR=lastF.r;endC=lastF.c;}
+  if(dep.k==='floor'&&endR===tr&&endC===tc)return false;
+  const dist=Math.hypot(endC-tc,endR-tr);
+  const T=Math.max(0.14,dist*0.085);
+  G.projs.push({it:p.held,x:p.x,y:p.y-16,cx:p.x,cy:p.y-16,z:0,
+    tx:endC*TS+TS/2,ty:endR*TS+TS/2,t:0,T,dep,fb:lastF,age:0,thrower:p});
+  p.held=null;Snd.pick();
+  return true;
+}
+function landFallback(r,c,it){
+  const t=G.grid[r]&&G.grid[r][c];
+  if(t&&t.type==='floor'&&!t.item&&!t.fire){t.item=it;Snd.place();return;}
+  for(const d of [[0,1],[0,-1],[1,0],[-1,0]]){
+    const t2=G.grid[r+d[1]]&&G.grid[r+d[1]][c+d[0]];
+    if(t2&&t2.type==='floor'&&!t2.item&&!t2.fire){t2.item=it;Snd.place();return;}
+  }
+  Snd.bad();
+}
+function updateProjs(dt){
+  for(let i=G.projs.length-1;i>=0;i--){
+    const pr=G.projs[i];pr.t+=dt;pr.age+=dt;
+    const f=Math.min(1,pr.t/pr.T);
+    pr.cx=pr.x+(pr.tx-pr.x)*f;pr.cy=pr.y+(pr.ty-pr.y)*f;
+    pr.z=Math.sin(f*Math.PI)*26;
+    let caught=false;
+    for(const q of G.players){
+      if(q.held||q.gone)continue;
+      if(q===pr.thrower&&pr.age<0.22)continue;
+      if(Math.hypot(q.x-pr.cx,(q.y-16)-pr.cy)<24){q.held=pr.it;caught=true;Snd.pick();break;}
+    }
+    if(caught){G.projs.splice(i,1);continue;}
+    if(f>=1){
+      G.projs.splice(i,1);
+      const d=pr.dep,it=pr.it;
+      if(d.k==='trash')Snd.place();
+      else if(d.k==='haz'){Snd.bad();showToast({lava:'🔥 Yeeted into the coals!',water:'🌊 Splash!',sky:'☁️ Off it goes!',void:'🕳️ Gone!'}[G.world.haz]||'💨 Gone!');}
+      else if(d.k==='pot'&&!d.tile.item&&potCanAdd(d.tile.parts,it.id)){d.tile.parts.push(it.id);resetSt(d.tile);Snd.place();}
+      else if(d.k==='cook'&&!d.tile.item&&stMap(d.tile)[it.id]){d.tile.item=it;resetSt(d.tile);Snd.place();}
+      else if(d.k==='tile'&&!d.tile.item&&!d.tile.fire){d.tile.item=it;resetSt(d.tile);Snd.place();}
+      else if(d.k==='floor')landFallback(Math.floor(pr.ty/TS),Math.floor(pr.tx/TS),it);
+      else landFallback(pr.fb.r,pr.fb.c,it);
+    }
   }
 }
 function tryServe(p,plate){
@@ -2408,6 +2490,7 @@ function updateCore(dt){
   updateBelts(dt);
   updateOrders(dt);
   updateReturns(dt);
+  updateProjs(dt);
   for(let i=G.popups.length-1;i>=0;i--){
     const pp=G.popups[i];pp.t-=dt;pp.y-=28*dt;
     if(pp.t<=0)G.popups.splice(i,1);
@@ -3324,6 +3407,17 @@ function renderWorld(){
   const vg=ctx.createRadialGradient(468,288,190,468,288,600);
   vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.24)');
   ctx.fillStyle=vg;ctx.fillRect(0,0,936,576);
+  /* thrown items in flight */
+  const _pl=G.netClient?(G.projRender||[]):(G.projs||[]);
+  for(const pr of _pl){
+    const isArr=pr.cx==null;
+    const px=isArr?pr[0]:pr.cx,py=isArr?pr[1]:pr.cy,pz=isArr?pr[2]:pr.z;
+    const pit=isArr?desIt(pr[3]):pr.it;
+    if(!pit)continue;
+    ctx.fillStyle='rgba(0,0,0,0.22)';
+    ctx.beginPath();ctx.ellipse(px,py+18,11,4.5,0,0,7);ctx.fill();
+    drawItem(px,py-pz,pit,0.92);
+  }
   /* popups */
   for(const pp of G.popups){
     ctx.globalAlpha=clamp(pp.t/0.4,0,1);
@@ -4017,7 +4111,17 @@ function netOnGame(from,d){
   if(NET.role==='host'){
     const slot=NET.slotOf?NET.slotOf[from]:null;
     if(slot==null||!G)return;
-    if(d.t==='in'){NET.keys[slot]=NET.keys[slot]||{};NET.keys[slot][d.k]=d.v;}
+    if(d.t==='in'){
+      NET.keys[slot]=NET.keys[slot]||{};NET.keys[slot][d.k]=d.v;
+      if(d.k==='w'&&d.v===1){
+        const ws=VS?VS.kitchens:[G];const g0=G;
+        for(const w of ws){
+          const p=w.players.find(pl=>pl.slot===slot);
+          if(p&&w.state==='play'){G=w;tryThrow(p);}
+        }
+        G=g0;
+      }
+    }
     else if(d.t==='pk'){
       const ws=VS?VS.kitchens:[G];const g0=G;
       for(const w of ws){
@@ -4129,7 +4233,8 @@ function snapWorld(w){
   return {st:w.state,cd:Math.round((w.cd||0)*10),tl:Math.round(w.timeLeft*10),
     sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
     ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0]),
-    ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),tls};
+    ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),
+    pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),tls};
 }
 function netSnap(){
   if(VS)return {t:'snap',q:NET.seq++,vs:1,ks:VS.kitchens.map(snapWorld)};
@@ -4155,6 +4260,7 @@ function applyWorldSnap(w,s,viewed){
     t.washT=(e[10]||0)/20;t.douseT=(e[11]||0)/20;
     t.netTouched=true;
   }
+  w.projRender=s.pj||[];
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
     p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
