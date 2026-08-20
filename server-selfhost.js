@@ -74,6 +74,7 @@ wss.on('connection', ws => {
     } else {
       r.peers.delete(ws.pid);
       send(r.host, { t: 'gone', id: ws.pid });
+      for (const p of r.peers.values()) send(p, { t: 'gone', id: ws.pid });
     }
   });
 });

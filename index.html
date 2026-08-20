@@ -70,6 +70,12 @@
   #scr-help h2{font-size:30px;color:var(--accent2);margin-bottom:16px}
   .bigbtn.vsb{background:linear-gradient(#b06ad6,#8e44ad 60%,#6a1b9a);box-shadow:0 5px 0 #4a1070,0 8px 16px rgba(0,0,0,.4)}
   .bigbtn.vsb:active{box-shadow:0 2px 0 #4a1070}
+  .tourseg{display:flex;gap:8px;justify-content:center;align-items:center;margin:0 auto 6px}
+  .tslbl{font-size:13.5px;color:#b9a8d0;font-weight:bold}
+  .tsbtn{font-family:inherit;font-size:13.5px;font-weight:bold;color:#d9cbe8;background:#00000038;
+    border:1.5px solid #ffffff28;border-radius:10px;padding:6px 13px;cursor:pointer}
+  .tsbtn:hover{filter:brightness(1.2)}
+  .tsbtn.sel{background:linear-gradient(#ffc94d,#ffb300);color:#3d2b00;border-color:#ffb300}
   .modegrp{max-width:720px;margin:0 auto 14px}
   .grplbl{font-size:15px;font-weight:bold;color:#ffca4d;text-align:left;margin:0 4px 7px;letter-spacing:.5px}
   .grplbl span{color:#b9a8d0;font-weight:normal;font-size:12.5px;margin-left:8px}
@@ -170,7 +176,7 @@
   <div class="scr active" id="scr-title">
     <button id="mutebtn">🔊 Sound On</button>
     <button id="musicbtn">🎵 Music On</button>
-<svg id="logo" viewBox="0 0 400 400" width="330" height="330" aria-label="Umami Krew">
+<svg id="logo" viewBox="0 0 400 400" width="296" height="296" aria-label="Umami Krew">
 <defs>
   <linearGradient id="lgo" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#ffc94d"/><stop offset="1" stop-color="#f4692a"/>
@@ -225,7 +231,8 @@
 </svg>
     <div class="sub" style="margin-top:2px">— PAN-ASIAN PANIC —</div>
     <div class="tag">Pan-Asian cooking chaos for 1–8 players · co-op &amp; team versus · 12 kitchens · 120 services</div>
-    <button class="bigbtn" id="btn-play">▶ &nbsp;Play</button>
+    <button class="bigbtn" id="btn-solo">👨‍🍳 &nbsp;Singleplayer</button>
+    <button class="bigbtn" id="btn-play">👥 &nbsp;Local Multiplayer</button>
     <button class="bigbtn alt" id="btn-online" style="background:linear-gradient(#5cd6a9,#2aa87a 60%,#1d8560);box-shadow:0 5px 0 #10603f,0 8px 16px rgba(0,0,0,.4)">🌐 &nbsp;Play Online</button>
     <button class="bigbtn vsb" id="btn-board">🏆 &nbsp;Leaderboard</button>
     <button class="bigbtn alt" id="btn-help">📖 &nbsp;How to Play</button>
@@ -252,6 +259,14 @@
   <!-- MODE SELECT -->
   <div class="scr" id="scr-modes">
     <h2>Choose a Mode</h2>
+    <div class="tourseg">
+      <span class="tslbl">Match length:</span>
+      <button class="tsbtn sel" data-rounds="0">Single game</button>
+      <button class="tsbtn" data-rounds="5">🏆 Tourney ×5</button>
+      <button class="tsbtn" data-rounds="10">🏆 ×10</button>
+      <button class="tsbtn" data-rounds="15">🏆 ×15</button>
+    </div>
+    <div class="lbhint" id="tourhint" style="display:block;margin-bottom:10px">tournaments run back-to-back random kitchens — highest combined total wins</div>
     <div class="modegrp">
       <div class="grplbl">🤝 CO-OP <span>one krew, one score</span></div>
       <div class="modebtns">
@@ -293,6 +308,12 @@
       <div id="ol-roomline" style="font-size:20px;margin-bottom:8px">Room <b id="ol-roomcode" style="color:#ffd54f;letter-spacing:5px;font-size:26px"></b></div>
       <div id="ol-players" style="max-width:420px;margin:0 auto 12px;background:#00000030;border:1px solid #ffffff15;border-radius:12px;padding:10px 16px;font-size:15px;line-height:1.9"></div>
       <div id="ol-hostui" style="display:none">
+        <div class="tourseg" style="margin-bottom:6px">
+          <button class="tsbtn sel" data-rounds="0">Single</button>
+          <button class="tsbtn" data-rounds="5">×5</button>
+          <button class="tsbtn" data-rounds="10">×10</button>
+          <button class="tsbtn" data-rounds="15">×15</button>
+        </div>
         <div class="grplbl" style="text-align:center">pick a mode for this krew count</div>
         <div class="modebtns" id="ol-modes" style="margin-bottom:10px"></div>
         <div class="lbhint" id="ol-hosthint" style="display:block">then choose a kitchen — the level starts for everyone</div>
@@ -1939,7 +1960,22 @@ function buildKitchen(li,members,teamIdx){
     orders:[],orderT:0,score:0,combo:0,timeLeft:L.time,plates:4,dirty:0,returns:[],
     served:0,missed:0,state:'countdown',cd:3.6,hasSink,hasExt,popups:[],ordersDirty:true,beltT:0,shake:0};
 }
-let VS=null;
+let VS=null,TOURN=null,TOURN_PICK=0;
+function pickTournLevels(n){
+  const idx=Array.from({length:LEVELS.length},(_,i)=>i);
+  for(let i=idx.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[idx[i],idx[j]]=[idx[j],idx[i]];}
+  return idx.slice(0,n);
+}
+function startTournament(rounds){
+  TOURN={rounds,played:0,totals:[0,0,0,0],seq:pickTournLevels(rounds),coop:!teamsFor(playerMode)};
+  startLevel(TOURN.seq[0]);
+}
+function tournStandingsHTML(){
+  if(TOURN.coop)return `Running total: <b style="color:#ffd54f">${TOURN.totals[0]}</b>`;
+  const rows=VS.kitchens.map(k=>({ti:k.teamIdx,tot:TOURN.totals[k.teamIdx]}))
+    .sort((a,b)=>b.tot-a.tot);
+  return rows.map((r,i)=>`${i===0?'👑':'&nbsp;&nbsp;'} ${TEAM_DEFS[r.ti].e} <b style="color:${TEAM_DEFS[r.ti].c}">${r.tot}</b>`).join(' &nbsp;·&nbsp; ');
+}
 function makeOrderSeq(L){
   const a=[];for(let i=0;i<400;i++)a.push(L.dishes[(Math.random()*L.dishes.length)|0]);
   return a;
@@ -2408,6 +2444,35 @@ function recordLB(){
 }
 function finishLevel(){
   G.state='done';
+  if(TOURN){
+    TOURN.totals[0]+=G.score;
+    TOURN.played++;
+    const last=TOURN.played>=TOURN.rounds;
+    $('#resstars').innerHTML='';
+    if(last){
+      $('#res-title').textContent='🏁 Tournament Complete!';
+      $('#res-detail').innerHTML=`Grand total over ${TOURN.rounds} rounds: <b style="color:#ffd54f">${TOURN.totals[0]}</b>`;
+      if(!SAVE.lb)SAVE.lb=[];
+      const entry={name:SAVE.pname||'CHEF',mode:MODES[playerMode].n+' ×'+TOURN.rounds,lvl:'Tournament',w:'Tournament',
+        score:TOURN.totals[0],stars:0,note:'🏁 gauntlet',ts:Date.now()};
+      SAVE.lb.push(entry);SAVE.lb.sort((a,b)=>b.score-a.score||a.ts-b.ts);
+      if(SAVE.lb.length>50)SAVE.lb.length=50;
+      SaveIO.save(SAVE);
+      $('#btn-res-next').style.display='none';
+      $('#btn-res-retry').style.display='none';
+    }else{
+      $('#res-title').textContent='Round '+TOURN.played+' done — '+G.score+' pts!';
+      $('#res-detail').innerHTML=`Round ${TOURN.played} of ${TOURN.rounds} · ${escHtml(G.L.name)}<br>`+tournStandingsHTML();
+      const nb=$('#btn-res-next');
+      nb.textContent='Next Round ➜';
+      nb.style.display=(G.netClient)?'none':'block';
+      $('#btn-res-retry').style.display='none';
+    }
+    $('#ov-results').classList.add('active');
+    Snd.serve();
+    return;
+  }
+  $('#btn-res-next').textContent='Next Level ➜';
   const rank=recordLB();
   const n=starsEarned(G.score);
   const prev=SAVE.stars[G.li]||0;
@@ -2443,6 +2508,42 @@ function finishVersus(){
   let ld=0;for(let i=1;i<scores.length;i++)if(scores[i]>scores[ld])ld=i;
   const tie=scores.every(s=>s===scores[0]);
   const K=VS.kitchens[ld];
+  if(TOURN){
+    VS.kitchens.forEach(k=>TOURN.totals[k.teamIdx]+=k.score);
+    TOURN.played++;
+    const last=TOURN.played>=TOURN.rounds;
+    let champ=0;for(let i=1;i<VS.kitchens.length;i++)
+      if(TOURN.totals[VS.kitchens[i].teamIdx]>TOURN.totals[VS.kitchens[champ].teamIdx])champ=i;
+    const CT=VS.kitchens[champ].teamIdx;
+    const champTie=VS.kitchens.every(k=>TOURN.totals[k.teamIdx]===TOURN.totals[VS.kitchens[0].teamIdx]);
+    $('#resstars').innerHTML='';
+    if(last){
+      $('#res-title').textContent=champTie?'🤝 Tournament Tied!':('🏆 Team '+TEAM_DEFS[CT].n+' Wins the Tournament!');
+      $('#res-detail').innerHTML=
+        `Final standings after ${TOURN.rounds} rounds:<br>`+tournStandingsHTML();
+      if(!SAVE.lb)SAVE.lb=[];
+      const entry={name:SAVE.pname||'CHEF',mode:MODES[playerMode].n+' ×'+TOURN.rounds,lvl:'Tournament',w:'Tournament',
+        score:TOURN.totals[CT],stars:0,note:champTie?'🤝 Tie':TEAM_DEFS[CT].e+' '+TEAM_DEFS[CT].n+' won',ts:Date.now()};
+      SAVE.lb.push(entry);SAVE.lb.sort((a,b)=>b.score-a.score||a.ts-b.ts);
+      if(SAVE.lb.length>50)SAVE.lb.length=50;
+      SaveIO.save(SAVE);
+      $('#btn-res-next').style.display='none';
+      $('#btn-res-retry').style.display='none';
+    }else{
+      $('#res-title').textContent=(tie?'🤝 Round '+TOURN.played+' tied!':('Round '+TOURN.played+': '+TEAM_DEFS[K.teamIdx].n+' takes it!'));
+      $('#res-detail').innerHTML=
+        VS.kitchens.map(k=>`${TEAM_DEFS[k.teamIdx].e} <b style="color:${TEAM_DEFS[k.teamIdx].c}">${k.score}</b>`).join(' &nbsp;vs&nbsp; ')+
+        `<br>Round ${TOURN.played} of ${TOURN.rounds} · ${escHtml(K.L.name)}<br>`+tournStandingsHTML();
+      const nb=$('#btn-res-next');
+      nb.textContent='Next Round ➜';
+      nb.style.display=(G.netClient)?'none':'block';
+      $('#btn-res-retry').style.display='none';
+    }
+    $('#ov-results').classList.add('active');
+    Snd.serve();
+    return;
+  }
+  $('#btn-res-next').textContent='Next Level ➜';
   const g0=G;G=K;
   const n=starsEarned(K.score);
   G=g0;
@@ -3054,7 +3155,7 @@ function drawFloor(x,y,r,c,t){
   }
 }
 let VIEW={s:1,x:0,y:0,mini:false};
-let MINI_CV=null;
+let MINI_CV=null,MARGIN_MINIS=false;
 function renderMiniWorld(k){
   if(!MINI_CV){MINI_CV=document.createElement('canvas');MINI_CV.width=936;MINI_CV.height=608;}
   const mc=MINI_CV.getContext('2d');
@@ -3071,7 +3172,7 @@ function render(){
   const others=VS.kitchens.filter(k=>k!==act);
   const ms=others.length>2?0.20:0.24;
   const mw=936*ms,mh=608*ms;
-  others.forEach((k,i)=>{
+  if(!MARGIN_MINIS)others.forEach((k,i)=>{
     const mx=936-mw-8,my=592-((others.length-i)*(mh+30))-6;
     const covered=act.players.some(p=>p.x>mx-34&&p.x<mx+mw+34&&p.y>my-56&&p.y<my+mh+34);
     const img=renderMiniWorld(k);
@@ -3458,6 +3559,7 @@ function warnBar(tl,x,y,frac,t){
     ctx.fillStyle=flash?'#ff5252':'#ffd54f';ctx.fillText('!',x+TS-10,y+14);}
 }
 function drawPlayer(p,t){
+  if(p.gone)ctx.globalAlpha=0.45;
   const moving=(Math.abs(p.mx||0)+Math.abs(p.my||0))>40;
   const bob=(p.working?Math.sin(t*18)*2.5:0)-(moving?Math.abs(Math.sin(p.walkT*1.7))*2.4:0);
   const x=p.x,y=p.y+bob;
@@ -3535,6 +3637,13 @@ function drawPlayer(p,t){
   }
   ctx.globalAlpha=1;
   /* badge */
+  if(p.gone){
+    ctx.font='bold 10px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#ffb0a8';
+    ctx.strokeStyle='#00000090';ctx.lineWidth=3;
+    ctx.strokeText('📡 offline',x,y-46);
+    ctx.fillText('📡 offline',x,y-46);
+  }
   if(G.mode>=2){
     ctx.font='bold 11px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=p.col;
@@ -3546,6 +3655,7 @@ function drawPlayer(p,t){
   }
   /* held item */
   if(p.held)drawItem(x+p.fx*8,y-46,p.held,0.85);
+  ctx.globalAlpha=1;
 }
 
 /* =====================================================================
@@ -3637,10 +3747,12 @@ function updateHUD(){
     const scores=VS.kitchens.map(k=>k.score);
     let ld=0;for(let i=1;i<scores.length;i++)if(scores[i]>scores[ld])ld=i;
     const tie=scores.every(s=>s===scores[0]);
-    $('#combo').textContent=tie?'':('🏆 '+TEAM_DEFS[VS.kitchens[ld].teamIdx].n+' leads!');
+    const rtag=TOURN?('🏆 R'+Math.min(TOURN.played+1,TOURN.rounds)+'/'+TOURN.rounds+' · '):'';
+    $('#combo').textContent=rtag+(tie?'':('🏆 '+TEAM_DEFS[VS.kitchens[ld].teamIdx].n+' leads!'));
   }else{
     $('#score').textContent='🪙 '+G.score;
-    $('#combo').textContent=G.combo>1?('🔥 COMBO ×'+G.combo+'  (+'+(G.combo*10)+'%)'):'';
+    const rtag2=TOURN?('🏆 R'+Math.min(TOURN.played+1,TOURN.rounds)+'/'+TOURN.rounds+(TOURN.coop?' · total '+TOURN.totals[0]:'')+'  '):'';
+    $('#combo').textContent=rtag2+(G.combo>1?('🔥 COMBO ×'+G.combo+'  (+'+(G.combo*10)+'%)'):'');
   }
   if(G.ordersDirty){
     G.ordersDirty=false;
@@ -3835,11 +3947,29 @@ function netOnWS(m){
   else if(m.t==='err'){olMsg(m.m);}
   else if(m.t==='peer'){hostAddPeer(m.id,m.name,m.style);}
   else if(m.t==='gone'){
+    const slot=NET.slots?NET.slots.indexOf(m.id):-1;
+    const nm=(NET.slotNames&&slot>=0&&NET.slotNames[slot])||NET.names[m.id]||'A chef';
     NET.peers.delete(m.id);delete NET.names[m.id];delete NET.styles[m.id];
-    if(NET.started&&G){showToast('🌐 '+(m.name||'a chef')+' disconnected');}
+    if(NET.started&&G&&slot>=0){
+      const ws=VS?VS.kitchens:[G];
+      const g0=G;
+      for(const w of ws)for(const p of w.players)if(p.slot===slot){
+        p.gone=true;
+        if(NET.role==='host'){delete NET.keys[slot];
+          ['u','d','l','r','w'].forEach(k2=>Keys.down['@'+slot+k2[0]]=false);
+          Keys.down['@'+slot+'u']=Keys.down['@'+slot+'d']=Keys.down['@'+slot+'l']=Keys.down['@'+slot+'r']=Keys.down['@'+slot+'w']=false;}
+      }
+      G=g0;
+      const g1=G;G=VS?VS.kitchens[VS.view]:G;
+      showToast('📡 '+nm+' disconnected!');
+      G=g1;
+      if(NET.role==='host')netBroadcast({t:'bye',slot,nm});
+    } else if(!NET.started){
+      showToast('👋 '+nm+' left the lobby');
+    }
     netLobbyRender();
   }
-  else if(m.t==='hostgone'){netAbort('Host left the game.');}
+  else if(m.t==='hostgone'){netAbort('📡 The host disconnected — game over. Back to the title screen.');}
   else if(m.t==='sig'){
     if(NET.role==='client')clientHandleSig(m.d);
     else{const pr=NET.peers.get(m.from);if(!pr)return;
@@ -3864,7 +3994,8 @@ function netOnGame(from,d){
     }
   }else{
     if(d.t==='start'){
-      NET.started=true;NET.slots=d.slots;NET.mySlot=d.slots.indexOf(NET.myId);
+      NET.started=true;NET.slots=d.slots;NET.mySlot=d.slots.indexOf(NET.myId);NET.slotNames=d.names||[];
+      TOURN=d.tourn?{rounds:d.tourn.rounds,played:d.tourn.played,totals:d.tourn.totals.slice(),seq:[],coop:!MODES[d.mode].teams}:null;
       setMode(d.mode);startLevel(d.li);
       const ws=VS?VS.kitchens:[G];
       for(const w of ws){
@@ -3878,6 +4009,11 @@ function netOnGame(from,d){
       }
     }
     else if(d.t==='snap'){if(d.q>NET.lastSeq){NET.lastSeq=d.q;NET.cur=d;}}
+    else if(d.t==='bye'){
+      const ws=VS?VS.kitchens:[G];
+      for(const w of (G?ws:[]))for(const p of w.players)if(p.slot===d.slot)p.gone=true;
+      showToast('📡 '+(d.nm||'A chef')+' disconnected!');
+    }
     else if(d.t==='end'){/* results come via snap state */}
   }
 }
@@ -3902,7 +4038,9 @@ function netLobbyRender(){
       .map(k=>`<button class="modebtn ${MODES[k].teams?'vs':''}" data-olmode="${k}" style="width:104px;padding:7px 2px"><b>${MODES[k].n}</b><i>${MODES[k].teams?'versus':'co-op'}</i></button>`).join('')
       ||'<span class="lbhint">no modes fit '+n+' chef'+(n>1?'s':'')+' — invite more!</span>';
     document.querySelectorAll('[data-olmode]').forEach(b=>b.onclick=()=>{
-      setMode(+b.dataset.olmode);buildMap();showScreen('map');
+      setMode(+b.dataset.olmode);TOURN=null;
+      if(TOURN_PICK>0){startTournament(TOURN_PICK);return;}
+      buildMap();showScreen('map');
       showToast('🌐 pick a kitchen — it starts for everyone');
     });
   }else{
@@ -3917,7 +4055,9 @@ function netHostStart(li){
   NET.keys={};NET.started=true;
   netSendWS({t:'lock'});
   const styles=ids.map(id=>NET.styles[id]||'classic');
-  netBroadcast({t:'start',li,mode:playerMode,slots:ids,styles});
+  const names=ids.map(id=>NET.names[id]||'Chef');
+  NET.slotNames=names;
+  netBroadcast({t:'start',li,mode:playerMode,slots:ids,styles,names,tourn:TOURN?{rounds:TOURN.rounds,played:TOURN.played,totals:TOURN.totals}:null});
   return styles;
 }
 function netHostWire(){
@@ -3946,14 +4086,15 @@ function serIt(it){return it?(it.id+(it.parts&&it.parts.length?'|'+it.parts.join
 function desIt(s){if(!s)return null;const[a,b]=s.split('|');const it={id:a};if(b!=null)it.parts=b?b.split(','):[];else if(a==='plate'||a==='pizzaraw')it.parts=[];return it;}
 function snapWorld(w){
   const tls=[];
+  const now=performance.now()/1000;
   for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
     const t=w.grid[r][c];
-    if(t.item||(t.parts&&t.parts.length)||t.fire||(t.chop&&t.chop>0)||t.st==='cook')
-      tls.push([r,c,serIt(t.item),(t.parts||[]).join(','),Math.round((t.cook||0)*10),Math.round((t.burn||0)*10),Math.round((t.chop||0)*10),t.fire?1:0,t.st||'',Math.round((t.chopAnimT||0)*10)]);
+    if(t.item||(t.parts&&t.parts.length)||t.fire||t.chopT>0||t.washT>0||t.douseT>0||t.st==='cook')
+      tls.push([r,c,serIt(t.item),(t.parts||[]).join(','),Math.round((t.cook||0)*10),Math.round((t.burn||0)*10),Math.round((t.chopT||0)*20),t.fire?1:0,t.st||'',(now-(t.chopAnimT||0))<0.15?1:0,Math.round((t.washT||0)*20),Math.round((t.douseT||0)*20)]);
   }
   return {st:w.state,cd:Math.round((w.cd||0)*10),tl:Math.round(w.timeLeft*10),
     sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
-    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held)]),
+    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0]),
     ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),tls};
 }
 function netSnap(){
@@ -3969,17 +4110,19 @@ function applyWorldSnap(w,s,viewed){
   if(viewed&&w.orders.map(o=>o.dish).join(',')!==od)w.ordersDirty=true;
   for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
     const t=w.grid[r][c];
-    if(t.netTouched){t.item=null;if(t.parts)t.parts=[];t.fire=false;t.chop=0;t.cook=0;t.burn=0;t.st='';t.chopAnimT=0;t.netTouched=false;}
+    if(t.netTouched){t.item=null;if(t.parts)t.parts=[];t.fire=false;t.chopT=0;t.washT=0;t.douseT=0;t.cook=0;t.burn=0;t.st='';t.netTouched=false;}
   }
   for(const e of s.tls){
     const t=w.grid[e[0]][e[1]];if(!t)continue;
     t.item=desIt(e[2]);
     if(t.parts)t.parts=e[3]?e[3].split(','):[];else if(e[3])t.parts=e[3].split(',');
-    t.cook=e[4]/10;t.burn=e[5]/10;t.chop=e[6]/10;t.fire=!!e[7];t.st=e[8]||'';t.chopAnimT=e[9]/10;
+    t.cook=e[4]/10;t.burn=e[5]/10;t.chopT=e[6]/20;t.fire=!!e[7];t.st=e[8]||'';
+    if(e[9])t.chopAnimT=performance.now()/1000;
+    t.washT=(e[10]||0)/20;t.douseT=(e[11]||0)/20;
     t.netTouched=true;
   }
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
-    p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);
+    p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
   });
   if(viewed&&w.score>oldSc)Snd.serve();
@@ -4024,6 +4167,7 @@ function netClientKey(code,down){
 
 
 
+$('#btn-solo').onclick=()=>{Snd.init();setMode(1);buildMap();showScreen('map');};
 $('#btn-play').onclick=()=>{Snd.init();showScreen('modes');};
 $('#btn-online').onclick=()=>{Snd.init();netReset();
   $('#ol-entry').style.display='';$('#ol-lobby').style.display='none';olMsg('');
@@ -4045,8 +4189,15 @@ $('#btn-join').onclick=()=>{
 $('#btn-board').onclick=()=>{Snd.init();renderBoard();showScreen('board');};
 $('#btn-modes-back').onclick=()=>showScreen('title');
 $('#btn-board-back').onclick=()=>showScreen('title');
+document.querySelectorAll('.tsbtn').forEach(b=>b.onclick=()=>{
+  Snd.init();TOURN_PICK=+b.dataset.rounds;
+  const seg=b.parentElement;
+  seg.querySelectorAll('.tsbtn').forEach(x=>x.classList.toggle('sel',x===b));
+});
 document.querySelectorAll('.modebtn').forEach(b=>b.onclick=()=>{
-  Snd.init();setMode(+b.dataset.mode);buildMap();showScreen('map');});
+  Snd.init();setMode(+b.dataset.mode);TOURN=null;
+  if(TOURN_PICK>0){startTournament(TOURN_PICK);return;}
+  buildMap();showScreen('map');});
 $('#pname').oninput=e=>{SAVE.pname=e.target.value.slice(0,12);SaveIO.save(SAVE);};
 $('#btn-mode').onclick=()=>showScreen('modes');
 $('#btn-style1').onclick=()=>{cycleStyle(1);buildMap();};
@@ -4067,14 +4218,17 @@ $('#btn-recipes-close').onclick=()=>{
 };
 $('#btn-resume').onclick=()=>{togglePause();};
 $('#btn-restart').onclick=()=>{startLevel(G.li);};
-$('#btn-quit').onclick=()=>{G=null;buildMap();showScreen('map');};
+$('#btn-quit').onclick=()=>{TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
 $('#btn-pause-recipes').onclick=()=>{
   $('#ov-pause').classList.remove('active');
   buildRecipes();$('#ov-recipes').classList.add('active');
 };
 $('#btn-res-retry').onclick=()=>{startLevel(G.li);};
-$('#btn-res-map').onclick=()=>{G=null;buildMap();showScreen('map');};
-$('#btn-res-next').onclick=()=>{startLevel(G.li+1);};
+$('#btn-res-map').onclick=()=>{TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
+$('#btn-res-next').onclick=()=>{
+  if(TOURN&&TOURN.played<TOURN.rounds){startLevel(TOURN.seq[TOURN.played]);return;}
+  startLevel(G.li+1);
+};
 $('#mutebtn').onclick=()=>{
   Snd.on=!Snd.on;Snd.init();
   $('#mutebtn').textContent=Snd.on?'🔊 Sound On':'🔇 Muted';
@@ -4140,6 +4294,36 @@ function drawPlateFood(x,y,foods,i,t){
     bctx.fillStyle='#fff';
     bctx.beginPath();bctx.arc(x+2,y-6-ph*12,2+ph*1.8,0,7);bctx.fill();
     bctx.globalAlpha=1;
+  }
+}
+function drawMarginMinis(w,h,ax,ay,aw,ah){
+  MARGIN_MINIS=false;
+  if(!(screen==='game'&&G&&VS&&VS.kitchens))return;
+  const others=VS.kitchens.filter(k=>k!==VS.kitchens[VS.view]);
+  if(!others.length)return;
+  const rmX=ax+aw+16,rmW=w-rmX-16;
+  if(rmW<150)return;
+  const maxH=(h-90)/others.length-42;
+  const msc=Math.min(rmW/936,320/936,maxH/608);
+  if(msc<0.15)return;
+  MARGIN_MINIS=true;
+  const miniW=936*msc,miniH=608*msc;
+  const total=others.length*(miniH+42);
+  let y=Math.max(56,ay-total/2+20);
+  for(const k of others){
+    const img=renderMiniWorld(k);
+    bctx.setTransform(BGS,0,0,BGS,0,0);
+    bctx.fillStyle='rgba(14,10,22,0.92)';
+    bctx.beginPath();bctx.roundRect(rmX-6,y-24,miniW+12,miniH+32,10);bctx.fill();
+    bctx.drawImage(img,rmX,y,miniW,miniH);
+    bctx.strokeStyle=TEAM_DEFS[k.teamIdx].c;bctx.lineWidth=2.5;
+    bctx.beginPath();bctx.roundRect(rmX-6,y-24,miniW+12,miniH+32,10);bctx.stroke();
+    bctx.font='bold 14px "Trebuchet MS",sans-serif';bctx.textAlign='left';bctx.textBaseline='middle';
+    bctx.fillStyle=TEAM_DEFS[k.teamIdx].c;
+    bctx.fillText(TEAM_DEFS[k.teamIdx].e+' '+TEAM_DEFS[k.teamIdx].n+' kitchen',rmX+2,y-11);
+    bctx.textAlign='right';bctx.fillStyle='#ffd54f';
+    bctx.fillText('🪙 '+k.score,rmX+miniW-2,y-11);
+    y+=miniH+42;
   }
 }
 function drawAmbient(t){
@@ -4291,6 +4475,7 @@ function drawAmbient(t){
   const vg2=bctx.createRadialGradient(ax,ay,Math.min(w,h)*0.42,ax,ay,Math.max(w,h)*0.8);
   vg2.addColorStop(0,'rgba(0,0,0,0)');vg2.addColorStop(1,'rgba(8,4,16,0.35)');
   bctx.fillStyle=vg2;bctx.fillRect(0,0,w,h);
+  drawMarginMinis(w,h,ax,ay,aw,ah);
 }
 /* ---------------- scaling ---------------- */
 let RS=1;

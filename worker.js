@@ -76,6 +76,7 @@ export class Hub {
       } else {
         r.peers.delete(ws.pid);
         this.send(r.host, { t: 'gone', id: ws.pid });
+        for (const p of r.peers.values()) this.send(p, { t: 'gone', id: ws.pid });
       }
     };
     ws.addEventListener('close', bye);
