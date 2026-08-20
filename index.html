@@ -905,36 +905,36 @@ const WORLDS=[
 const LEVELS=[
 {w:0,name:"First Roll",time:155,intv:15,pat:80,dishes:["fruitbowl","cornroast"],map:[
 "#####WW######",
-"#...Jp......#",
-"#.a#J....#b.#",
-"c...J.......F",
-"####J..GGGG##",
+"#....p......U",
+"#.a#.....#b.U",
+"c...........U",
+"####C..C#####",
 "#.N.....q...#",
 "#.B.......T.#",
 "#############"]},
 {w:0,name:"Rice 101",time:160,intv:15,pat:75,dishes:["porridge","fruitbowl"],map:[
 "#a###WW###s##",
-"#......N....#",
-"#..JJJJ.#####",
-"#..JJJJ.#####",
-"#.p.....#####",
-"#....q......P",
-"#B...b.....P#",
+"Bq.........p#",
+"#M~C~~~~#####",
+"#M~C~~~~#####",
+"#.......#####",
+"#...........P",
+"##...b.....P#",
 "######T######"]},
 {w:0,name:"Tamago Practice",time:155,intv:14,pat:72,dishes:["toastie","cornroast"],map:[
 "##w#k#WW#t###",
 "#...........#",
-"#....#GG....#",
+"#....#C#....#",
 "#.p..C#C..q.#",
 "#....#C#....#",
 "#...........#",
 "#B....c....T#",
-"#####F#######"]},
+"##UUUU#######"]},
 {w:0,name:"Dojo Divide",time:165,intv:14,pat:70,dishes:["picnic","porridge"],map:[
 "##a#s#w#k#B##",
 "#.....p.....#",
 "#...........#",
-"###GGGP#C####",
+"###C##P#GGGG#",
 "#...........#",
 "#.....q.....#",
 "#...........T",
@@ -943,25 +943,25 @@ const LEVELS=[
 "#w#k#t#c#a#b#",
 "#...........#",
 "#...........#",
-"#M~CGGFF#~~~#",
+"#M~CC#FF#~~~#",
 "#M~~~~~~~~~~#",
 "#....q......#",
 "B..........pT",
 "###WW####K###"]},
 {w:0,name:"Bento Basics",time:170,intv:14,pat:68,dishes:["picnic","cornroast","porridge"],map:[
 "#w#k#a#######",
-"K.....MM....G",
-"c..p..~~....G",
+"K.....MM....#",
+"c..p..~~....C",
 "s.....~~....C",
-"#..q..~~....F",
-"P.....~~....F",
+"Z..q..~~....F",
+"Z.....~~....F",
 "B.....~~....T",
 "###WW########"]},
 {w:0,name:"Roll Rush",time:165,intv:13,pat:65,dishes:["fruitbowl","toastie","cornroast"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"a...p....q..G",
+"#...........#",
+"a...p....q..C",
 "b...........C",
 "w...........c",
 "k...........F",
@@ -969,16 +969,16 @@ const LEVELS=[
 {w:0,name:"Split Dojo",time:175,intv:13,pat:65,dishes:["toastie","cornroast","fruitbowl","picnic"],map:[
 "#a#b#w#######",
 "#.....#.....#",
-"#..p..G..q..W",
-"#.....G.....W",
+"#..p..C..q..W",
+"#.....#.....W",
 "k.....C.....c",
 "#.....#.....F",
 "t.....#.....F",
 "##B##T##K##T#"]},
 {w:0,name:"Full Omakase",time:180,intv:12,pat:62,dishes:["fruitbowl","toastie","cornroast","picnic","porridge"],map:[
 "#a#b#w#k#t#s#",
-"G...........#",
-"G...p...q...F",
+"#...........#",
+"C...p...q...F",
 "C...........F",
 "c...........P",
 "B...........T",
@@ -986,9 +986,9 @@ const LEVELS=[
 "###WW###K####"]},
 {w:0,name:"Graduation Roll",time:190,intv:12,pat:60,dishes:["fruitbowl","toastie","cornroast","picnic","porridge"],map:[
 "#a#b#w#k#t#B#",
-"#...p.......#",
-"#...........P",
-"#GGG111##C###",
+"#...p.......Z",
+"#...........Z",
+"#C##111##C###",
 "s...........#",
 "#.....q.....F",
 "c...........F",
@@ -997,17 +997,17 @@ const LEVELS=[
 "#####WW######",
 "#~o......rs~#",
 "#...........#",
-"#.p..P.P..q.#",
-"#.........N.#",
-"#~.B.....T.~#",
-"##JJJK..C..##",
+"#.p..P.PJ.q.#",
+"#.......J...#",
+"#~.BN...JT.~#",
+"##C..K..J..##",
 "#############"]},
 {w:1,name:"Miso at Sea",time:165,intv:14,pat:72,dishes:["porridge","cloudsoup","skyskewer"],map:[
 "#o#r#h#e#s###",
 "#.....~.....#",
-"#.JJJS....P.#",
+"#.C..S....P.#",
 "#p...~~~...q#",
-"#.JJJS....P.#",
+"#.C..S....P.#",
 "#.....~.....#",
 "#B....K....T#",
 "####WW#######"]},
@@ -1022,11 +1022,11 @@ const LEVELS=[
 "#############"]},
 {w:1,name:"Gangway Gap",time:160,intv:13,pat:68,dishes:["cloudsoup","skyskewer"],map:[
 "#o#r#h##BWWK#",
-"#.....~~....G",
-"#.....~~.q..G",
+"#.....~~....#",
+"#.....~~.q..C",
 "#.....~~....C",
-"#.....MM....#",
-"e.....~~....P",
+"#.....MM....Z",
+"e.....~~....Z",
 "#.....~~...pS",
 "########T####"]},
 {w:1,name:"Galley Class",time:160,intv:13,pat:66,dishes:["skyskewer","captains"],map:[
@@ -1041,17 +1041,17 @@ const LEVELS=[
 {w:1,name:"Kaiten Belt",time:160,intv:13,pat:64,dishes:["porridge","skyskewer"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"s...p....q..G",
+"#...........#",
+"s...p....q..C",
 "h...........C",
 "e...........S",
 "#...........P",
 "#B##T##K#####"]},
 {w:1,name:"Deck Nine",time:170,intv:12,pat:64,dishes:["cloudsoup","porridge","skyskewer"],map:[
 "#o#r#s#h#e###",
-"G...........#",
-"G..~~~~~~...#",
-"G..~~~~~~...P",
+"#...........#",
+"#..~~~~~~...#",
+"C..~~~~~~...P",
 "C..~~~~~~...S",
 "#..~~~~~~...P",
 "B.p......q..T",
@@ -1067,13 +1067,13 @@ const LEVELS=[
 "###########F#"]},
 {w:1,name:"Captain's Omakase",time:175,intv:12,pat:60,dishes:["porridge","cloudsoup","skyskewer","captains"],map:[
 "#o#r#s#h#e#c#",
-"G...........#",
-"G...p.......P",
+"#...........#",
+"C...p.......P",
 "C...........P",
 "#...q.......S",
 "B...........T",
 "#...........#",
-"###WW###K##F#"]},
+"###WW###KUUU#"]},
 {w:1,name:"Storm Service",time:180,intv:11,pat:58,dishes:["cloudsoup","skyskewer","captains"],map:[
 "#h#e#o###c###",
 "#......~....E",
@@ -1086,61 +1086,61 @@ const LEVELS=[
 {w:2,name:"First Steam",time:150,intv:15,pat:75,dishes:["applepie"],map:[
 "#d#h####WW###",
 "#...........#",
-"#.JJJ~~~..O.#",
+"#.C..~~~..O.#",
 "#.p..~~~..q.#",
 "#.C..~~~..O.#",
 "#...........#",
 "#B...K....TX#",
 "#############"]},
 {w:2,name:"Bao Corner",time:150,intv:14,pat:72,dishes:["applepie","berrypie"],map:[
-"#d#h#y##WW###",
-"#...J.......#",
-"#.O#J....#O.#",
-"#...J.......#",
-"#p..J###JJJq#",
-"#...........#",
-"#B...K..T..X#",
+"#d#h#y##WWK##",
+"#.....MMp...#",
+"#.O#..~~.BO.#",
+"#.....~~....#",
+"#JJJJ###C..q#",
+"#.....~~....#",
+"##...#~~T..X#",
 "#############"]},
 {w:2,name:"Curry Kitchen",time:160,intv:14,pat:68,dishes:["emberstew","applepie"],map:[
 "#d#h#u#r#####",
 "#.....#.MM..#",
 "#.p.....~O..#",
-"#..JJJJ.~P..#",
-"#..JJJ#.~~..#",
+"#..C....~P..#",
+"#..C..#.~~..#",
 "#......q~~..#",
 "#B.....K~T.X#",
 "####WW#######"]},
 {w:2,name:"Manju Alley",time:160,intv:13,pat:66,dishes:["pumpkinpie","emberstew"],map:[
 "#d#u#r##WW###",
-"G...........#",
-"G....p......O",
-"C...........P",
-"#.....q.....#",
+"#...........#",
+"C....p......O",
+"C...........Z",
+"#.....q.....Z",
 "B...........T",
 "#...........X",
 "#####K#######"]},
 {w:2,name:"Coal Split",time:170,intv:13,pat:64,dishes:["applepie","berrypie"],map:[
 "#d#h#y##K####",
 "#.....~~....#",
-"G.....~~.q..O",
-"G.....~~....O",
-"G.....MM....#",
+"C.....~~.q..O",
+"#.....~~....O",
+"#.....MM....#",
 "C.....~~....B",
 "#.....~~...pX",
 "######~#WW#T#"]},
 {w:2,name:"Charcoal Belt",time:170,intv:12,pat:62,dishes:["applepie","emberstew"],map:[
 "#d#h#u#####X#",
 "#......~....#",
-"G.p....~..q.O",
-"G.11111#....P",
-"r......~....#",
+"C.p....~..q.O",
+"#N11111#....Z",
+"r......~....Z",
 "C......~....B",
 "#......~....T",
 "######~#WW#K#"]},
 {w:2,name:"Steam Hall",time:175,intv:12,pat:60,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
 "#d#h#y#u#r###",
-"G...........#",
-"G...p.......O",
+"#...........#",
+"C...p.......O",
 "C...........O",
 "#....q......P",
 "B...........P",
@@ -1148,9 +1148,9 @@ const LEVELS=[
 "###WW###K####"]},
 {w:2,name:"Ember Ring",time:175,intv:11,pat:60,dishes:["applepie","pumpkinpie"],map:[
 "#d#h#u#######",
-"G...........#",
-"G..~~~~~~...#",
-"G..~~~~~~...O",
+"#...........#",
+"#..~~~~~~...#",
+"C..~~~~~~...O",
 "C..~~~~~~...O",
 "#..~~~~~~...#",
 "B.p......q..X",
@@ -1158,7 +1158,7 @@ const LEVELS=[
 {w:2,name:"Dinner Rush",time:180,intv:11,pat:58,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
 "#d#h#y#u#r###",
 "#...........#",
-"#.#GGO#P##..#",
+"#.#C#O#P##..#",
 "#M~~~~~~~~~~#",
 "#M#C#O#P#T~~#",
 "B..........p#",
@@ -1167,8 +1167,8 @@ const LEVELS=[
 {w:2,name:"The Great Steam-Off",time:200,intv:10,pat:55,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
 "#d#h#y#####X#",
 "#......~....#",
-"G.p....~.q..O",
-"G.11111#....O",
+"C.p....~.q..O",
+"#N11111#....O",
 "r......~....P",
 "C......~....P",
 "u......~....B",
@@ -1177,33 +1177,33 @@ const LEVELS=[
 "#####WW######",
 "#..y.....b..#",
 "#.N.........#",
-"#~~....JJJJ~#",
+"#~~....C...~#",
 "#~....C....~#",
 "#..p....q..~#",
 "#.B......T..#",
 "#############"]},
 {w:3,name:"Catch of the Day",time:155,intv:14,pat:70,dishes:["chillbowl","grilledfish"],map:[
-"#y#b#####WW##",
-"#.....~~~...#",
-"#..J..~~~.S.#",
-"#.pJ..~~~...#",
-"#f.J..~~~.q.#",
-"#..J.N......#",
-"#B...K....T.#",
+"#y#b#####WWB#",
+"#....~~~~...K",
+"#..J.~~~~.S.#",
+"#..J.~~~~...#",
+"#f.J.~~~~.q.#",
+"#..J.MM.....#",
+"##...#~p..T.#",
 "#############"]},
 {w:3,name:"Udon Stand",time:160,intv:13,pat:68,dishes:["chowder","grilledfish"],map:[
 "#f#o####WWBK#",
 "#.....MM...p#",
-"~~~JJJ~~...P#",
-"~~JJJJ~~...P#",
+"~~~..C~~...P#",
+"~~...C~~...P#",
 "#.....~~.q..#",
 "#.....S~....#",
 "##...#~~..T.#",
 "#############"]},
 {w:3,name:"Icy Crossing",time:165,intv:13,pat:66,dishes:["chillbowl","chowder"],map:[
 "#y#b#f##BWWK#",
-"#.....~~....G",
-"#.....~~.q..G",
+"#.....~~....#",
+"#.....~~.q..C",
 "#.....~~....C",
 "#.....MM....#",
 "o.....~~....P",
@@ -1221,8 +1221,8 @@ const LEVELS=[
 {w:3,name:"Freezer Belt",time:165,intv:12,pat:62,dishes:["chillbowl","fryup"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"y...p....q..G",
+"#...........#",
+"y...p....q..C",
 "b...........C",
 "f...........S",
 "o...........F",
@@ -1247,8 +1247,8 @@ const LEVELS=[
 "###########F#"]},
 {w:3,name:"Winter Menu",time:175,intv:11,pat:58,dishes:["chillbowl","grilledfish","chowder","fryup"],map:[
 "#y#b#f#o#####",
-"G...........#",
-"G...p.......P",
+"#...........#",
+"C...p.......P",
 "C...........P",
 "#...q.......S",
 "B...........F",
@@ -1268,15 +1268,15 @@ const LEVELS=[
 "#...........#",
 "#.C.111111#.#",
 "#.p.......q.#",
-"#.J.#####...#",
-"#.J.........#",
-"#BJ.F..K..T.#",
+"#.C.#####...#",
+"#...........#",
+"#B..YYYK..T.#",
 "#############"]},
 {w:4,name:"Roll Line",time:155,intv:13,pat:68,dishes:["boltbites","energywrap"],map:[
 "#z#n#e#o#####",
 "#...........#",
 "#.##.....##.#",
-"#.pJJJJ..Fq.#",
+"#.pC..YYYYq.#",
 "#.##.....##.#",
 "#.....JJJJ..#",
 "#B.F....K..T#",
@@ -1284,17 +1284,17 @@ const LEVELS=[
 {w:4,name:"Soup Station",time:160,intv:13,pat:66,dishes:["circuitsoup","boltbites"],map:[
 "#n#r#o##WW###",
 "#.....MM....#",
-"#.JJJJ##BK#.#",
+"#.C...##BK#.#",
 "#.....#~.q..#",
-"#.JJJJ#~PP..#",
+"#.C...#~PP..#",
 "#.....~F....#",
 "##...#~~..Tp#",
 "#############"]},
 {w:4,name:"Conveyor Chaos",time:165,intv:12,pat:64,dishes:["energywrap","circuitsoup","boltbites"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"z...p....q..G",
+"#...........#",
+"z...p....q..C",
 "n...........C",
 "e...........F",
 "r...........P",
@@ -1303,7 +1303,7 @@ const LEVELS=[
 "#z#n#e#o#B###",
 "#.....p.....#",
 "#...........#",
-"###GGGG#C####",
+"###C####GGGG#",
 "#...........#",
 "#.....q.....#",
 "F...........T",
@@ -1311,7 +1311,7 @@ const LEVELS=[
 {w:4,name:"Bar Grid",time:170,intv:12,pat:60,dishes:["boltbites","circuitsoup","energywrap"],map:[
 "#z#n#e#o#r###",
 "#...........#",
-"#.#GGF#P##..#",
+"#.#C#F#P##..#",
 "#M~~~~~~~~~~#",
 "#M#C#F#P#T~~#",
 "B..........p#",
@@ -1321,24 +1321,24 @@ const LEVELS=[
 "#z#n#e#o#r#B#",
 "#...p.......#",
 "#...........#",
-"#GGG111##C###",
-"#...........#",
-"#.....q.....F",
+"#C##111##C###",
+"#...........U",
+"#.....q.....U",
 "#...........P",
 "#WW##T##K####"]},
 {w:4,name:"Quality Check",time:175,intv:11,pat:58,dishes:["deluxewrap","boltbites"],map:[
 "#z#n#e#o#####",
 "#...........#",
 "#...........#",
-"#M~CGGFP#~~~#",
+"#M~CCUUP#~~~#",
 "#M~~~~~~~~~~#",
 "#.p......q..#",
 "B...........T",
 "###WW#K##k###"]},
 {w:4,name:"Dinner Peak",time:180,intv:11,pat:56,dishes:["boltbites","energywrap","circuitsoup","deluxewrap"],map:[
 "#z#n#e#k#o#r#",
-"G...........#",
-"G...p.......F",
+"#...........#",
+"C...p.......F",
 "C...........F",
 "#...q.......P",
 "B...........P",
@@ -1356,11 +1356,11 @@ const LEVELS=[
 {w:5,name:"Teriyaki Test",time:155,intv:14,pat:70,dishes:["candyapple","chocbanana"],map:[
 "#a#b####WW###",
 "#...........#",
-"#..#GGP#....#",
+"#..#C#P#....#",
 "#.p......q..#",
-"#..#J#P#....#",
-"#...J.......#",
-"#B.mJ.K..TX.#",
+"#..#C#P#....#",
+"#...........#",
+"#B.m..K..TX.#",
 "#############"]},
 {w:5,name:"Tempura Deck",time:160,intv:13,pat:68,dishes:["carnivalcorn","candyapple"],map:[
 "#c#k#a#m#####",
@@ -1374,16 +1374,16 @@ const LEVELS=[
 {w:5,name:"Bao in the Sky",time:160,intv:13,pat:66,dishes:["midnightpie","chocbanana"],map:[
 "#d#y#m#b#####",
 "#..........~#",
-"#JJJJ.O.....#",
+"#...C.O.....#",
 "#.p......q..#",
-"#JJJJ.P.....#",
+"#...C.VVVV..#",
 "#..........~#",
 "#B....K.T..X#",
 "####WW#######"]},
 {w:5,name:"Elevator Bank",time:165,intv:12,pat:64,dishes:["candyapple","carnivalcorn","chocbanana"],map:[
 "#a#b#c#k#m###",
 "#...........#",
-"#.#GGF###T#.#",
+"#.#C#UUUUT#.#",
 "#M~~~~~~~~~~#",
 "#M#C#P#K#W#~#",
 "B...........#",
@@ -1392,8 +1392,8 @@ const LEVELS=[
 {w:5,name:"Tofu Mezzanine",time:170,intv:12,pat:62,dishes:["chocbanana","candyapple"],map:[
 "#a#b#m#######",
 "#.....#.....#",
-"#..p..G..q..W",
-"#.....G.....W",
+"#..p..C..q..W",
+"#.....#.....W",
 "#.....C.....#",
 "#.....#.....P",
 "#.....#.....P",
@@ -1401,16 +1401,16 @@ const LEVELS=[
 {w:5,name:"Express Lift",time:170,intv:11,pat:60,dishes:["carnivalcorn","midnightpie"],map:[
 "#d#y#m#####X#",
 "#......~....#",
-"G.p....~.q..O",
-"G.11111#....F",
+"C.p....~.q..O",
+"#N11111#....F",
 "k......~....P",
 "C......~....B",
 "c......~....T",
 "######~#WW#K#"]},
 {w:5,name:"Penthouse Izakaya",time:175,intv:11,pat:58,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
 "#a#b#c#k#m###",
-"G...........#",
-"G...p.......F",
+"#...........U",
+"C...p.......U",
 "C...........P",
 "d...q.......P",
 "y...........O",
@@ -1418,9 +1418,9 @@ const LEVELS=[
 "###WW###K####"]},
 {w:5,name:"Lantern Floor",time:180,intv:11,pat:56,dishes:["candyapple","carnivalcorn","midnightpie"],map:[
 "#a#c#k#d#y###",
-"G...........#",
-"G..~~~~~~...#",
-"G..~~~~~~...P",
+"#...........Z",
+"#..~~~~~~...Z",
+"C..~~~~~~...Z",
 "C..~~~~~~...F",
 "m..~~~~~~...O",
 "B.p......q..X",
@@ -1428,7 +1428,7 @@ const LEVELS=[
 {w:5,name:"Midnight Rush",time:185,intv:10,pat:54,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
 "#a#b#c#k#m###",
 "#...........#",
-"#.#GGF#P##..#",
+"#.#C#UUP##..#",
 "#M~~~~~~~~~~#",
 "#MBC#O#P#T~~#",
 "d..........p#",
@@ -1437,8 +1437,8 @@ const LEVELS=[
 {w:5,name:"Neon Gala",time:210,intv:10,pat:52,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
 "#a#b#d###m#X#",
 "#......~....#",
-"G.p....~.q..O",
-"G.11111#....F",
+"C.p....~.q..O",
+"#N11111#....F",
 "y......~....P",
 "C......~....P",
 "c......~....B",
@@ -1453,22 +1453,22 @@ const LEVELS=[
 "#B........T.#",
 "#####K#######"]},
 {w:6,name:"Salmon Stream",time:155,intv:13,pat:64,dishes:["grilledfish","chowder"],map:[
-"#f#o####WW###",
-"#...........#",
-"C....~~.VVVV#",
-"C.p..~~..q.P#",
+"#f#o###BWWK##",
+"#....MM.....#",
+"C....~~....P#",
+"C....~~..q.P#",
 "#....~~.....#",
-"#.....RRRR..#",
-"#B...K....T.#",
+"#....~S.....#",
+"##...#~p..T.#",
 "#############"]},
 {w:6,name:"Udon Cove",time:160,intv:12,pat:62,dishes:["fishwrap","grilledfish"],map:[
 "#z#f#t##WWK##",
 "#.....MM....#",
 "#.C#..~~.BS.#",
 "#.....~~..q.#",
-"#.J#..~~.#S.#",
-"#.J...~~....#",
-"##J..#~~p.T.#",
+"#.C#..~~.#S.#",
+"#.....~~....#",
+"##...#~~p.T.#",
 "#############"]},
 {w:6,name:"Pond-Side Tables",time:165,intv:12,pat:60,dishes:["chowder","fishwrap"],map:[
 "#f#o#z#t#####",
@@ -1482,8 +1482,8 @@ const LEVELS=[
 {w:6,name:"Bubble Belt",time:165,intv:12,pat:60,dishes:["grilledfish","fryup"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"f...p....q..G",
+"#...........#",
+"f...p....q..C",
 "o...........C",
 "#...........S",
 "#...........F",
@@ -1517,8 +1517,8 @@ const LEVELS=[
 "##B##T##K##F#"]},
 {w:6,name:"Full Garden Menu",time:180,intv:10,pat:54,dishes:["grilledfish","chowder","fishwrap","fryup"],map:[
 "#f#o#z#t#####",
-"G...........#",
-"G...p.......P",
+"#...........#",
+"C...p.......P",
 "C...........P",
 "#...q.......S",
 "B...........F",
@@ -1536,7 +1536,7 @@ const LEVELS=[
 {w:7,name:"First Wok",time:150,intv:13,pat:66,dishes:["cornroast"],map:[
 "#c#c####WW###",
 "#...........#",
-"#..YYYY.#...#",
+"#..F....#...#",
 "#.p......q..#",
 "#..F....#...#",
 "#....##.....#",
@@ -1544,12 +1544,12 @@ const LEVELS=[
 "#####K#######"]},
 {w:7,name:"Tempura Stand",time:155,intv:13,pat:64,dishes:["cornroast","chickenwrap"],map:[
 "#z#h#t#c#####",
-"#...........#",
-"#.C#.....EE.#",
-"#.p.......q.#",
-"#.J#.....#F.#",
-"#.J.........#",
-"#BJ..K....T.#",
+"#.......MM..#",
+"#.C#....~#S.#",
+"#.p.....~~..#",
+"#.C#....~#F.#",
+"#.......~~..#",
+"#B...K.q~~T.#",
 "###WW########"]},
 {w:7,name:"Yakisoba Pit",time:160,intv:12,pat:62,dishes:["roastfeast","cornroast"],map:[
 "#h#o#c##WWBK#",
@@ -1565,15 +1565,15 @@ const LEVELS=[
 "#.....#.....#",
 "#..p..C..q..W",
 "#.....#.....W",
-"e.....C.....E",
-"n.....#.....E",
+"e.....C.....#",
+"n.....#.....S",
 "k.....#.....S",
 "##B##T##K##T#"]},
 {w:7,name:"Cart Line",time:165,intv:12,pat:60,dishes:["cornroast","roastfeast"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"h...p....q..G",
+"#...........#",
+"h...p....q..C",
 "o...........C",
 "c...........S",
 "#...........F",
@@ -1581,7 +1581,7 @@ const LEVELS=[
 {w:7,name:"Chili Row",time:170,intv:11,pat:58,dishes:["stuffedpepper","cornroast"],map:[
 "#e#n#k#c#####",
 "#...........#",
-"#M~CGGFF#~~~#",
+"#M~CC#FF#~~~#",
 "#M~~~~~~~~~~#",
 "#.p......q..#",
 "#...........#",
@@ -1599,7 +1599,7 @@ const LEVELS=[
 {w:7,name:"Crowd Crush",time:175,intv:11,pat:56,dishes:["stuffedpepper","chickenwrap"],map:[
 "#z#h#t#e#####",
 "#...........#",
-"#.#C#EE.##..#",
+"#.#C#S#.##..#",
 "#M~~~~~~~~~~#",
 "#MBC#S#~#T~~#",
 "n..........p#",
@@ -1626,25 +1626,25 @@ const LEVELS=[
 {w:8,name:"Steep Start",time:150,intv:13,pat:66,dishes:["porridge"],map:[
 "#s#s####WW###",
 "#...........#",
-"#..VVVV.~...#",
+"#..P....~...#",
 "#.p......q..#",
 "#..P....~...#",
 "#...........#",
 "#B........T.#",
 "#####K#######"]},
 {w:8,name:"Nori Bites",time:155,intv:13,pat:64,dishes:["porridge","berrytoast"],map:[
-"#s#w#y##WW###",
-"#...........#",
-"#.GG.....#P.#",
-"#.p.......q.#",
-"#.J#.....#P.#",
-"#.J.........#",
-"#BJ..K....T.#",
+"#s#w#y##WWK##",
+"#.....MM....#",
+"#.C#..~~.BP.#",
+"#.....~~..q.#",
+"#.C#..~~.#P.#",
+"#.....~~....#",
+"##...#~~p.T.#",
 "#############"]},
 {w:8,name:"Tofu Loft",time:160,intv:12,pat:62,dishes:["sweettoast","berrytoast"],map:[
 "#w#m#b#y#####",
-"G...........#",
-"G....~~.VVVV#",
+"#...........#",
+"C....~~....P#",
 "C.p..~~..q.P#",
 "#....~~.....#",
 "#...........#",
@@ -1652,8 +1652,8 @@ const LEVELS=[
 "####WW#######"]},
 {w:8,name:"Ropeway Split",time:165,intv:12,pat:60,dishes:["porridge","sweettoast"],map:[
 "#s#w#m#b#####",
-"#.....~.....G",
-"#.p...~..q..G",
+"#.....~.....#",
+"#.p...~..q..C",
 "#.....~.....C",
 "#....N......#",
 "#.....~.....P",
@@ -1662,7 +1662,7 @@ const LEVELS=[
 {w:8,name:"Salad Route",time:165,intv:12,pat:60,dishes:["chillbowl","berrytoast"],map:[
 "#y#b#w#######",
 "#...........#",
-"#M~CGGCC#~~~#",
+"#M~CC#CC#~~~#",
 "#M~~~~~~~~~~#",
 "#.p......q..#",
 "#...........#",
@@ -1671,17 +1671,17 @@ const LEVELS=[
 {w:8,name:"Gondola Belt",time:170,intv:11,pat:58,dishes:["porridge","sweettoast"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"s...p....q..G",
+"#...........#",
+"s...p....q..C",
 "w...........C",
 "m...........P",
 "b...........P",
 "#B##T##K#####"]},
 {w:8,name:"Frozen Terrace",time:170,intv:11,pat:58,dishes:["berrytoast","sweettoast","chillbowl"],map:[
 "#w#y#m#b#####",
-"G...........#",
-"G..~~~~~~...#",
-"G..~~~~~~...P",
+"#...........Z",
+"#..~~~~~~...Z",
+"C..~~~~~~...Z",
 "C..~~~~~~...C",
 "#..~~~~~~...#",
 "B.p......q..T",
@@ -1689,7 +1689,7 @@ const LEVELS=[
 {w:8,name:"Ryokan Galley",time:175,intv:11,pat:56,dishes:["porridge","berrytoast","sweettoast"],map:[
 "#s#w#y#m#b###",
 "#...........#",
-"#.#GGP###T#.#",
+"#.#C#P###T#.#",
 "#M~~~~~~~~~~#",
 "#M#C#P#K#W#~#",
 "B...........#",
@@ -1697,8 +1697,8 @@ const LEVELS=[
 "#############"]},
 {w:8,name:"Full Kaiseki",time:180,intv:10,pat:54,dishes:["porridge","berrytoast","sweettoast","chillbowl"],map:[
 "#s#w#y#m#b###",
-"G...........#",
-"G...p.......P",
+"#...........#",
+"C...p.......P",
 "C...........P",
 "#...q.......#",
 "B...........T",
@@ -1707,8 +1707,8 @@ const LEVELS=[
 {w:8,name:"Whiteout Service",time:190,intv:10,pat:52,dishes:["porridge","sweettoast","chillbowl"],map:[
 "#s#w#m#######",
 "#......~....#",
-"G.p....~.q..P",
-"G.11111#....P",
+"C.p....~.q..P",
+"#N11111#....P",
 "y......~....#",
 "C......~....B",
 "b......~....T",
@@ -1718,15 +1718,15 @@ const LEVELS=[
 "#...........#",
 "#.C.111111#.#",
 "#.p.......q.#",
-"#.J.#####...#",
-"#.J.........#",
-"#BJ.P..K..T.#",
+"#.C.#####...#",
+"#...........#",
+"#B..VVVK..T.#",
 "#############"]},
 {w:9,name:"Ration Ramen",time:155,intv:12,pat:62,dishes:["circuitsoup","stuffedpepper"],map:[
 "#n#r#e#k#####",
 "#...........#",
 "#.##.....##.#",
-"#.pJJJJ..Pq.#",
+"#.pC..VVVVq.#",
 "#.##.....##.#",
 "#.....JJJJ..#",
 "#B.P....K..T#",
@@ -1736,9 +1736,9 @@ const LEVELS=[
 "#...........#",
 "#.C...#####.#",
 "#.p...#..q..#",
-"#.C...#.RRRR#",
-"#.......R...#",
-"#B..K...R.T.#",
+"#.C...#.SS..#",
+"#...........#",
+"#B..K.....T.#",
 "#####WW######"]},
 {w:9,name:"Void Crossing",time:165,intv:11,pat:58,dishes:["circuitsoup","chickenwrap"],map:[
 "#z#h#t#n#r###",
@@ -1752,17 +1752,17 @@ const LEVELS=[
 {w:9,name:"Cargo Belt",time:165,intv:11,pat:58,dishes:["stuffedpepper","chickenwrap","circuitsoup"],map:[
 "#############",
 "#1111111111W#",
-"#...........G",
-"z...p....q..G",
+"#...........#",
+"z...p....q..C",
 "h...........C",
 "t...........S",
 "e...........P",
 "#B#n#T#K#r#k#"]},
 {w:9,name:"Orbit Ring",time:170,intv:11,pat:56,dishes:["circuitsoup","stuffedpepper"],map:[
 "#n#r#e#k#####",
-"G...........#",
-"G..~~~~~~...#",
-"G..~~~~~~...P",
+"#...........#",
+"#..~~~~~~...#",
+"C..~~~~~~...P",
 "C..~~~~~~...P",
 "#..~~~~~~...#",
 "B.p......q..T",
@@ -1770,7 +1770,7 @@ const LEVELS=[
 {w:9,name:"Night Cycle",time:170,intv:10,pat:56,dishes:["chickenwrap","circuitsoup","stuffedpepper"],map:[
 "#z#h#t#e#n###",
 "#...........#",
-"#.#C#EEP##..#",
+"#.#C#S#P##..#",
 "#M~~~~~~~~~~#",
 "#MBC#S#P#T~~#",
 "k...........#",
@@ -1779,7 +1779,7 @@ const LEVELS=[
 {w:9,name:"Slurp Frenzy",time:175,intv:10,pat:54,dishes:["deluxewrap","circuitsoup"],map:[
 "#z#n#e#k#r###",
 "#...........#",
-"#.#GGC#P##..#",
+"#.#C#C#P##..#",
 "#M~~~~~~~~~~#",
 "#M#C#C#P#T~~#",
 "B..........p#",
@@ -1787,8 +1787,8 @@ const LEVELS=[
 "###WW##K#####"]},
 {w:9,name:"System Overload",time:180,intv:10,pat:52,dishes:["circuitsoup","stuffedpepper","chickenwrap","deluxewrap"],map:[
 "#z#h#t#e#n#k#",
-"#...........E",
-"C...p.......E",
+"#...........#",
+"C...p.......S",
 "C...........S",
 "r...q.......P",
 "B...........P",
@@ -1796,8 +1796,8 @@ const LEVELS=[
 "###WW###K####"]},
 {w:9,name:"Command Deck",time:195,intv:9,pat:50,dishes:["deluxewrap","chickenwrap"],map:[
 "#z#n#t#######",
-"#......#....E",
-"C.p....#.q..E",
+"#......#....#",
+"C.p....#.q..S",
 "#N11111#....S",
 "e......#....#",
 "C......#....B",
@@ -1806,7 +1806,7 @@ const LEVELS=[
 {w:10,name:"Late-Night Banquet",time:150,intv:13,pat:64,dishes:["emberstew"],map:[
 "#u#r####WW###",
 "#...........#",
-"#.JJJ~~~..P.#",
+"#.C..~~~..P.#",
 "#.p..~~~..q.#",
 "#.C..~~~..P.#",
 "#...........#",
@@ -1817,24 +1817,24 @@ const LEVELS=[
 "#...........#",
 "#.P#.....#P.#",
 "#.p.......q.#",
-"#.J#.....#J.#",
-"#.J.......J.#",
-"#BJ...K.T.JX#",
+"#.C#.....#C.#",
+"#...........#",
+"#B....K.T..X#",
 "####WW#######"]},
 {w:10,name:"Signature Bao",time:160,intv:12,pat:60,dishes:["pumpkinpie","emberstew"],map:[
 "#d#u#r##WW###",
-"G...........#",
-"G....p......O",
-"C...........P",
-"#.....q.....#",
+"#...........#",
+"C....p......O",
+"C...........Z",
+"#.....q.....Z",
 "B...........T",
 "#...........X",
 "#####K#######"]},
 {w:10,name:"Ballroom Split",time:165,intv:11,pat:58,dishes:["candyapple","chocberries"],map:[
 "#a#m#y#######",
 "#.....#.....#",
-"#..p..G..q..W",
-"#.....G.....W",
+"#..p..C..q..W",
+"#.....#.....W",
 "#.....C.....#",
 "#.....#.....P",
 "#.....#.....P",
@@ -1842,25 +1842,25 @@ const LEVELS=[
 {w:10,name:"Service Belt",time:165,intv:11,pat:58,dishes:["pumpkinpie","chocberries"],map:[
 "#d#u#y#####X#",
 "#......~....#",
-"G.p....~..q.O",
-"G.11111#....P",
-"m......~....#",
+"C.p....~..q.O",
+"#N11111#....Z",
+"m......~....Z",
 "C......~....B",
 "#......~....T",
 "######~#WW#K#"]},
 {w:10,name:"Lantern Ring",time:170,intv:11,pat:56,dishes:["emberstew","pumpkinpie"],map:[
 "#d#u#r#######",
-"G...........#",
-"G..~~~~~~...#",
-"G..~~~~~~...O",
-"C..~~~~~~...P",
+"#...........#",
 "#..~~~~~~...#",
+"C..~~~~~~...O",
+"C..~~~~~~...Z",
+"#..~~~~~~...Z",
 "B.p......q..X",
 "###WW#K#T####"]},
 {w:10,name:"Palace Galley",time:170,intv:10,pat:56,dishes:["candyapple","chocberries","emberstew"],map:[
 "#a#m#y#u#r###",
 "#...........#",
-"#.#GGP###T#.#",
+"#.#C#P###T#.#",
 "#M~~~~~~~~~~#",
 "#M#C#P#K#W#~#",
 "B...........#",
@@ -1869,7 +1869,7 @@ const LEVELS=[
 {w:10,name:"Feast Rush",time:175,intv:10,pat:54,dishes:["pumpkinpie","candyapple","chocberries"],map:[
 "#d#u#a#m#y###",
 "#...........#",
-"#.#GGO#P##..#",
+"#.#C#O#P##..#",
 "#M~~~~~~~~~~#",
 "#M#C#O#P#T~~#",
 "B..........p#",
@@ -1877,8 +1877,8 @@ const LEVELS=[
 "###WW##K#####"]},
 {w:10,name:"Full Banquet",time:180,intv:9,pat:52,dishes:["emberstew","pumpkinpie","chocberries","candyapple"],map:[
 "#d#u#r#a#m###",
-"G...........#",
-"G...p.......O",
+"#...........#",
+"C...p.......O",
 "C...........P",
 "y...q.......P",
 "B...........T",
@@ -1887,8 +1887,8 @@ const LEVELS=[
 {w:10,name:"Midnight Ceremony",time:195,intv:9,pat:50,dishes:["pumpkinpie","emberstew","chocberries"],map:[
 "#d#u#y#####X#",
 "#......~....#",
-"G.p....~.q..O",
-"G.11111#....P",
+"C.p....~.q..O",
+"#N11111#....P",
 "r......~....P",
 "C......~....B",
 "m......~....T",
@@ -1905,21 +1905,21 @@ const LEVELS=[
 {w:11,name:"Icy Rolls",time:160,intv:12,pat:60,dishes:["deluxewrap","captains"],map:[
 "#z#n#e#k#c#h#",
 "#...........#",
-"#.C#.....#S.#",
+"#.C#.....EE.#",
 "#.p.......q.#",
-"#.J#.....#Y.#",
-"#.J.......Y.#",
-"#BJ...K.T.YX#",
+"#.C#.....#Y.#",
+"#.........Y.#",
+"#B....K.T.YX#",
 "####WW#######"]},
 {w:11,name:"Aurora Manju",time:160,intv:11,pat:58,dishes:["midnightpie","captains"],map:[
 "#d#y#m#h#e#c#",
-"G...........#",
-"G...p.......O",
+"#...........#",
+"C...p.......O",
 "C...........P",
 "#.....q.....S",
 "B...........T",
 "#...........X",
-"###WW##K###F#"]},
+"###WW##KUUUU#"]},
 {w:11,name:"Crevasse Split",time:165,intv:11,pat:56,dishes:["roastfeast","deluxewrap"],map:[
 "#h#o#z#######",
 "#.....#.....#",
@@ -1932,8 +1932,8 @@ const LEVELS=[
 {w:11,name:"Supply Belt",time:170,intv:10,pat:56,dishes:["midnightpie","roastfeast"],map:[
 "#d#y#m#####X#",
 "#......~....#",
-"G.p....~.q..O",
-"G.11111#....S",
+"C.p....~.q..O",
+"#N11111#....S",
 "h......~....P",
 "C......~....B",
 "o......~....T",
@@ -1959,7 +1959,7 @@ const LEVELS=[
 {w:11,name:"Firework Quota",time:180,intv:9,pat:52,dishes:["midnightpie","deluxewrap"],map:[
 "#d#y#m#z#n###",
 "#...........#",
-"#.#GGO#P##..#",
+"#.#C#O#P##..#",
 "#M~~~~~~~~~~#",
 "#MBC#C#P#T~~#",
 "e..........p#",
@@ -2075,7 +2075,8 @@ function buildKitchen(li,members,teamIdx){
   };
   runsOf('plat').forEach((cells,i)=>{
     if(cells.length<2)return;
-    plats.push({cells,pos:0,dir:1,spd:0.85+0.1*(i%3),cx:cells[0].c*TS+TS/2,cy:cells[0].r*TS+TS/2,px:0,py:0});
+    plats.push({cells,pos:0,dir:1,spd:0.72+0.08*(i%3),waitT:PLAT_DWELL,docked:true,
+      cx:cells[0].c*TS+TS/2,cy:cells[0].r*TS+TS/2,px:0,py:0});
   });
   ['stove','board','fryer','pot'].forEach(kind=>runsOf(kind).forEach(cells=>{
     if(cells.length<2)return;
@@ -2220,6 +2221,9 @@ function tryMove(p,others,dx,dy){
 }
 const DASH_T=0.15,DASH_CD=0.34,DASH_MULT=2.1;
 const FALL_T=5;
+/* boarding a raft should be forgiving: it waits at each end, its deck catches
+   you if you so much as clip it, and it pulls you the rest of the way aboard */
+const PLAT_DWELL=0.85, PLAT_GRIP=TS*0.68, PLAT_PULL=120, HAZ_GRACE=0.2;
 const HAZ_MSG={water:'🌊 Overboard! Fished out in',lava:'🔥 Into the coals! Back in',
   sky:'☁️ Off the mountain! Back in',void:'🕳️ Down it goes! Back in'};
 const HAZ_DEF='🕳️ Into the service pit! Back in';
@@ -2229,8 +2233,15 @@ function hazardAt(x,y){
   if(G.grid[r][c].type!=='hazard')return false;
   /* a raft under your feet keeps you dry */
   for(const pl of (G.plats||[]))
-    if(Math.abs(x-pl.cx)<TS*0.52&&Math.abs(y-pl.cy)<TS*0.52)return false;
+    if(Math.abs(x-pl.cx)<PLAT_GRIP&&Math.abs(y-pl.cy)<PLAT_GRIP)return false;
   return true;
+}
+function checkHaz(p,dt){
+  /* a moment's grace, so clipping the edge of a gap is a stumble, not a dunk */
+  if(hazardAt(p.x,p.y)){
+    p.hazT=(p.hazT||0)+dt;
+    if(p.hazT>HAZ_GRACE)fallIn(p);
+  } else p.hazT=0;
 }
 function escapeOk(br,bc){
   /* would parking a station on (br,bc) seal a chef into a pocket? */
@@ -2258,20 +2269,31 @@ function updateDynamics(dt){
   G.shutT+=dt;
   for(const pl of (G.plats||[])){
     const last=pl.cells.length-1;
-    pl.pos+=pl.dir*pl.spd*dt;
-    if(pl.pos>=last){pl.pos=last;pl.dir=-1;}
-    else if(pl.pos<=0){pl.pos=0;pl.dir=1;}
+    if((pl.waitT||0)>0)pl.waitT-=dt;      /* hold at each end so you can board */
+    else{
+      pl.pos+=pl.dir*pl.spd*dt;
+      if(pl.pos>=last){pl.pos=last;pl.dir=-1;pl.waitT=PLAT_DWELL;}
+      else if(pl.pos<=0){pl.pos=0;pl.dir=1;pl.waitT=PLAT_DWELL;}
+    }
+    pl.docked=(pl.waitT||0)>0;
     const a=pl.cells[0],b=pl.cells[last],f=last?pl.pos/last:0;
     const nx=(a.c+(b.c-a.c)*f)*TS+TS/2, ny=(a.r+(b.r-a.r)*f)*TS+TS/2;
     pl.px=nx-pl.cx;pl.py=ny-pl.cy;
     pl.cx=nx;pl.cy=ny;
-    /* ferry whoever is aboard */
+    /* ferry whoever is aboard — clipping the deck counts as aboard */
     for(const p of G.players){
-      if(p.fallT>0)continue;
-      if(Math.abs(p.x-pl.cx)<TS*0.52&&Math.abs(p.y-pl.cy)<TS*0.52){
-        if(!collides(p.x+pl.px,p.y))p.x+=pl.px;
-        if(!collides(p.x,p.y+pl.py))p.y+=pl.py;
-      }
+      if(p.fallT>0||p.gone)continue;
+      const dx=pl.cx-p.x, dy=pl.cy-p.y;
+      if(Math.abs(dx)>=PLAT_GRIP||Math.abs(dy)>=PLAT_GRIP)continue;
+      if(!collides(p.x+pl.px,p.y))p.x+=pl.px;
+      if(!collides(p.x,p.y+pl.py))p.y+=pl.py;
+      /* half a step on is enough: slide them the rest of the way aboard */
+      const hr=Math.floor(p.y/TS),hc=Math.floor(p.x/TS);
+      const gt=G.grid[hr]&&G.grid[hr][hc];
+      if(!gt||gt.type!=='hazard')continue;
+      const step=PLAT_PULL*dt;
+      if(Math.abs(dx)>1.5){const mv=Math.sign(dx)*Math.min(step,Math.abs(dx));if(!collides(p.x+mv,p.y))p.x+=mv;}
+      if(Math.abs(dy)>1.5){const mv=Math.sign(dy)*Math.min(step,Math.abs(dy));if(!collides(p.x,p.y+mv))p.y+=mv;}
     }
   }
   for(const m of (G.machines||[])){
@@ -2289,7 +2311,12 @@ function updateDynamics(dt){
     const tf=G.grid[from.r][from.c],tt=G.grid[to.r][to.c];
     /* never shove a chef into a machine */
     const blocked=G.players.some(p=>p.fallT<=0&&Math.floor(p.x/TS)===to.c&&Math.floor(p.y/TS)===to.r);
-    if(blocked||tt.item||tt.fire||!escapeOk(to.r,to.c)){m.moveT=2.2;continue;}
+    /* wait for whoever is mid-chop on it to finish */
+    const busy=G.players.some(p=>{
+      if(p.gone||p.fallT>0||!p.working)return false;
+      return Math.floor(p.y/TS)+p.fy===from.r&&Math.floor(p.x/TS)+p.fx===from.c;
+    });
+    if(blocked||busy||tt.item||tt.fire||!escapeOk(to.r,to.c)){m.moveT=2.2;continue;}
     m.moveT=0;m.idx=ni;
     tt.type=tf.type;tt.item=tf.item;tt.parts=tf.parts;tt.cook=tf.cook;tt.burn=tf.burn;
     tt.chopT=tf.chopT;tt.st=tf.st;tt.dumpT=tf.dumpT;tt.chopAnimT=tf.chopAnimT;
@@ -2299,7 +2326,7 @@ function updateDynamics(dt){
 }
 function fallIn(p){
   if(p.fallT>0)return;
-  p.fallT=FALL_T;p.fx=0;p.fy=-1;p.mx=0;p.my=0;p.dashT=0;p.dashCd=0;p.working=false;
+  p.fallT=FALL_T;p.fx=0;p.fy=-1;p.mx=0;p.my=0;p.dashT=0;p.dashCd=0;p.working=false;p.hazT=0;
   p.fellAt={x:p.x,y:p.y};
   if(p.held){
     if(p.held.id==='plate')G.returns.push(9);
@@ -2381,7 +2408,7 @@ function movePlayer(p,o,dt,ctrl){
     p.walkT+=dt*14;
     if(Math.abs(p.mx)>1&&!tryMove(p,o,p.mx*dt,0)){p.mx=0;p.dashT=0;}
     if(Math.abs(p.my)>1&&!tryMove(p,o,0,p.my*dt)){p.my=0;p.dashT=0;}
-    if(hazardAt(p.x,p.y))fallIn(p);
+    checkHaz(p,dt);
     return;
   }
   if(p.working){vx*=0.35;vy*=0.35;}
@@ -2390,7 +2417,7 @@ function movePlayer(p,o,dt,ctrl){
   p.my+=(vy*SPD-p.my)*acc;
   if(Math.abs(p.mx)>1&&!tryMove(p,o,p.mx*dt,0))p.mx=0;
   if(Math.abs(p.my)>1&&!tryMove(p,o,0,p.my*dt))p.my=0;
-  if(hazardAt(p.x,p.y))fallIn(p);
+  checkHaz(p,dt);
 }
 function frontAnyTile(p){
   const c=Math.floor(p.x/TS),r=Math.floor(p.y/TS);
@@ -3988,6 +4015,11 @@ function drawRailsAndRafts(t,railCells){
       ctx.stroke();
     }
     ctx.lineCap='butt';
+    if(pl.docked){
+      const pulse=(0.5+0.35*Math.abs(Math.sin(t*4))).toFixed(2);
+      ctx.strokeStyle='rgba(255,214,79,'+pulse+')';ctx.lineWidth=4;
+      rr(x-37,y-34,74,68,9);ctx.stroke();
+    }
     ctx.restore();
   }
 }
@@ -4127,17 +4159,55 @@ function drawSolidTile(tl,t){
       em(28);ctx.fillText('🗑️',cx,cy);
       break;}
     case 'sink':{
-      ctx.fillStyle='#7fb3c4';rr(x+8,y+8,TS-16,TS-22,8);ctx.fill();
-      ctx.fillStyle='#5b93a6';rr(x+12,y+12,TS-24,TS-30,6);ctx.fill();
+      /* stainless unit: backsplash, taps, gooseneck spout, deep basin */
+      ctx.fillStyle='#ccd5dc';rr(x+4,y+4,TS-8,TS-10,8);ctx.fill();
+      ctx.strokeStyle='#8b959f';ctx.lineWidth=2;rr(x+4,y+4,TS-8,TS-10,8);ctx.stroke();
+      ctx.fillStyle='#b4bec7';rr(x+4,y+4,TS-8,26,7);ctx.fill();
+      ctx.strokeStyle='#9aa4ad';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(x+6,y+29);ctx.lineTo(x+TS-6,y+29);ctx.stroke();
+      for(const o of [-19,19]){
+        ctx.fillStyle='#e8eef3';ctx.beginPath();ctx.arc(cx+o,y+17,5.5,0,7);ctx.fill();
+        ctx.strokeStyle='#78838d';ctx.lineWidth=2;ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx+o-3.5,y+17);ctx.lineTo(cx+o+3.5,y+17);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx+o,y+13.5);ctx.lineTo(cx+o,y+20.5);ctx.stroke();
+      }
+      ctx.lineCap='round';
+      for(const gk of [[8.5,'#69757f'],[5.5,'#c3d0da']]){
+        ctx.strokeStyle=gk[1];ctx.lineWidth=gk[0];
+        ctx.beginPath();
+        ctx.moveTo(cx-9,y+27);ctx.lineTo(cx-9,y+15);
+        ctx.quadraticCurveTo(cx-9,y+8,cx-1,y+8);
+        ctx.quadraticCurveTo(cx+7,y+8,cx+7,y+15);
+        ctx.lineTo(cx+7,y+20);
+        ctx.stroke();
+      }
+      ctx.lineCap='butt';
+      ctx.fillStyle='#69757f';rr(cx+3,y+19,8.5,6,2);ctx.fill();
+      ctx.fillStyle='#93a3b0';rr(x+9,y+32,TS-18,TS-46,7);ctx.fill();
+      ctx.fillStyle='#70838f';rr(x+12,y+35,TS-24,TS-52,5);ctx.fill();
+      ctx.strokeStyle='rgba(232,240,246,0.45)';ctx.lineWidth=1.5;rr(x+12,y+35,TS-24,TS-52,5);ctx.stroke();
+      ctx.fillStyle='#4a5763';ctx.beginPath();ctx.ellipse(cx,y+TS-19,6.5,3.8,0,0,7);ctx.fill();
+      ctx.strokeStyle='#39434d';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(cx-5,y+TS-19);ctx.lineTo(cx+5,y+TS-19);ctx.stroke();
+      if(tl.washT>0){
+        ctx.fillStyle='rgba(150,215,240,0.85)';ctx.fillRect(cx+4,y+24,6,18);
+        ctx.strokeStyle='rgba(205,240,252,0.6)';ctx.lineWidth=2;
+        for(let i=0;i<3;i++){
+          const rad=4+((t*36+i*7)%14);
+          ctx.beginPath();ctx.ellipse(cx+8,y+45,rad,rad*0.42,0,0,7);ctx.stroke();
+        }
+      }
       if(G.dirty>0){
         const n=Math.min(G.dirty,4);
         for(let i=0;i<n;i++){
-          ctx.fillStyle='#b9ab97';ctx.beginPath();ctx.arc(cx,cy+6-i*4,13,0,7);ctx.fill();
+          ctx.fillStyle='#c4b6a1';ctx.beginPath();ctx.ellipse(cx,y+50-i*4,15,7,0,0,7);ctx.fill();
           ctx.strokeStyle='#8d8171';ctx.lineWidth=1.5;ctx.stroke();
         }
-        ctx.font='bold 12px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle='#4a3f33';ctx.fillText('×'+G.dirty,cx,cy-n*4);
-        em(13);ctx.fillText('🧼',x+TS-14,y+14);
+        ctx.font='bold 13px "Trebuchet MS",sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.strokeStyle='rgba(0,0,0,0.65)';ctx.lineWidth=3.5;
+        ctx.strokeText('×'+G.dirty,x+TS-11,y+TS-15);
+        ctx.fillStyle='#fff3d6';ctx.fillText('×'+G.dirty,x+TS-11,y+TS-15);
+        ctx.textAlign='center';
       }
       break;}
     case 'ext':{
@@ -5011,7 +5081,9 @@ function snapWorld(w){
     sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
     ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0,(p.dashT||0)>0?1:0,p.ddx||0,p.ddy||0,Math.round((p.fallT||0)*10)]),
     ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),
-    pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),tls};
+    pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),
+    pt:(w.plats||[]).map(pl=>[Math.round(pl.pos*100),pl.dir,Math.round((pl.waitT||0)*20)]),
+    mc:(w.machines||[]).map(m=>m.idx),tls};
 }
 function netSnap(){
   if(VS)return {t:'snap',q:NET.seq++,vs:1,ks:VS.kitchens.map(snapWorld)};
@@ -5038,6 +5110,14 @@ function applyWorldSnap(w,s,viewed){
     t.netTouched=true;
   }
   w.projRender=s.pj||[];
+  if(s.pt)s.pt.forEach((v,i)=>{const pl=(w.plats||[])[i];if(!pl)return;
+    pl.pos=v[0]/100;pl.dir=v[1];pl.waitT=v[2]/20;pl.docked=pl.waitT>0;});
+  if(s.mc)s.mc.forEach((ni,i)=>{const m=(w.machines||[])[i];if(!m||m.idx===ni)return;
+    const from=m.cells[m.idx],to=m.cells[ni];
+    const tf=w.grid[from.r][from.c],tt=w.grid[to.r][to.c];
+    tt.type=tf.type;tt.parts=tf.parts;tt.st=tf.st;
+    tf.type=tf.base||'floor';tf.parts=null;tf.st='';
+    m.idx=ni;m.ofx=(from.c-to.c)*TS;m.ofy=(from.r-to.r)*TS;});
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
     p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
     p.dashT=a[7]?0.12:0;p.ddx=a[8]||0;p.ddy=a[9]||0;p.fallT=(a[10]||0)/10;
