@@ -70,6 +70,7 @@
   #scr-help h2{font-size:30px;color:var(--accent2);margin-bottom:16px}
   .bigbtn.vsb{background:linear-gradient(#b06ad6,#8e44ad 60%,#6a1b9a);box-shadow:0 5px 0 #4a1070,0 8px 16px rgba(0,0,0,.4)}
   .bigbtn.vsb:active{box-shadow:0 2px 0 #4a1070}
+  .lvlbtn.needpair{opacity:.55;filter:saturate(.6)}
   .tourseg{display:flex;gap:8px;justify-content:center;align-items:center;margin:0 auto 6px}
   .tslbl{font-size:13.5px;color:#b9a8d0;font-weight:bold}
   .tsbtn{font-family:inherit;font-size:13.5px;font-weight:bold;color:#d9cbe8;background:#00000038;
@@ -1962,8 +1963,36 @@ function buildKitchen(li,members,teamIdx){
     served:0,missed:0,state:'countdown',cd:3.6,hasSink,hasExt,popups:[],ordersDirty:true,beltT:0,shake:0};
 }
 let VS=null,TOURN=null,TOURN_PICK=0;
+const SPLIT_CACHE={};
+function levelIsSplit(li){
+  if(SPLIT_CACHE[li]!==undefined)return SPLIT_CACHE[li];
+  const L=LEVELS[li];let p=null,q=null;
+  for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+    const ch=L.map[r][c];
+    if(ch==='p')p=[r,c];else if(ch==='q')q=[r,c];
+  }
+  if(!p||!q)return SPLIT_CACHE[li]=false;
+  const walk=(r,c)=>'.pq'.includes(L.map[r][c]);
+  const seen=new Set([p.join(',')]),dq=[p];
+  while(dq.length){
+    const [r,c]=dq.pop();
+    for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nr=r+d[0],nc=c+d[1];
+      if(nr<0||nc<0||nr>=GROWS||nc>=GCOLS)continue;
+      const k=nr+','+nc;
+      if(seen.has(k)||!walk(nr,nc))continue;
+      seen.add(k);dq.push([nr,nc]);
+    }
+  }
+  return SPLIT_CACHE[li]=!seen.has(q.join(','));
+}
+function chefsPerKitchen(m){
+  const t=MODES[m].teams;
+  return t?Math.min(...t.map(x=>x.length)):MODES[m].chefs;
+}
+function levelPlayable(li){return !(levelIsSplit(li)&&chefsPerKitchen(playerMode)<2);}
 function pickTournLevels(n){
-  const idx=Array.from({length:LEVELS.length},(_,i)=>i);
+  const idx=Array.from({length:LEVELS.length},(_,i)=>i).filter(levelPlayable);
   for(let i=idx.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[idx[i],idx[j]]=[idx[j],idx[i]];}
   return idx.slice(0,n);
 }
@@ -2412,10 +2441,11 @@ function updateBelts(dt){
     if(n.type==='window'){
       if(t.item.id==='plate'){
         const oi=matchOrder(t.item);
-        if(oi>=0){serveOrder(oi,t.c*TS+TS/2,t.r*TS);t.item=null;}
+        if(oi>=0){serveOrder(oi,{idx:-1,x:t.c*TS+TS/2,y:t.r*TS});t.item=null;}
       }
     } else if((n.type==='belt'||n.type==='counter'||n.type==='board')&&!n.item&&!n.fire){
       n.item=t.item;moved.add(n.item);t.item=null;resetSt(n);
+      n.item._sx=t.c*TS+TS/2;n.item._sy=t.r*TS+TS/2;n.item._st=performance.now();
     }
   }
 }
@@ -3252,14 +3282,23 @@ function renderSplitscreen(){
   const n=VS.kitchens.length;
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,cv.width,cv.height);
-  let slots;
-  if(n===2){
-    const s=0.5;
-    slots=[{s,x:0,y:158},{s,x:468,y:158}];
-  }else{
-    const s=0.42,w=936*s,h=608*s,x0=(936-2*w-12)/2;
-    slots=[{s,x:x0,y:26},{s,x:x0+w+12,y:26},
-           {s,x:n===3?(936-w)/2:x0,y:26+h+36},{s,x:x0+w+12,y:26+h+36}].slice(0,n);
+  const layoutFor=rows=>{
+    const cols=Math.ceil(n/rows);
+    const s=Math.min((CW-14*(cols+1))/cols/936,(592-32*rows-6)/rows/608);
+    return {rows,cols,s};
+  };
+  const L1=layoutFor(1),L2=layoutFor(2);
+  const lay=(n>2&&L2.s>=L1.s)||(n===4&&L2.s>=L1.s)?(L2.s>=L1.s?L2:L1):(L1.s>=L2.s?L1:L2);
+  const s=lay.s,w=936*s,h=608*s;
+  const slots=[];
+  for(let i=0;i<n;i++){
+    const row=Math.floor(i/lay.cols);
+    const inRow=Math.min(lay.cols,n-row*lay.cols);
+    const rowW=inRow*w+(inRow-1)*14;
+    const x0=(CW-rowW)/2;
+    const totH=lay.rows*h+(lay.rows-1)*32;
+    const y0=(592-totH)/2+((592-totH)/2>26?0:26-(592-totH)/2)+22;
+    slots.push({s,x:x0+(i-row*lay.cols)*(w+14),y:Math.max(26,(592-totH)/2+6)+row*(h+32)});
   }
   VS.kitchens.forEach((k,i)=>{
     const sl=slots[i];
@@ -3279,7 +3318,7 @@ function renderSplitscreen(){
   G=VS.kitchens[VS.view];VIEW={s:1,x:0,y:0,mini:false};
   ctx.setTransform(RS,0,0,RS,0,0);
   ctx.font='11px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,0.45)';
-  ctx.fillText('Tab: swap which kitchen fills the order panel',468,586);
+  ctx.fillText('Tab: swap which kitchen fills the order panel',CW/2,586);
 }
 function render(){
   if(!VS){VIEW={s:1,x:0,y:0,mini:false};renderWorld();return;}
@@ -3613,7 +3652,16 @@ function drawTileOverlay(tl,t){
     if(jx||jr){
       ctx.save();ctx.translate(cx+jx,cy);ctx.rotate(jr);
       drawItem(0,0,tl.item,1);ctx.restore();
-    } else drawItem(cx,cy,tl.item,1);
+    } else {
+      const it=tl.item;
+      let ix=cx,iy=cy;
+      if(it._st){
+        const f=(performance.now()-it._st)/240;
+        if(f<1){ix=it._sx+(cx-it._sx)*f;iy=it._sy+(cy-it._sy)*f;}
+        else{delete it._st;delete it._sx;delete it._sy;}
+      }
+      drawItem(ix,iy,it,1);
+    }
     if(cooking)drawSizzle(cx,cy,t,tl);
     if(tl.type==='board'&&CHOP[tl.item.id]&&tl.chopT>0)drawKnife(cx,cy,t,chopActive);
   }
@@ -3908,6 +3956,7 @@ function showScreen(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
   $('#scr-'+id).classList.add('active');
   screen=id;
+  fit();
   Music.play(id==='game'&&G?('w'+G.L.w):'menu');
 }
 function renderBoard(){
@@ -3947,16 +3996,18 @@ function buildMap(){
     const li=mapWorld*10+j;
     const L=LEVELS[li];
     const unlocked=levelUnlocked(li);
+    const pair=!levelPlayable(li);
     const st=SAVE.stars[li]||0;
     const stars=[0,1,2].map(i=>`<span class="${i<st?'on':'off'}">★</span>`).join('');
-    return `<button class="lvlbtn ${unlocked?'':'lockd'}" data-li="${li}">
-      <span class="num">${unlocked?(mapWorld+1)+'–'+(j+1):'🔒'}</span>
-      <span class="nm">${unlocked?L.name:'???'}</span>
-      <span class="st">${stars}</span></button>`;
+    return `<button class="lvlbtn ${unlocked?'':'lockd'} ${pair?'needpair':''}" data-li="${li}">
+      <span class="num">${pair?'👥':(unlocked?(mapWorld+1)+'–'+(j+1):'🔒')}</span>
+      <span class="nm">${L.name}</span>
+      <span class="st">${pair?'<span style="font-size:9px;color:#ffb300">2+ chefs / team</span>':stars}</span></button>`;
   }).join('');
   document.querySelectorAll('.lvlbtn').forEach(b=>b.onclick=()=>{
     const li=+b.dataset.li;
     if(!levelUnlocked(li)){Snd.bad();return;}
+    if(!levelPlayable(li)){Snd.bad();showToast2('👥 Split kitchen — needs at least 2 chefs per team! Try co-op or a bigger versus mode.');return;}
     startLevel(li);
   });
 }
@@ -4473,7 +4524,7 @@ function drawAmbient(t){
   bctx.setTransform(BGS,0,0,BGS,0,0);
   const W=inGame?G.world:{fl1:'#7d4b43',fl2:'#734440',ct:'#8a6a48',cs:'#5f452e',haz:null,ice:false};
   bctx.clearRect(0,0,w,h);
-  const ax=w/2,ay=h/2,aw=960*appScale/2+24,ah=740*appScale/2+18;
+  const ax=w/2,ay=h/2,aw=APPW*appScale/2+24,ah=740*appScale/2+18;
 
   /* ---------- exterior world outside the walls ---------- */
   let ext='#8fae8a';
@@ -4619,15 +4670,23 @@ function drawAmbient(t){
 }
 /* ---------------- scaling ---------------- */
 let RS=1;
+let CW=936,APPW=960;
 function fit(){
-  const s=Math.min(window.innerWidth/975,window.innerHeight/765,1.35);
+  const wide=(typeof VS!=='undefined'&&VS&&!NET.started&&screen==='game');
+  const s=wide?Math.min(window.innerHeight/765,1.35)
+             :Math.min(window.innerWidth/975,window.innerHeight/765,1.35);
   appScale=s;
-  $('#app').style.transform='scale('+s+')';
+  CW=wide?Math.max(936,Math.min(1920,Math.floor(window.innerWidth/s)-40)):936;
+  APPW=CW+24;
+  const app=$('#app');
+  app.style.width=APPW+'px';
+  app.style.transform='scale('+s+')';
+  const hud=$('#hud');if(hud)hud.style.width=APPW+'px';
   const nrs=Math.min(2.5,Math.max(1,(window.devicePixelRatio||1)*s));
-  if(Math.abs(nrs-RS)>0.01){
+  if(Math.abs(nrs-RS)>0.01||cv.width!==Math.round(CW*RS)){
     RS=nrs;
-    cv.width=Math.round(936*RS);cv.height=Math.round(592*RS);
-    cv.style.width='936px';cv.style.height='592px';
+    cv.width=Math.round(CW*RS);cv.height=Math.round(592*RS);
+    cv.style.width=CW+'px';cv.style.height='592px';
   }
   sizeBg();
 }
