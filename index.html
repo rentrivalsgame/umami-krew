@@ -3165,8 +3165,42 @@ function renderMiniWorld(k){
   try{renderWorld();}finally{ctx=oldCtx;G=oldG;VIEW=oldView;}
   return MINI_CV;
 }
+function renderSplitscreen(){
+  const n=VS.kitchens.length;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,cv.width,cv.height);
+  let slots;
+  if(n===2){
+    const s=0.5;
+    slots=[{s,x:0,y:158},{s,x:468,y:158}];
+  }else{
+    const s=0.42,w=936*s,h=608*s,x0=(936-2*w-12)/2;
+    slots=[{s,x:x0,y:26},{s,x:x0+w+12,y:26},
+           {s,x:n===3?(936-w)/2:x0,y:26+h+36},{s,x:x0+w+12,y:26+h+36}].slice(0,n);
+  }
+  VS.kitchens.forEach((k,i)=>{
+    const sl=slots[i];
+    G=k;VIEW={s:sl.s,x:sl.x,y:sl.y,mini:true};renderWorld();
+    ctx.setTransform(RS,0,0,RS,0,0);
+    const w=936*sl.s,h=608*sl.s;
+    ctx.strokeStyle=TEAM_DEFS[k.teamIdx].c;ctx.lineWidth=i===VS.view?3:1.5;
+    ctx.globalAlpha=i===VS.view?1:0.75;
+    ctx.beginPath();ctx.roundRect(sl.x+1,sl.y+1,w-2,h-2,6);ctx.stroke();
+    ctx.globalAlpha=1;
+    ctx.font='bold 14px "Trebuchet MS",sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillStyle=TEAM_DEFS[k.teamIdx].c;
+    ctx.fillText(TEAM_DEFS[k.teamIdx].e+' '+TEAM_DEFS[k.teamIdx].n+' kitchen'+(i===VS.view?'  (orders shown)':''),sl.x+4,sl.y-10);
+    ctx.textAlign='right';ctx.fillStyle='#ffd54f';
+    ctx.fillText('🪙 '+k.score,sl.x+w-4,sl.y-10);
+  });
+  G=VS.kitchens[VS.view];VIEW={s:1,x:0,y:0,mini:false};
+  ctx.setTransform(RS,0,0,RS,0,0);
+  ctx.font='11px "Trebuchet MS",sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,0.45)';
+  ctx.fillText('Tab: swap which kitchen fills the order panel',468,586);
+}
 function render(){
   if(!VS){VIEW={s:1,x:0,y:0,mini:false};renderWorld();return;}
+  if(!NET.started){renderSplitscreen();return;}
   const act=VS.kitchens[VS.view];
   G=act;VIEW={s:1,x:0,y:0,mini:false};renderWorld();
   const others=VS.kitchens.filter(k=>k!==act);
@@ -3793,7 +3827,7 @@ function renderBoard(){
       `<span class="lblvl">${escHtml(e.lvl)}</span><span class="lbnote2">${e.note||''}</span><span class="lbdate">${ds}</span></div>`;
   }).join(''):'<div class="lbempty">No services logged yet — go cook something!</div>';
 }
-function levelUnlocked(i){return i===0||(SAVE.stars[i-1]||0)>0;}
+function levelUnlocked(i){return true;} /* all 120 kitchens are open in every mode */
 function totalStars(){let n=0;for(const k in SAVE.stars)n+=SAVE.stars[k];return n;}
 function buildMap(){
   $('#totalstars').textContent='★ '+totalStars()+' / '+(LEVELS.length*3)+' stars collected';
@@ -4298,13 +4332,13 @@ function drawPlateFood(x,y,foods,i,t){
 }
 function drawMarginMinis(w,h,ax,ay,aw,ah){
   MARGIN_MINIS=false;
-  if(!(screen==='game'&&G&&VS&&VS.kitchens))return;
+  if(!(screen==='game'&&G&&VS&&VS.kitchens&&NET.started))return;
   const others=VS.kitchens.filter(k=>k!==VS.kitchens[VS.view]);
   if(!others.length)return;
   const rmX=ax+aw+16,rmW=w-rmX-16;
   if(rmW<150)return;
   const maxH=(h-90)/others.length-42;
-  const msc=Math.min(rmW/936,320/936,maxH/608);
+  const msc=Math.min(rmW/936,maxH/608);
   if(msc<0.15)return;
   MARGIN_MINIS=true;
   const miniW=936*msc,miniH=608*msc;
