@@ -394,6 +394,7 @@
       🧺 Grab ingredients from crates → 🔪 chop on cutting boards → 🔥 grill, deep-fry, simmer &amp; steam →
       🍽️ plate the dish → 🛎️ serve matching orders at the counter before customers walk out!<br>
       🍤 Shrimp &amp; noodles cook in the golden <b>deep fryer</b>; meat &amp; fish go on the <b>grill</b>.<br>
+      🧪 <b>Experiment freely:</b> you can mince anything on a board and drop anything in the grill or fryer — but nonsense turns into a <b>Minced Mess</b> or a <b>Fried Mystery</b>, and no customer will ever accept it. Bin it and start over.<br>
       🥏 <b>Throw!</b> Tap your chop key while carrying an ingredient to hurl it the way you're facing — teammates catch it mid-air, and good aim lands it on counters, in pots, even into the fryer. (Plates &amp; assembled dishes are too precious to throw.)<br>
       ⚠️ Don't leave food on the grill or in the fryer too long — it burns (and in fiery kitchens like the Dumpling Den, Neon Rooftop, Banquet Hall &amp; Snow Festival it catches <b>fire</b> 🔥 — grab the extinguisher 🧯).<br>
       ❄️ At the Ice Market, Onsen Ryokan &amp; Snow Festival the floors are ice — you'll slide! &nbsp;🧼 Dirty plates come back at the sink — hold your action key there to wash them. &nbsp;⏸ <span class="key">Esc</span> pauses.
@@ -677,8 +678,12 @@ const ING={
   chowder:{e:'🍲',n:'Seafood Udon',st:'cook'},
   circuit_soup:{e:'🥣',n:'Miso Veggie Soup',st:'cook'},
   burnt:{e:'🌫️',n:'Burnt Food',st:'burnt'},
+  mush:{e:'🥣',n:'Minced Mess',st:'chop'},
+  friedmess:{e:'🍤',n:'Fried Mystery',st:'cook'},
   ext:{e:'🧯',n:'Extinguisher'}
 };
+const RUINED=id=>id==='mush'||id==='friedmess';
+const canChop=it=>!!it&&!['plate','pizzaraw','ext','mush'].includes(it.id);
 const CHOP={apple:'apple_c',banana:'banana_c',berry:'berry_c',cheese:'cheese_c',
   tomato:'tomato_c',chicken:'chicken_raw',potato:'potato_c',carrot:'carrot_c',
   pumpkin:'pumpkin_c',fish:'fish_s',bean:'bean_c',pepper:'pepper_c',dough:'dough_b'};
@@ -2189,10 +2194,14 @@ function actPick(p){
     if(t.type==='stove'||t.type==='fryer'){
       const M=stMap(t);
       if(!t.item&&M[h.id]){t.item=h;p.held=null;resetSt(t);Snd.place();}
-      else if(!t.item&&CHOP[h.id]&&M[CHOP[h.id]]){Snd.bad();showToast('🔪 Chop that on a board first!');}
-      else if(!t.item&&(GRILL[h.id]||FRY[h.id])){Snd.bad();showToast(t.type==='fryer'?'🔥 That belongs on the grill!':'🍤 That goes in the deep fryer!');}
       else if(t.item&&h.id==='plate'&&GRILL_OUTS.includes(t.item.id)&&canAdd(h,t.item.id)){
         h.parts.push(t.item.id);t.item=null;resetSt(t);Snd.place();}
+      else if(!t.item&&h.id!=='plate'&&h.id!=='ext'){
+        t.item=h;p.held=null;resetSt(t);Snd.place();
+        if(CHOP[h.id]&&M[CHOP[h.id]])showToast('🔪 Chop it first — as-is it will just ruin!');
+        else if(GRILL[h.id]||FRY[h.id])showToast(t.type==='fryer'?'🔥 That belongs on the grill — it will ruin in the oil!':'🍤 That goes in the fryer — it will ruin on the grill!');
+        else showToast('🤔 That is never going to be edible…');
+      }
       else Snd.bad();
       return;
     }
@@ -2226,6 +2235,8 @@ function actPick(p){
 }
 function mergeHeld(p,h,t){
   const it=t.item;
+  if((h.id==='plate'&&RUINED(it.id))||(it.id==='plate'&&RUINED(h.id))){
+    Snd.bad();showToast('🤢 Ruined — no order will take that. Bin it!');return;}
   if(h.id==='plate'&&it.id!=='plate'){
     const pid=platePartId(it);
     if(pid&&canAdd(h,pid)){h.parts.push(pid);t.item=null;resetSt(t);Snd.place();return;}
@@ -2253,10 +2264,14 @@ function actWork(p,dt,ctrl){
     return;
   }
   if(p.held)return;
-  if(t.type==='board'&&t.item&&CHOP[t.item.id]){
+  if(t.type==='board'&&canChop(t.item)){
     t.chopT+=dt;p.working=true;t.chopAnimT=performance.now()/1000;
     p.chopSnd+=dt;if(p.chopSnd>0.19){p.chopSnd=0;Snd.chop();}
-    if(t.chopT>=1.6){t.item={id:CHOP[t.item.id]};t.chopT=0;Snd.ding();}
+    if(t.chopT>=1.6){
+      const out=CHOP[t.item.id];
+      t.item={id:out||'mush'};t.chopT=0;
+      if(out)Snd.ding();else{Snd.bad();showToast('🥣 Minced beyond recognition — nobody will order that!');}
+    }
   } else if(t.type==='sink'&&G.dirty>0){
     t.washT+=dt;p.working=true;
     if(t.washT>=2.2){t.washT=0;G.dirty--;G.plates++;Snd.ding();}
@@ -2267,7 +2282,7 @@ function throwDepositFor(t,it){
   if(t.fire)return null;
   if(t.type==='trash')return {k:'trash'};
   if(t.type==='pot'&&!t.item&&potCanAdd(t.parts,it.id))return {k:'pot',tile:t};
-  if((t.type==='stove'||t.type==='fryer')&&!t.item&&stMap(t)[it.id])return {k:'cook',tile:t};
+  if((t.type==='stove'||t.type==='fryer')&&!t.item&&it.id!=='plate'&&it.id!=='ext')return {k:'cook',tile:t};
   if((t.type==='counter'||t.type==='board'||t.type==='belt')&&!t.item)return {k:'tile',tile:t};
   return null;
 }
@@ -2333,7 +2348,7 @@ function updateProjs(dt){
       if(d.k==='trash')Snd.place();
       else if(d.k==='haz'){Snd.bad();showToast({lava:'🔥 Yeeted into the coals!',water:'🌊 Splash!',sky:'☁️ Off it goes!',void:'🕳️ Gone!'}[G.world.haz]||'💨 Gone!');}
       else if(d.k==='pot'&&!d.tile.item&&potCanAdd(d.tile.parts,it.id)){d.tile.parts.push(it.id);resetSt(d.tile);Snd.place();}
-      else if(d.k==='cook'&&!d.tile.item&&stMap(d.tile)[it.id]){d.tile.item=it;resetSt(d.tile);Snd.place();}
+      else if(d.k==='cook'&&!d.tile.item){d.tile.item=it;resetSt(d.tile);Snd.place();}
       else if(d.k==='tile'&&!d.tile.item&&!d.tile.fire){d.tile.item=it;resetSt(d.tile);Snd.place();}
       else if(d.k==='floor')landFallback(Math.floor(pr.ty/TS),Math.floor(pr.tx/TS),it);
       else landFallback(pr.fb.r,pr.fb.c,it);
@@ -2387,8 +2402,9 @@ function updateStations(dt){
     if((t.type==='stove'||t.type==='fryer')&&it){
       const g=stMap(t)[it.id];
       if(g){t.cook+=dt;if(t.cook>=g.t){t.item={id:g.out};t.cook=0;Snd.ding();}}
-      else if(GRILL_OUTS.includes(it.id)){t.burn+=dt;if(t.burn>=8){t.item={id:'burnt'};t.burn=0;Snd.alarm();}}
-      else if(it.id==='burnt'&&G.world.fire){t.fireT+=dt;if(t.fireT>=8)ignite(t);}
+      else if(it.id==='burnt'){if(G.world.fire){t.fireT+=dt;if(t.fireT>=8)ignite(t);}}
+      else if(GRILL_OUTS.includes(it.id)||it.id==='friedmess'){t.burn+=dt;if(t.burn>=8){t.item={id:'burnt'};t.burn=0;Snd.alarm();}}
+      else {t.cook+=dt;if(t.cook>=5){t.item={id:'friedmess'};t.cook=0;Snd.alarm();}}
     } else if(t.type==='oven'&&it){
       if(it.id==='pizzaraw'){t.cook+=dt;
         if(t.cook>=8){const rc=G.ovenR.find(rc=>rc.needs.length===it.parts.length&&rc.needs.every(x=>it.parts.includes(x)));
@@ -3144,6 +3160,36 @@ function drawIngredient(x,y,id,s){
       ctx.fillStyle='#f4f1e8';rr(x+3*s,y-0.5*s,3*s,2.6*s,0.8*s);ctx.fill();
     }
     break;}
+  case 'mush':{ /* minced beyond recognition */
+    shE(x,y+7*s,10*s,3.4*s);
+    const bits=[[-6,2,3.2,0.3],[0,3.4,3.6,-0.4],[6,2,3,0.5],[-3,-0.6,3.4,0.15],[3.4,-1,3.2,-0.2],[0,-4,2.8,0.4]];
+    bits.forEach((b,i)=>{
+      ctx.save();ctx.translate(x+b[0]*s,y+b[1]*s);ctx.rotate(b[3]);
+      ctx.fillStyle=i%2?'#9aa86a':'#bcbd8a';
+      rr(-b[2]*s,-b[2]*0.6*s,b[2]*2*s,b[2]*1.2*s,1.6*s);ctx.fill();oL(1.1*s);
+      ctx.restore();
+    });
+    ctx.fillStyle='#7d8a52';
+    for(const o of [[-8.5,4.5],[8.5,4.2],[1.5,6.2]]){
+      ctx.beginPath();ctx.arc(x+o[0]*s,y+o[1]*s,1.25*s,0,7);ctx.fill();}
+    break;}
+  case 'friedmess':{ /* deep-fried mystery lump */
+    shE(x,y+8*s,10*s,3.4*s);
+    ctx.fillStyle='#c8862f';
+    ctx.beginPath();
+    ctx.moveTo(x-9*s,y+2*s);
+    ctx.quadraticCurveTo(x-10.5*s,y-5*s,x-3*s,y-6*s);
+    ctx.quadraticCurveTo(x+2*s,y-9.5*s,x+7*s,y-4*s);
+    ctx.quadraticCurveTo(x+11*s,y-0.5*s,x+8*s,y+4.5*s);
+    ctx.quadraticCurveTo(x+2*s,y+8*s,x-4*s,y+6*s);
+    ctx.closePath();ctx.fill();oL(1.5*s);
+    ctx.fillStyle='#e2a751';
+    for(const o of [[-4,-2,2.4],[2,-3.4,2.6],[5,1,2.2],[-1,3,2.3],[-6,1.6,1.8]]){
+      ctx.beginPath();ctx.arc(x+o[0]*s,y+o[1]*s,o[2]*s,0,7);ctx.fill();}
+    ctx.fillStyle='#6b4a22';
+    for(const o of [[3.2,-5],[-5.4,-3],[6,3.4]]){
+      ctx.beginPath();ctx.arc(x+o[0]*s,y+o[1]*s,1.3*s,0,7);ctx.fill();}
+    break;}
   case 'burnt':{
     shE(x,y+7*s,10*s,3.5*s);
     ctx.fillStyle='#3a3430';
@@ -3645,7 +3691,7 @@ function drawTileOverlay(tl,t){
   /* item (with cooking / chopping animations) */
   if(tl.item&&tl.type!=='ext'){
     const cooking=(tl.type==='stove'||tl.type==='fryer')&&stMap(tl)[tl.item.id];
-    const chopActive=tl.type==='board'&&CHOP[tl.item.id]&&tl.chopT>0&&(t-(tl.chopAnimT||0))<0.15;
+    const chopActive=tl.type==='board'&&canChop(tl.item)&&tl.chopT>0&&(t-(tl.chopAnimT||0))<0.15;
     let jx=0,jr=0;
     if(cooking){jx=Math.sin(t*22+tl.c)*1.3;jr=Math.sin(t*13+tl.r)*0.055;}
     if(chopActive){jx=Math.sin(t*30)*2.2;}
@@ -3663,7 +3709,7 @@ function drawTileOverlay(tl,t){
       drawItem(ix,iy,it,1);
     }
     if(cooking)drawSizzle(cx,cy,t,tl);
-    if(tl.type==='board'&&CHOP[tl.item.id]&&tl.chopT>0)drawKnife(cx,cy,t,chopActive);
+    if(tl.type==='board'&&canChop(tl.item)&&tl.chopT>0)drawKnife(cx,cy,t,chopActive);
   }
   else if(tl.item&&tl.type==='ext'){em(26);ctx.fillText('🧯',cx,cy);}
   /* progress bars */
@@ -3671,7 +3717,8 @@ function drawTileOverlay(tl,t){
   if((tl.type==='stove'||tl.type==='fryer')&&tl.item){
     const M=stMap(tl);
     if(M[tl.item.id])drawBar(x+8,y+4,TS-16,tl.cook/M[tl.item.id].t,'#ffa726');
-    else if(GRILL_OUTS.includes(tl.item.id))warnBar(tl,x,y,tl.burn/8,t);
+    else if(GRILL_OUTS.includes(tl.item.id)||tl.item.id==='friedmess')warnBar(tl,x,y,tl.burn/8,t);
+    else if(tl.item.id!=='burnt')drawBar(x+8,y+4,TS-16,tl.cook/5,'#b0653a');
   }
   if(tl.type==='oven'&&tl.item){
     if(tl.item.id==='pizzaraw')drawBar(x+8,y+4,TS-16,tl.cook/8,'#ffa726');
