@@ -3112,6 +3112,22 @@ function drawBar(x,y,w,frac,col,bg){
   ctx.fillStyle=col;rr(x+1,y+1,Math.max(2,(w-2)*clamp(frac,0,1)),5,2);ctx.fill();
 }
 function drawPartMini(x,y,pid,s){drawIngredient(x,y,pid,s*1.1);}
+/* a plated dish reads as one mixed thing, so spell out what is actually on it */
+function drawPlateChips(x,y,parts,s){
+  const n=Math.min(parts.length,5),r=7.6*s,gap=r*2.2;
+  const cy2=y-21*s,x0=x-(n-1)*gap/2;
+  for(let i=0;i<n;i++){
+    const px=x0+i*gap;
+    ctx.fillStyle='rgba(22,16,32,0.85)';
+    ctx.beginPath();ctx.arc(px,cy2,r,0,7);ctx.fill();
+    const prev=ICON_MODE;ICON_MODE=true;
+    ctx.save();ctx.beginPath();ctx.arc(px,cy2,r-1.5*s,0,7);ctx.clip();
+    drawIngredient(px,cy2,parts[i],0.34*s);
+    ctx.restore();ICON_MODE=prev;
+    ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=1.4*s;
+    ctx.beginPath();ctx.arc(px,cy2,r,0,7);ctx.stroke();
+  }
+}
 function drawItem(x,y,it,s){
   s=s||1;
   if(!it)return;
@@ -3120,6 +3136,7 @@ function drawItem(x,y,it,s){
     ctx.save();ctx.translate(x,y);
     drawPlateArt(it.parts,16*s,false);
     ctx.restore();
+    if(!ICON_MODE&&it.parts&&it.parts.length)drawPlateChips(x,y,it.parts,s);
     return;
   }
   if(it.id==='pizzaraw'){
