@@ -14,7 +14,7 @@
   body{font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--cream)}
   #viewport{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   #bgcv{position:fixed;inset:0;z-index:0}
-  #app{width:960px;height:740px;position:relative;transform-origin:center center;flex:0 0 auto;z-index:1}
+  #app{width:960px;height:750px;position:relative;transform-origin:center center;flex:0 0 auto;z-index:1}
   .scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
     overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#6a5a8a transparent}
   .scr::-webkit-scrollbar{width:9px}
@@ -180,10 +180,10 @@
 
   /* ---------- Game ---------- */
   #scr-game{background:#141020;border-radius:18px;overflow:hidden}
-  #hud{width:960px;height:142px;background:linear-gradient(#241933,#1c1329);display:flex;align-items:center;
+  #hud{width:960px;height:158px;background:linear-gradient(#241933,#1c1329);display:flex;align-items:center;
     padding:0 12px;gap:10px;border-bottom:3px solid #00000060}
-  #orders{display:flex;gap:8px;flex:1;height:132px;align-items:center;overflow:hidden}
-  .ordercard{width:114px;height:126px;background:var(--cream);border-radius:12px;color:var(--ink);
+  #orders{display:flex;gap:8px;flex:1;height:148px;align-items:center;overflow:hidden}
+  .ordercard{width:118px;height:142px;background:var(--cream);border-radius:12px;color:var(--ink);
     display:flex;flex-direction:column;align-items:center;padding-top:2px;box-shadow:0 3px 6px rgba(0,0,0,.4);
     position:relative;flex:0 0 auto;animation:slidein .3s ease}
   @keyframes slidein{from{transform:translateY(-110px)}to{transform:translateY(0)}}
@@ -198,16 +198,17 @@
     box-shadow:inset 0 0.14em 0 #ffffff,0 0.1em 0.12em rgba(0,0,0,0.15)}
   .dishicon{width:78px;height:78px;display:block;margin:0 auto}
   .dishicon.rsm{width:40px;height:40px;margin:0 auto}
-  .ordercard .parts{font-size:15px;letter-spacing:1px;height:21px;white-space:nowrap}
+  .ordercard .parts{font-size:17px;letter-spacing:1px;height:28px;white-space:nowrap}
   .ing{display:inline-flex;align-items:flex-start;margin:0 1.5px}
-  .ingst{font-size:10px;line-height:1;margin-left:-4px;margin-top:-2px;letter-spacing:-2px}
+  .ingst{font-size:12px;line-height:1;margin-left:-5px;margin-top:-2px;letter-spacing:-2px}
   .rbasics{margin-top:3px;font-size:12px;opacity:.95}
   .rbasics .ingst{font-size:11px;letter-spacing:-1px}
   .rbasics .picon{width:22px;height:22px}
-  .ordercard .parts .picon{width:20px;height:20px;margin:0 1px}
-  .ordercard .nm2{font-size:10px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
-    height:23px;line-height:1.13;padding:0 4px;overflow:hidden;text-align:center;width:100%}
-  .ordercard .nm2.nmL{font-size:8.5px;letter-spacing:0}
+  .ordercard .parts .picon{width:26px;height:26px;margin:0 1px}
+  .ordercard .nm2{font-size:11px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
+    height:29px;line-height:1.18;padding:0 3px;overflow:hidden;text-align:center;width:100%;
+    display:flex;align-items:center;justify-content:center}
+  .ordercard .nm2.nmL{font-size:9.5px;letter-spacing:0;line-height:1.15}
   .patbar{position:absolute;bottom:0;left:0;height:7px;background:var(--good);border-radius:0 0 0 10px;width:100%}
   .ordercard.urgent{animation:urge .5s linear infinite}
   @keyframes urge{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
@@ -4685,7 +4686,7 @@ function updateHUD(){
       return `<div class="ordercard" data-i="${i}">
         ${icon}
         <div class="parts">${basicsHTML(o.dish)}</div>
-        <div class="nm2${d.n.length>=18?' nmL':''}">${d.n}</div>
+        <div class="nm2${d.n.length>=16?' nmL':''}">${d.n}</div>
         <div class="patbar"></div></div>`;
     }).join('');
   }
@@ -6033,7 +6034,7 @@ function drawAmbient(t){
   const S=inGame?(SCENES[G.L.w]||SCENES[0]):TITLE_SCENE;
   const W={fl1:S.f1,fl2:S.f2,ct:S.tc,cs:S.wall,haz:inGame?G.world.haz:null,ice:inGame?G.world.ice:false};
   bctx.clearRect(0,0,w,h);
-  const ax=w/2+APPDX,ay=h/2,aw=APPW*appScale/2+24,ah=740*appScale/2+18;
+  const ax=w/2+APPDX,ay=h/2,aw=APPW*appScale/2+24,ah=750*appScale/2+18;
 
   /* ---------- the building: one interior holding kitchen + dining ---------- */
   const mL=Math.max(0,ax-aw),mR=Math.max(0,w-(ax+aw)),mT=Math.max(0,ay-ah),mB=Math.max(0,h-(ay+ah));
@@ -6178,8 +6179,8 @@ let RS=1;
 let CW=936,APPW=960,APPDX=0;
 function fit(){
   const wide=(typeof VS!=='undefined'&&VS&&!NET.started&&screen==='game');
-  const s=wide?Math.min(window.innerHeight/765,1.35)
-             :Math.min(window.innerWidth/975,window.innerHeight/765,1.35);
+  const s=wide?Math.min(window.innerHeight/775,1.35)
+             :Math.min(window.innerWidth/975,window.innerHeight/775,1.35);
   appScale=s;
   CW=wide?Math.max(936,Math.min(1920,Math.floor(window.innerWidth/s)-40)):936;
   APPW=CW+24;
