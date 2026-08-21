@@ -182,9 +182,9 @@
   #scr-game{background:#141020;border-radius:18px;overflow:hidden}
   #hud{width:960px;height:142px;background:linear-gradient(#241933,#1c1329);display:flex;align-items:center;
     padding:0 12px;gap:10px;border-bottom:3px solid #00000060}
-  #orders{display:flex;gap:8px;flex:1;height:128px;align-items:center;overflow:hidden}
-  .ordercard{width:104px;height:120px;background:var(--cream);border-radius:12px;color:var(--ink);
-    display:flex;flex-direction:column;align-items:center;padding-top:4px;box-shadow:0 3px 6px rgba(0,0,0,.4);
+  #orders{display:flex;gap:8px;flex:1;height:132px;align-items:center;overflow:hidden}
+  .ordercard{width:114px;height:126px;background:var(--cream);border-radius:12px;color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;padding-top:2px;box-shadow:0 3px 6px rgba(0,0,0,.4);
     position:relative;flex:0 0 auto;animation:slidein .3s ease}
   @keyframes slidein{from{transform:translateY(-110px)}to{transform:translateY(0)}}
   .ordercard .big{font-size:34px;line-height:1.05}
@@ -196,15 +196,15 @@
 .tofuicon{display:inline-block;width:0.85em;height:0.72em;background:#f4f1e8;
     border:0.09em solid #cfc9b8;border-radius:0.16em;vertical-align:-0.05em;
     box-shadow:inset 0 0.14em 0 #ffffff,0 0.1em 0.12em rgba(0,0,0,0.15)}
-  .dishicon{width:62px;height:62px;display:block;margin:1px auto 0}
+  .dishicon{width:78px;height:78px;display:block;margin:0 auto}
   .dishicon.rsm{width:40px;height:40px;margin:0 auto}
-  .ordercard .parts{font-size:14px;letter-spacing:1px;height:18px;white-space:nowrap}
+  .ordercard .parts{font-size:15px;letter-spacing:1px;height:21px;white-space:nowrap}
   .ing{display:inline-flex;align-items:flex-start;margin:0 1.5px}
-  .ingst{font-size:9px;line-height:1;margin-left:-4px;margin-top:-2px;letter-spacing:-2px}
+  .ingst{font-size:10px;line-height:1;margin-left:-4px;margin-top:-2px;letter-spacing:-2px}
   .rbasics{margin-top:3px;font-size:12px;opacity:.95}
   .rbasics .ingst{font-size:11px;letter-spacing:-1px}
   .rbasics .picon{width:22px;height:22px}
-  .ordercard .parts .picon{width:17px;height:17px;margin:0 1px}
+  .ordercard .parts .picon{width:20px;height:20px;margin:0 1px}
   .ordercard .nm2{font-size:10px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
     height:23px;line-height:1.13;padding:0 4px;overflow:hidden;text-align:center;width:100%}
   .ordercard .nm2.nmL{font-size:8.5px;letter-spacing:0}
@@ -4625,10 +4625,17 @@ function srcOf(pid){
   const ov=OVEN_RECIPES.find(r=>r.out===pid);if(ov)return {from:ov.needs.slice(),st:'oven'};
   return null;
 }
+/* some steps take several inputs but only one of them is the thing you
+   personally load into the appliance — steamer fillings ride in on the dough,
+   so only the dough should wear the steamer badge */
+const STEP_VESSEL={oven:'dough_b'};
 function baseOf(pid,acc,chain,d){
   const s=srcOf(pid);
   if(!s||d>6){acc.push({id:pid,sts:chain});return;}
-  s.from.forEach(f=>baseOf(f,acc,chain.concat([s.st]),d+1));
+  s.from.forEach(f=>{
+    const loadsIt=!STEP_VESSEL[s.st]||STEP_VESSEL[s.st]===f;
+    baseOf(f,acc,loadsIt?chain.concat([s.st]):chain,d+1);
+  });
 }
 function dishBasics(k){
   if(BASIC_CACHE[k])return BASIC_CACHE[k];
