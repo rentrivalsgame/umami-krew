@@ -2521,6 +2521,9 @@ function actPick(p){
       if(t.type==='ext'&&t.item.id!=='ext'){/*fallthrough pick*/}
       p.held=t.item;t.item=null;resetSt(t);Snd.pick();
     }
+    else if(t.type==='oven'){
+      showToastOnce('🥟 Steamer: bring a wrapper with a filling on it and it will steam into a bao.');
+    }
   } else {
     if(t.type==='trash'){
       if(h.id==='plate'){if(h.parts.length){h.parts=[];Snd.place();}else Snd.bad();}
@@ -2560,10 +2563,11 @@ function actPick(p){
         if(ovenReady(h)){t.item=h;p.held=null;resetSt(t);Snd.place();}
         else {Snd.bad();showToast('♨️ The steamer needs a rolled wrapper + one filling!');}
       }
-      else if(!t.item&&h.id==='dough_b'){Snd.bad();showToast('♨️ Add a filling (cut 🍗, 🍄 or 🎃) to the wrapper first!');}
+      else if(!t.item&&h.id==='dough_b'){Snd.bad();showToast('🥟 Add a filling (cut 🍗, 🍄 or 🎃) to the wrapper first!');}
       else if(t.item&&h.id==='plate'&&OVEN_OUTS.includes(t.item.id)&&canAdd(h,t.item.id)){
         h.parts.push(t.item.id);t.item=null;resetSt(t);Snd.place();}
-      else Snd.bad();
+      else if(t.item){Snd.bad();showToastOnce('🥟 Something is already steaming — take it out with a plate.');}
+      else{Snd.bad();showToastOnce('🥟 Steamer: only a filled wrapper goes in. Cut dough on a board, set it down, then add a cut filling.');}
       return;
     }
     if(t.type==='pot'){
@@ -4149,18 +4153,39 @@ function drawSolidTile(tl,t){
       }
       break;}
     case 'oven':{
-      ctx.fillStyle='#813c2a';ctx.fillRect(x+6,y+4,TS-12,TS-16);
-      ctx.fillStyle='#2b1510';rr(x+13,y+16,TS-26,TS-34,10);ctx.fill();
+      /* a bamboo steamer basket — woven sides, open top, lid on when it works */
+      ctx.fillStyle='rgba(0,0,0,0.26)';
+      ctx.beginPath();ctx.ellipse(cx,cy+21,25,6,0,0,7);ctx.fill();
+      const bw=26,tp=cy-13,bt=cy+21;
+      const bg2=ctx.createLinearGradient(cx-bw,0,cx+bw,0);
+      bg2.addColorStop(0,'#8d6435');bg2.addColorStop(0.38,'#cda368');bg2.addColorStop(1,'#825c30');
+      ctx.fillStyle=bg2;rr(cx-bw,tp,bw*2,bt-tp,6);ctx.fill();
+      ctx.strokeStyle='#5f4222';ctx.lineWidth=2;rr(cx-bw,tp,bw*2,bt-tp,6);ctx.stroke();
+      ctx.save();ctx.beginPath();rr(cx-bw,tp,bw*2,bt-tp,6);ctx.clip();
+      ctx.strokeStyle='rgba(255,238,205,0.28)';ctx.lineWidth=1.6;
+      for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(cx+i*8,tp);ctx.lineTo(cx+i*8,bt);ctx.stroke();}
+      ctx.strokeStyle='rgba(84,56,26,0.5)';ctx.lineWidth=2.6;
+      for(let i=1;i<4;i++){const yy=tp+(bt-tp)*i/4;
+        ctx.beginPath();ctx.moveTo(cx-bw,yy);ctx.lineTo(cx+bw,yy);ctx.stroke();}
+      ctx.restore();
+      /* open mouth so it reads as something you put food into */
+      ctx.fillStyle='#4a3320';ctx.beginPath();ctx.ellipse(cx,tp,bw,8,0,0,7);ctx.fill();
+      ctx.strokeStyle='#e0bd85';ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.ellipse(cx,tp,bw,8,0,0,7);ctx.stroke();
       if(tl.item){
-        ctx.fillStyle=tl.cook>0?'#ff9d45':'#5a3a30';
-        rr(x+15,y+18,TS-30,TS-38,8);ctx.fill();
+        ctx.fillStyle=tl.cook>0?'#f6e3c2':'#7a6248';
+        ctx.beginPath();ctx.ellipse(cx,tp+1,bw-6,6,0,0,7);ctx.fill();
+        drawItem(cx,cy+1,tl.item,0.52);
         if(tl.cook>0){
-          ctx.globalAlpha=0.30+0.28*Math.sin(t*7+tl.c);
-          ctx.fillStyle='#ffd54f';
-          rr(x+15,y+18,TS-30,TS-38,8);ctx.fill();
+          ctx.fillStyle='#ffffff';
+          for(let i=0;i<3;i++){
+            const ph=(t*0.8+i*0.34)%1;
+            ctx.globalAlpha=(1-ph)*0.5;
+            ctx.beginPath();
+            ctx.arc(cx-11+i*11+Math.sin(t*3+i)*3,tp-13-ph*17,3+ph*4,0,7);ctx.fill();
+          }
           ctx.globalAlpha=1;
         }
-        drawItem(cx,cy+2,tl.item,0.5);
       }
       break;}
     case 'plates':{
