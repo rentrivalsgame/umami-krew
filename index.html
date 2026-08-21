@@ -1078,7 +1078,7 @@ const LEVELS=[
 "#h#e#o###c###",
 "#......~....#",
 "C..p...~.q..S",
-"#N11111#....P",
+"#.11111#....P",
 "r......~....P",
 "C......~....B",
 "#......~....T",
@@ -1132,7 +1132,7 @@ const LEVELS=[
 "#d#h#u#####X#",
 "#......~....#",
 "C.p....~..q.O",
-"#N11111#....P",
+"#.11111#....P",
 "r......~....#",
 "C......~....B",
 "#......~....T",
@@ -1168,7 +1168,7 @@ const LEVELS=[
 "#d#h#y#####X#",
 "#......~....#",
 "C.p....~.q..O",
-"#N11111#....O",
+"#.11111#....O",
 "r......~....P",
 "C......~....P",
 "u......~....B",
@@ -1258,7 +1258,7 @@ const LEVELS=[
 "#f#o#########",
 "#......~....#",
 "C.p....~.q..S",
-"#N11111#....P",
+"#.11111#....P",
 "#......~....#",
 "C......~....B",
 "#......~....T",
@@ -1348,7 +1348,7 @@ const LEVELS=[
 "#z#n#e#######",
 "#......#....#",
 "C.p....#.q..S",
-"#N11111#....P",
+"#.11111#....P",
 "r......#....P",
 "C......#....B",
 "k......#....T",
@@ -1402,7 +1402,7 @@ const LEVELS=[
 "#d#y#m#####X#",
 "#......~....#",
 "C.p....~.q..O",
-"#N11111#....F",
+"#.11111#....F",
 "k......~....P",
 "C......~....B",
 "c......~....T",
@@ -1438,7 +1438,7 @@ const LEVELS=[
 "#a#b#d###m#X#",
 "#......~....#",
 "C.p....~.q..O",
-"#N11111#....F",
+"#.11111#....F",
 "y......~....P",
 "C......~....P",
 "c......~....B",
@@ -1475,7 +1475,7 @@ const LEVELS=[
 "#.....~.....#",
 "#.p...~..q..C",
 "#.....~.....C",
-"#....N......#",
+"#...........#",
 "S.....~.....P",
 "B.....~.....P",
 "####K##T##WW#"]},
@@ -1528,7 +1528,7 @@ const LEVELS=[
 "#f#o#z#######",
 "#......~....#",
 "C.p....~.q..S",
-"#N11111#....P",
+"#.11111#....P",
 "t......~....#",
 "C......~....B",
 "#......~....T",
@@ -1618,7 +1618,7 @@ const LEVELS=[
 "#z#h#t#######",
 "#......#....#",
 "C.p....#.q..S",
-"#N11111#....F",
+"#.11111#....F",
 "e......#....B",
 "C......#....#",
 "n......#....T",
@@ -1655,7 +1655,7 @@ const LEVELS=[
 "#.....~.....#",
 "#.p...~..q..C",
 "#.....~.....C",
-"#....N......#",
+"#...........#",
 "#.....~.....P",
 "B.....~.....P",
 "####K###T#WW#"]},
@@ -1708,7 +1708,7 @@ const LEVELS=[
 "#s#w#m#######",
 "#......~....#",
 "C.p....~.q..P",
-"#N11111#....P",
+"#.11111#....P",
 "y......~....#",
 "C......~....B",
 "b......~....T",
@@ -1745,7 +1745,7 @@ const LEVELS=[
 "#.....~.....#",
 "#.p...~..q..C",
 "#.....~.....C",
-"#....N......#",
+"#...........#",
 "S.....~.....P",
 "B.....~.....P",
 "####K##T##WW#"]},
@@ -1798,7 +1798,7 @@ const LEVELS=[
 "#z#n#t#######",
 "#......#....#",
 "C.p....#.q..S",
-"#N11111#....S",
+"#.11111#....S",
 "e......#....#",
 "C......#....B",
 "h......#....T",
@@ -1843,7 +1843,7 @@ const LEVELS=[
 "#d#u#y#####X#",
 "#......~....#",
 "C.p....~..q.O",
-"#N11111#....P",
+"#.11111#....P",
 "m......~....#",
 "C......~....B",
 "#......~....T",
@@ -1888,7 +1888,7 @@ const LEVELS=[
 "#d#u#y#####X#",
 "#......~....#",
 "C.p....~.q..O",
-"#N11111#....P",
+"#.11111#....P",
 "r......~....P",
 "C......~....B",
 "m......~....T",
@@ -1933,7 +1933,7 @@ const LEVELS=[
 "#d#y#m#####X#",
 "#......~....#",
 "C.p....~.q..O",
-"#N11111#....S",
+"#.11111#....S",
 "h......~....P",
 "C......~....B",
 "o......~....T",
@@ -1978,7 +1978,7 @@ const LEVELS=[
 "#z#n#e#####X#",
 "#......~....#",
 "C.p....~.q..S",
-"#N11111#....O",
+"#.11111#....O",
 "d......~....P",
 "C......~....B",
 "y......~....T",
@@ -2044,7 +2044,6 @@ function buildKitchen(li,members,teamIdx){
       else if(ch==='X'){t.type='ext';t.item={id:'ext'};}
       else if(ch==='~')t.type='hazard';
       else if(ch==='M'){t.type='hazard';t.rail='plat';}
-      else if(ch==='N'){t.type='shutter';t.shut=0;}
       else if(ch>='1'&&ch<='4')
         {t.type='belt';t.dir=[[1,0],[-1,0],[0,-1],[0,1]][ch.charCodeAt(0)-49];}
       else if(CRATES[ch]){t.type='crate';t.ing=CRATES[ch];}
@@ -2106,7 +2105,7 @@ function buildKitchen(li,members,teamIdx){
     else{c1=PCOLS[slot][0];c2=PCOLS[slot][1];}
     players.push(mkPlayer(i,sp,c1,c2,slot));
   });
-  G={li,L,grid,thr,mode:playerMode,teamIdx,orderIdx:0,world:WORLDS[L.w],potR,ovenR,plats,machines,shutT:0,
+  G={li,L,grid,thr,mode:playerMode,teamIdx,orderIdx:0,world:WORLDS[L.w],potR,ovenR,plats,machines,
     players,
     orders:[],orderT:0,score:0,combo:0,timeLeft:L.time,plates:4,dirty:0,returns:[],projs:[],
     served:0,missed:0,state:'countdown',cd:3.6,hasSink,hasExt,popups:[],ordersDirty:true,beltT:0,shake:0};
@@ -2121,7 +2120,7 @@ function levelIsSplit(li){
     if(ch==='p')p=[r,c];else if(ch==='q')q=[r,c];
   }
   if(!p||!q)return SPLIT_CACHE[li]=false;
-  const walk=(r,c)=>'.pqRJYVMN'.includes(L.map[r][c]);
+  const walk=(r,c)=>'.pqM'.includes(L.map[r][c]);
   const seen=new Set([p.join(',')]),dq=[p];
   while(dq.length){
     const [r,c]=dq.pop();
@@ -2178,19 +2177,9 @@ function mkPlayer(idx,sp,col,col2,slot){
     style:chefStyle(s+1)};
 }
 const SPD=250,PR=19;
-function shutterOpen(t){
-  if(((G.shutT+ (t.r+t.c)*0.9) % 8.5) < 5.2)return true;
-  /* hold the door: a chef in the gateway keeps it up */
-  for(const p of G.players){
-    if(p.gone||p.fallT>0)continue;
-    if(Math.floor(p.y/TS)===t.r&&Math.floor(p.x/TS)===t.c)return true;
-  }
-  return false;
-}
 function solidAt(r,c){
   if(r<0||c<0||r>=GROWS||c>=GCOLS)return true;
   const t=G.grid[r][c],ty=t.type;
-  if(ty==='shutter')return !shutterOpen(t);
   return ty!=='floor'&&ty!=='hazard';
 }
 function collides(x,y){
@@ -2247,7 +2236,7 @@ function escapeOk(br,bc){
         if(seen.has(k)||(nr===br&&nc===bc))continue;
         if(nr<0||nc<0||nr>=GROWS||nc>=GCOLS)continue;
         const ty=G.grid[nr][nc].type;
-        if(ty!=='floor'&&ty!=='shutter')continue;
+        if(ty!=='floor')continue;
         seen.add(k);dq.push([nr,nc]);
       }
     }
@@ -2256,7 +2245,6 @@ function escapeOk(br,bc){
   return true;
 }
 function updateDynamics(dt){
-  G.shutT+=dt;
   for(const pl of (G.plats||[])){
     const last=pl.cells.length-1;
     if((pl.waitT||0)>0)pl.waitT-=dt;      /* hold at each end so you can board */
@@ -3803,20 +3791,6 @@ function renderWorld(){
   for(const m of (G.machines||[]))m.cells.forEach(c2=>railCells.add(c2.r+','+c2.c));
   for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
     const tl=G.grid[r][c],x=c*TS,y=r*TS;
-    if(tl.type==='shutter'){
-      const open=shutterOpen(tl);
-      ctx.fillStyle=shade(W.fl2,-10);ctx.fillRect(x,y,TS,TS);
-      ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(x+2,y+2,TS-4,TS-4);
-      const h=open?9:TS-6;
-      ctx.fillStyle='#8a8f98';rr(x+3,y+3,TS-6,h,4);ctx.fill();
-      ctx.strokeStyle='#5a5f68';ctx.lineWidth=2;rr(x+3,y+3,TS-6,h,4);ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,0.18)';
-      for(let i=1;i*14<h;i++)ctx.fillRect(x+6,y+3+i*14,TS-12,3);
-      if(!open){
-        ctx.fillStyle='#ffca4d';ctx.fillRect(x+TS/2-9,y+TS-13,18,4);
-      }
-      continue;
-    }
     if(tl.type==='hazard'){
       if(HZ==='lava'){
         ctx.fillStyle='#c62828';ctx.fillRect(x,y,TS,TS);
@@ -3879,7 +3853,7 @@ function renderWorld(){
   for(let r=0;r<GROWS;r++){
     for(let c=0;c<GCOLS;c++){
       const tl=G.grid[r][c];
-      if(tl.type==='floor'||tl.type==='hazard'||tl.type==='shutter')continue;
+      if(tl.type==='floor'||tl.type==='hazard')continue;
       const mo=(tl.rail?machineOffset(tl):null);
       if(mo&&(mo.ofx||mo.ofy)){ctx.save();ctx.translate(mo.ofx,mo.ofy);drawSolidTile(tl,t);ctx.restore();}
       else drawSolidTile(tl,t);
