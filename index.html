@@ -2139,6 +2139,11 @@ function chefsPerKitchen(m){
   return t?Math.min(...t.map(x=>x.length)):MODES[m].chefs;
 }
 function levelPlayable(li){return !(levelIsSplit(li)&&chefsPerKitchen(playerMode)<2);}
+function nextPlayable(li){
+  /* the kitchen after this one that the current mode can actually staff */
+  for(let i=li+1;i<LEVELS.length;i++)if(levelPlayable(i))return i;
+  return -1;
+}
 function pickTournLevels(n){
   const idx=Array.from({length:LEVELS.length},(_,i)=>i).filter(levelPlayable);
   for(let i=idx.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[idx[i],idx[j]]=[idx[j],idx[i]];}
@@ -2982,7 +2987,7 @@ function finishLevel(){
     `<br>⭐ ${G.thr[0]} &nbsp; ⭐⭐ ${G.thr[1]} &nbsp; ⭐⭐⭐ ${G.thr[2]} &nbsp;·&nbsp; Best: ${Math.max(best,G.score)}`+
     (rank>=0&&rank<10?`<br>🏆 <b style="color:#ffd54f">#${rank+1}</b> on your leaderboard!`:'');
   const nextBtn=$('#btn-res-next');
-  nextBtn.style.display=(G.li<LEVELS.length-1&&(SAVE.stars[G.li]||0)>0)?'block':'none';
+  nextBtn.style.display=(nextPlayable(G.li)>=0&&(SAVE.stars[G.li]||0)>0)?'block':'none';
   if(G.netClient){nextBtn.style.display='none';$('#btn-res-retry').style.display='none';}
   else if(!NET.started)$('#btn-res-retry').style.display='';
   $('#ov-results').classList.add('active');
@@ -3056,7 +3061,7 @@ function finishVersus(){
     `<br>⭐ ${K.thr[0]} &nbsp; ⭐⭐ ${K.thr[1]} &nbsp; ⭐⭐⭐ ${K.thr[2]} &nbsp;·&nbsp; Best: ${Math.max(best,K.score)}`+
     (rank>=0&&rank<10?`<br>🏆 <b style="color:#ffd54f">#${rank+1}</b> on your leaderboard!`:'');
   const nextBtn=$('#btn-res-next');
-  nextBtn.style.display=(li<LEVELS.length-1&&(SAVE.stars[li]||0)>0)?'block':'none';
+  nextBtn.style.display=(nextPlayable(li)>=0&&(SAVE.stars[li]||0)>0)?'block':'none';
   if(G.netClient){nextBtn.style.display='none';$('#btn-res-retry').style.display='none';}
   else if(!NET.started)$('#btn-res-retry').style.display='';
   $('#ov-results').classList.add('active');
@@ -4754,6 +4759,11 @@ function showToast2(msg){/* toast outside game screen: reuse alert-free quick fl
   setTimeout(()=>{el.textContent=old;el.style.color='';},1600);
 }
 function startLevel(li){
+  if(!NET.started&&!levelPlayable(li)){
+    Snd.bad();G=null;VS=null;buildMap();showScreen('map');
+    showToast2('👥 '+LEVELS[li].name+' is a split kitchen — it needs 2+ chefs per team.');
+    return;
+  }
   buildLevel(li);
   fit();
   if(NET.role==='host'){
@@ -5295,7 +5305,10 @@ $('#btn-res-retry').onclick=()=>{startLevel(G.li);};
 $('#btn-res-map').onclick=()=>{TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
 $('#btn-res-next').onclick=()=>{
   if(TOURN&&TOURN.played<TOURN.rounds){startLevel(TOURN.seq[TOURN.played]);return;}
-  startLevel(G.li+1);
+  const from=G.li,nx=nextPlayable(from);
+  if(nx<0){TOURN=null;G=null;VS=null;buildMap();showScreen('map');return;}
+  startLevel(nx);
+  if(nx>from+1)showToast('👥 Skipped '+LEVELS[from+1].name+' — split kitchen, needs 2+ chefs.');
 };
 $('#mutebtn').onclick=()=>{
   Snd.on=!Snd.on;Snd.init();
