@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Umami Krew: Pan-Asian Panic</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232b2135'/%3E%3Cpath d='M12 30h40a20 20 0 0 1-40 0z' fill='%23ffc94d'/%3E%3Crect x='8' y='27' width='48' height='5' rx='2.5' fill='%23f4692a'/%3E%3Cpath d='M38 14l10 6-10 6' stroke='%23ffc94d' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root{
     --ink:#2b2135; --cream:#fff6e8; --accent:#ff7043; --accent2:#ffb300;
@@ -127,12 +128,16 @@
   .chatrow input{flex:1;font-family:inherit;font-size:14px;color:#f2ead6;background:#00000045;
     border:1px solid #ffffff26;border-radius:9px;padding:8px 10px}
   .chatrow input:focus{outline:none;border-color:#ffca4d}
-  #gchat{position:absolute;left:10px;bottom:10px;width:290px;z-index:7;display:none}
-  #gchat .chatlog{min-height:0;max-height:104px;background:#0e0a16aa;font-size:12.5px;margin-bottom:5px}
+  /* the chat lives in the HUD, filling the gap beside the queued orders */
+  #gchat{flex:1 1 auto;min-width:0;height:140px;z-index:7;display:none;
+    flex-direction:column;justify-content:flex-end;padding:4px 0}
+  #gchat .chatlog{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;
+    background:#0e0a16aa;font-size:12.5px;line-height:1.45;margin-bottom:5px;padding:6px 9px;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14px);
+    mask-image:linear-gradient(180deg,transparent 0,#000 14px)}
   #gchat .chatrow input{font-size:12.5px;padding:6px 9px;background:#0e0a16aa}
-  #gchat.dim{opacity:.5;transition:opacity .2s}
-  #gchat.dim .chatlog{max-height:58px}
-  #gchat.dim:hover{opacity:1}
+  #gchat.dim{opacity:.75;transition:opacity .2s}
+  #gchat.dim:hover,#gchat:focus-within{opacity:1}
   .tourseg{display:flex;gap:8px;justify-content:center;align-items:center;margin:0 auto 6px}
   .tslbl{font-size:13.5px;color:#b9a8d0;font-weight:bold}
   .tsbtn{font-family:inherit;font-size:13.5px;font-weight:bold;color:#d9cbe8;background:#00000038;
@@ -182,8 +187,8 @@
   #scr-game{background:#141020;border-radius:18px;overflow:hidden}
   #hud{width:960px;height:158px;background:linear-gradient(#241933,#1c1329);display:flex;align-items:center;
     padding:0 12px;gap:10px;border-bottom:3px solid #00000060}
-  #orders{display:flex;gap:8px;flex:1;height:148px;align-items:center;overflow:hidden}
-  .ordercard{width:118px;height:142px;background:var(--cream);border-radius:12px;color:var(--ink);
+  #orders{display:flex;gap:8px;flex:0 1 auto;min-width:0;height:148px;align-items:center;overflow:hidden}
+  .ordercard{width:126px;height:146px;background:var(--cream);border-radius:12px;color:var(--ink);
     display:flex;flex-direction:column;align-items:center;padding-top:2px;box-shadow:0 3px 6px rgba(0,0,0,.4);
     position:relative;flex:0 0 auto;animation:slidein .3s ease}
   @keyframes slidein{from{transform:translateY(-110px)}to{transform:translateY(0)}}
@@ -196,17 +201,20 @@
 .tofuicon{display:inline-block;width:0.85em;height:0.72em;background:#f4f1e8;
     border:0.09em solid #cfc9b8;border-radius:0.16em;vertical-align:-0.05em;
     box-shadow:inset 0 0.14em 0 #ffffff,0 0.1em 0.12em rgba(0,0,0,0.15)}
-  .dishicon{width:78px;height:78px;display:block;margin:0 auto}
+  .dishicon{width:66px;height:66px;display:block;margin:0 auto}
   .dishicon.rsm{width:40px;height:40px;margin:0 auto}
-  .ordercard .parts{font-size:17px;letter-spacing:1px;height:28px;white-space:nowrap}
-  .ing{display:inline-flex;align-items:flex-start;margin:0 1.5px}
-  .ingst{font-size:12px;line-height:1;margin-left:-5px;margin-top:-2px;letter-spacing:-2px}
-  .rbasics{margin-top:3px;font-size:12px;opacity:.95}
-  .rbasics .ingst{font-size:11px;letter-spacing:-1px}
-  .rbasics .picon{width:22px;height:22px}
-  .ordercard .parts .picon{width:26px;height:26px;margin:0 1px}
+  .ordercard .parts{font-size:0;letter-spacing:0;height:46px;flex:0 0 auto;width:100%;
+    display:flex;align-items:flex-start;justify-content:center;gap:1px;overflow:hidden}
+  .ing{display:inline-flex;flex-direction:column;align-items:center;margin:0;flex:0 0 auto}
+  .ingst{display:flex;align-items:center;gap:1px;margin-top:-8px;line-height:0}
+  .stbi{width:25px;height:25px;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+  .rbasics{margin-top:5px;font-size:0;opacity:.95;display:flex;flex-wrap:wrap;gap:2px 3px}
+  .rbasics .picon{width:26px;height:26px}
+  .rbasics .stbi{width:22px;height:22px}
+  .rbasics .ingst{margin-top:-7px}
+  .ordercard .parts .picon{width:29px;height:29px;margin:0}
   .ordercard .nm2{font-size:11px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
-    height:29px;line-height:1.18;padding:0 3px;overflow:hidden;text-align:center;width:100%;
+    height:29px;line-height:1.18;padding:0 3px;margin-bottom:3px;overflow:hidden;text-align:center;width:100%;
     display:flex;align-items:center;justify-content:center}
   .ordercard .nm2.nmL{font-size:9.5px;letter-spacing:0;line-height:1.15}
   .patbar{position:absolute;bottom:0;left:0;height:7px;background:var(--good);border-radius:0 0 0 10px;width:100%}
@@ -339,6 +347,17 @@
       <button class="tsbtn" data-rounds="15">🏆 ×15</button>
     </div>
     <div class="lbhint" id="tourhint" style="display:block;margin-bottom:10px">tournaments run back-to-back random kitchens — highest combined total wins<br>this keyboard seats <b>two</b> chefs — for 3–8, host an online room and everyone plays on their own computer</div>
+    <div class="tourseg" id="cpuseg">
+      <span class="tslbl">🤖 CPU chefs:</span>
+      <button class="tsbtn" id="cpu-less">−</button>
+      <b id="cpu-n" style="min-width:18px;display:inline-block;text-align:center;font-size:16px">0</b>
+      <button class="tsbtn" id="cpu-more">+</button>
+      <span class="tslbl" style="margin-left:16px">Skill:</span>
+      <button class="tsbtn" data-cpud="0">🥄 Line Cook</button>
+      <button class="tsbtn" data-cpud="1">🔪 Sous Chef</button>
+      <button class="tsbtn" data-cpud="2">👑 Head Chef</button>
+    </div>
+    <div class="lbhint" id="cpuhint" style="display:block;margin-bottom:10px"></div>
     <div class="modegrp">
       <div class="grplbl">🤝 CO-OP <span>one krew, one score · two chefs share this keyboard</span></div>
       <div class="modebtns">
@@ -501,6 +520,12 @@
   <div class="scr" id="scr-game">
     <div id="hud">
       <div id="orders"></div>
+      <div id="gchat">
+        <div id="gchatlog" class="chatlog game"></div>
+        <div class="chatrow">
+          <input id="gchatin" maxlength="160" spellcheck="false" placeholder="Press T to chat…">
+        </div>
+      </div>
       <div id="hudright">
         <div id="timer">0:00</div>
         <div id="score">🪙 0</div>
@@ -510,12 +535,6 @@
     <div id="stage">
       <canvas id="cv" width="936" height="592"></canvas>
       <div id="toastwrap"><div id="toast"></div></div>
-      <div id="gchat">
-        <div id="gchatlog" class="chatlog game"></div>
-        <div class="chatrow">
-          <input id="gchatin" maxlength="160" spellcheck="false" placeholder="Press T to chat…">
-        </div>
-      </div>
 
       <div class="overlay" id="countdown"><div id="cdnum">3</div></div>
 
@@ -565,6 +584,7 @@ const SaveIO={mem:null,
     return this.mem||{stars:{}};},
   save(d){this.mem=d;try{localStorage.setItem('kk_save',JSON.stringify(d));}catch(e){}}};
 let SAVE=SaveIO.load(); if(!SAVE.stars)SAVE.stars={};
+if(SAVE.cpu==null)SAVE.cpu=0; if(SAVE.cpuDiff==null)SAVE.cpuDiff=1;
 
 /* ---------------- audio --------------------------------------------- */
 const Snd={ctx:null,on:true,
@@ -967,33 +987,33 @@ const LEVELS=[
 "w...........c",
 "k...........F",
 "#B#t#T#K#####"]},
-{w:0,name:"Split Dojo",time:175,intv:13,pat:65,dishes:["toastie","cornroast","fruitbowl","picnic"],map:[
-"#a#b#w#######",
-"#.....#.....#",
-"#..p..C..q..W",
-"#.....#.....W",
-"k.....C.....c",
-"#.....#.....F",
-"t.....#.....F",
-"##B##T##K##T#"]},
-{w:0,name:"Full Omakase",time:180,intv:12,pat:62,dishes:["fruitbowl","toastie","cornroast","picnic","porridge"],map:[
-"#a#b#w#k#t#s#",
-"#...........#",
-"C...p...q...F",
-"C...........F",
-"c...........P",
-"B...........T",
-"#...........#",
-"###WW###K####"]},
-{w:0,name:"Graduation Roll",time:190,intv:12,pat:60,dishes:["fruitbowl","toastie","cornroast","picnic","porridge"],map:[
-"#a#b#w#k#t#B#",
-"#...p.......#",
-"#...........P",
-"#C##111##C###",
-"s...........#",
-"#.....q.....F",
-"c...........F",
-"#WW##T##K####"]},
+{w:0,name:"Split Dojo",time:205,intv:16,pat:75,dishes:["toastie","cornroast","fruitbowl","picnic"],map:[
+"#a#c#k#W#w###",
+"#...#...#...#",
+"#.C.#.W.#.#.#",
+"#.p.......q.#",
+"#.C.#.K.#.#.#",
+"#...#...#...#",
+"##..#.t.#..F#",
+"##b##B###T###"]},
+{w:0,name:"Full Omakase",time:210,intv:15,pat:72,dishes:["fruitbowl","toastie","cornroast","picnic","porridge"],map:[
+"#b#k####B#s##",
+"#...~~~.....#",
+"#.C.~~~.P.F.#",
+"#.p.........#",
+"#.C.~~~.P.T.#",
+"a...~~~....W#",
+"##..~~~.q..w#",
+"##c#####K#t##"]},
+{w:0,name:"Graduation Roll",time:220,intv:15,pat:70,dishes:["fruitbowl","toastie","cornroast","picnic","porridge"],map:[
+"#t#w#####W###",
+"a...#####...#",
+"b.C.MMMMM.P.F",
+"c.p.MMMMM.q.#",
+"k.C.MMMMM.#.P",
+"s...#####...#",
+"##.######K.T#",
+"##B#######W##"]},
 {w:1,name:"All Aboard",time:160,intv:15,pat:75,dishes:["porridge","cloudsoup"],map:[
 "#####WW######",
 "#~o......rs~#",
@@ -1030,23 +1050,23 @@ const LEVELS=[
 "e.....~~....P",
 "#.....~~...pS",
 "########T####"]},
-{w:1,name:"Galley Class",time:160,intv:13,pat:66,dishes:["skyskewer","captains"],map:[
-"#h#e#c#######",
-"#........MM.#",
-"C...p....~~.S",
-"C........~~.F",
-"#......q.~~.#",
-"B........~~.T",
-"#........~~.#",
+{w:1,name:"Galley Class",time:160,intv:13,pat:66,dishes:["skyskewer","fishwrap"],map:[
+"#h#e#z#f#t###",
+"#...........#",
+"C...p.......S",
+"C...........S",
+"#......q....#",
+"B...........T",
+"#...........#",
 "####WW##K####"]},
-{w:1,name:"Kaiten Belt",time:160,intv:13,pat:64,dishes:["porridge","skyskewer"],map:[
+{w:1,name:"Kaiten Belt",time:160,intv:13,pat:64,dishes:["porridge","fishwrap"],map:[
 "#############",
 "#1111111111W#",
 "#...........#",
 "s...p....q..C",
-"h...........C",
-"e...........S",
-"#...........P",
+"z...........C",
+"f...........S",
+"t...........P",
 "#B##T##K#####"]},
 {w:1,name:"Deck Nine",time:170,intv:12,pat:64,dishes:["cloudsoup","porridge","skyskewer"],map:[
 "#o#r#s#h#e###",
@@ -1057,33 +1077,33 @@ const LEVELS=[
 "#..~~~~~~...P",
 "B.p......q..T",
 "###WW##K#####"]},
-{w:1,name:"Rough Seas",time:170,intv:12,pat:62,dishes:["skyskewer","captains","porridge"],map:[
-"#h#e#c#s#####",
+{w:1,name:"Rough Seas",time:200,intv:15,pat:72,dishes:["skyskewer","fishwrap","porridge"],map:[
+"#e#f#h#s#z###",
 "#...........#",
-"#.#C#S###T#.#",
-"#M~~~~~~~~~~#",
-"#M#C#P#K#W#~#",
-"B...........#",
-"#..p.....q..#",
-"###########F#"]},
-{w:1,name:"Captain's Omakase",time:175,intv:12,pat:60,dishes:["porridge","cloudsoup","skyskewer","captains"],map:[
-"#o#r#s#h#e#c#",
+"#.C.~~~~~.S.#",
+"#.C.~.W.~.P.#",
+"#...~.K.~...#",
+"#.p.~...~.q.#",
+"##...P.....T#",
+"####B###t####"]},
+{w:1,name:"Captain's Omakase",time:205,intv:15,pat:70,dishes:["porridge","cloudsoup","skyskewer","captains"],map:[
+"#c#e#h#o#r#s#",
 "#...........#",
-"C...p.......P",
-"C...........P",
-"#...q.......S",
-"B...........T",
-"#...........#",
-"###WW###K##F#"]},
-{w:1,name:"Storm Service",time:180,intv:11,pat:58,dishes:["cloudsoup","skyskewer","captains"],map:[
-"#h#e#o###c###",
-"#......~....#",
-"C..p...~.q..S",
-"#.11111#....P",
-"r......~....P",
-"C......~....B",
-"#......~....T",
-"########WWFK#"]},
+"##.#######.##",
+"#.p.......q.#",
+"##.###.###.##",
+"#...#...#...#",
+"#.C.#.P.#.S.#",
+"#B#C#K#T#F#W#"]},
+{w:1,name:"Storm Service",time:210,intv:14,pat:68,dishes:["cloudsoup","skyskewer","captains"],map:[
+"#############",
+"c...#######.#",
+"e.C.MMMMMMM.S",
+"h.p.MMMMMMMqF",
+"o.C.MMMMMMM.P",
+"r...#######.T",
+"##.K#######.#",
+"##B########W#"]},
 {w:2,name:"First Steam",time:150,intv:15,pat:75,dishes:["applepie"],map:[
 "#d#h####WW###",
 "#...........#",
@@ -1147,33 +1167,33 @@ const LEVELS=[
 "B...........P",
 "X...........T",
 "###WW###K####"]},
-{w:2,name:"Ember Ring",time:175,intv:11,pat:60,dishes:["applepie","pumpkinpie"],map:[
-"#d#h#u#######",
-"#...........#",
-"#..~~~~~~...#",
-"C..~~~~~~...O",
-"C..~~~~~~...O",
-"#..~~~~~~...#",
-"B.p......q..X",
-"###WW#K#T####"]},
-{w:2,name:"Dinner Rush",time:180,intv:11,pat:58,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
-"#d#h#y#u#r###",
-"#...........#",
-"#.#C#O#P##..#",
-"#M~~~~~~~~~~#",
-"#M#C#O#P#T~~#",
-"B..........p#",
-"#.q.......X.#",
-"###WW##K#####"]},
-{w:2,name:"The Great Steam-Off",time:200,intv:10,pat:55,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
-"#d#h#y#####X#",
-"#......~....#",
-"C.p....~.q..O",
-"#.11111#....O",
-"r......~....P",
-"C......~....P",
-"u......~....B",
-"##K#####T#WW#"]},
+{w:2,name:"Ember Ring",time:205,intv:14,pat:70,dishes:["applepie","pumpkinpie"],map:[
+"#h#u##W######",
+"#....#.#....#",
+"d.C..#.#..O.#",
+"#.C..#.#..O.#",
+"#.p..#.#..q.#",
+"#.K..#.#..#.#",
+"#X.........T#",
+"####B###W####"]},
+{w:2,name:"Dinner Rush",time:210,intv:14,pat:68,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
+"#d#h#u#y#####",
+"#.....#.....#",
+"#.C.#.#.P.C.#",
+"#.....#.....#",
+"#..p.....q..T",
+"#.....#.....#",
+"#X.B.P#O.W.K#",
+"####r########"]},
+{w:2,name:"The Great Steam-Off",time:230,intv:13,pat:65,dishes:["applepie","berrypie","pumpkinpie","emberstew"],map:[
+"#########W###",
+"d...#####...#",
+"h.C.MMMMM.P.P",
+"r.p.MMMMM.q.#",
+"u.C.MMMMM.#.O",
+"y...#####...#",
+"##.X#####K.T#",
+"##B#######W##"]},
 {w:3,name:"Cold Open",time:150,intv:14,pat:72,dishes:["chillbowl"],map:[
 "#####WW######",
 "#..y.....b..#",
@@ -1237,33 +1257,33 @@ const LEVELS=[
 "#..~~~~~~...#",
 "B.p......q..T",
 "###WW##K#####"]},
-{w:3,name:"Market Galley",time:170,intv:12,pat:60,dishes:["grilledfish","fryup","chowder"],map:[
-"#f#o#y#b#####",
-"#...........#",
-"#.#C#S###T#.#",
-"#M~~~~~~~~~~#",
-"#M#C#P#K#W#~#",
-"B...........#",
-"#..p.....q..#",
-"###########F#"]},
-{w:3,name:"Winter Menu",time:175,intv:11,pat:58,dishes:["chillbowl","grilledfish","chowder","fryup"],map:[
-"#y#b#f#o#####",
-"#........MM.#",
-"C...p....~~.P",
-"C........~~.P",
-"#...q....~~.S",
-"B........~~.F",
-"#........~~.T",
-"###WW###K####"]},
-{w:3,name:"Blizzard Service",time:185,intv:11,pat:56,dishes:["grilledfish","chowder","fryup"],map:[
+{w:3,name:"Market Galley",time:200,intv:15,pat:70,dishes:["grilledfish","fryup","chowder"],map:[
 "#f#o#########",
-"#......~....#",
-"C.p....~.q..S",
-"#.11111#....P",
-"#......~....#",
-"C......~....B",
-"#......~....T",
-"########WWFK#"]},
+"#...........#",
+"#.C.~~~~~.S.#",
+"#.C.~~~~~.F.#",
+"#.p.......q.#",
+"#...#...#...#",
+"##.P#.#.#P.T#",
+"#####B#W##K##"]},
+{w:3,name:"Winter Menu",time:205,intv:14,pat:68,dishes:["chillbowl","grilledfish","chowder","fryup"],map:[
+"#######W#####",
+"b...........#",
+"f.QQQQQQQQQ.C",
+"o.Q#P#S#F#Q.#",
+"y.Q#######Q.C",
+"#.QQQQQQQQQ.T",
+"##.p.....q.K#",
+"####B###W####"]},
+{w:3,name:"Blizzard Service",time:215,intv:14,pat:66,dishes:["grilledfish","chowder","fryup"],map:[
+"#############",
+"f...#######.#",
+"o.C.MMMMMMM.S",
+"#.p.MMMMMMMqF",
+"#.C.MMMMMMM.P",
+"#...#######.T",
+"##.K#######.#",
+"##B########W#"]},
 {w:4,name:"Kaiten 101",time:150,intv:14,pat:70,dishes:["boltbites"],map:[
 "#o######WW###",
 "#...........#",
@@ -1327,33 +1347,33 @@ const LEVELS=[
 "#.....q.....F",
 "#...........P",
 "#WW##T##K####"]},
-{w:4,name:"Quality Check",time:175,intv:11,pat:58,dishes:["deluxewrap","boltbites"],map:[
-"#z#n#e#o#####",
+{w:4,name:"Quality Check",time:205,intv:14,pat:68,dishes:["deluxewrap","boltbites"],map:[
+"#e#k#n#W#z###",
 "#...........#",
-"#...........#",
-"#M~CC#FP#~~~#",
-"#M~~~~~~~~~~#",
-"#.p......q..#",
-"B...........T",
-"###WW#K##k###"]},
-{w:4,name:"Dinner Peak",time:180,intv:11,pat:56,dishes:["boltbites","energywrap","circuitsoup","deluxewrap"],map:[
-"#z#n#e#k#o#r#",
-"#...........#",
-"C...p.......F",
-"C...........F",
-"#...q.......P",
-"B...........P",
-"#...........T",
-"###WW###K####"]},
-{w:4,name:"Last Train Service",time:190,intv:10,pat:54,dishes:["energywrap","deluxewrap","circuitsoup"],map:[
-"#z#n#e#######",
-"#......#....#",
-"C.p....#.q..S",
-"#.11111#....P",
-"r......#....P",
-"C......#....B",
-"k......#....T",
-"########WW#K#"]},
+"#..CC###F#..#",
+"#..#######..#",
+"#..#######..#",
+"#..KT##BW#..#",
+"#...p...q...#",
+"########o####"]},
+{w:4,name:"Dinner Peak",time:210,intv:14,pat:66,dishes:["boltbites","energywrap","circuitsoup","deluxewrap"],map:[
+"#e#n#o#W#z###",
+"#...#...#...#",
+"#.C.#.W.#.P.#",
+"#.p.......q.#",
+"#.C.#.K.#.P.#",
+"#...#...#...#",
+"##..#.r.#..F#",
+"##k##B###T###"]},
+{w:4,name:"Last Train Service",time:220,intv:13,pat:64,dishes:["energywrap","deluxewrap","circuitsoup"],map:[
+"#########W###",
+"e...#####...#",
+"k.C.MMMMM.#.P",
+"n.p.MMMMM.q.#",
+"r.C.MMMMM.#.P",
+"z...#####...#",
+"##.######K.T#",
+"##B#######W##"]},
 {w:5,name:"Teriyaki Test",time:155,intv:14,pat:70,dishes:["candyapple","chocbanana"],map:[
 "#a#b####WW###",
 "#...........#",
@@ -1417,33 +1437,33 @@ const LEVELS=[
 "y...........O",
 "B.........X.T",
 "###WW###K####"]},
-{w:5,name:"Lantern Floor",time:180,intv:11,pat:56,dishes:["candyapple","carnivalcorn","midnightpie"],map:[
-"#a#c#k#d#y###",
+{w:5,name:"Lantern Floor",time:210,intv:14,pat:66,dishes:["candyapple","carnivalcorn","midnightpie"],map:[
+"#c#k####B#m##",
+"#...~~~.....#",
+"#.C.~~~.P.F.#",
+"#.p.........#",
+"#.C.~~~.O.T.#",
+"a...~~~....W#",
+"#X..~~~.q..##",
+"##d#####K#y##"]},
+{w:5,name:"Midnight Rush",time:215,intv:13,pat:64,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
+"#a#b#c#d#m#y#",
 "#...........#",
-"#..~~~~~~...#",
-"C..~~~~~~...P",
-"C..~~~~~~...F",
-"m..~~~~~~...O",
-"B.p......q..X",
-"###WW#K#T####"]},
-{w:5,name:"Midnight Rush",time:185,intv:10,pat:54,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
-"#a#b#c#k#m###",
-"#...........#",
-"#.#C#F#P##..#",
-"#M~~~~~~~~~~#",
-"#MBC#O#P#T~~#",
-"d..........p#",
-"#.q.....X...#",
-"###WW##K##y##"]},
-{w:5,name:"Neon Gala",time:210,intv:10,pat:52,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
-"#a#b#d###m#X#",
-"#......~....#",
-"C.p....~.q..O",
-"#.11111#....F",
-"y......~....P",
-"C......~....P",
-"c......~....B",
-"##K###k#WW#T#"]},
+"#.C.~~~~~.F.#",
+"#.C.~.W.~.P.#",
+"#...~.K.~...#",
+"#.p.~...~.q.#",
+"#X...O.....T#",
+"####B###k####"]},
+{w:5,name:"Neon Gala",time:240,intv:13,pat:62,dishes:["candyapple","chocbanana","carnivalcorn","midnightpie"],map:[
+"#m#y#########",
+"a...#######.#",
+"b.C.MMMMMMM.F",
+"c.p.MMMMMMMqP",
+"d.C.MMMMMMM.O",
+"k...#######.T",
+"#X.K#######.#",
+"##B########W#"]},
 {w:6,name:"Koi Pond Prep",time:150,intv:13,pat:66,dishes:["grilledfish"],map:[
 "#f#f####WW###",
 "#...........#",
@@ -1507,33 +1527,33 @@ const LEVELS=[
 "#..~~~~~~...#",
 "B.p......q..T",
 "###WW##K#####"]},
-{w:6,name:"Friday Service",time:175,intv:11,pat:56,dishes:["grilledfish","chowder","fryup"],map:[
+{w:6,name:"Friday Service",time:205,intv:14,pat:66,dishes:["grilledfish","chowder","fryup"],map:[
 "#f#o#########",
-"#.....#.....#",
-"#..p..C..q..W",
-"#.....#.....W",
-"#.....C.....#",
-"#.....#.....S",
-"#.....#.....P",
-"##B##T##K##F#"]},
-{w:6,name:"Full Garden Menu",time:180,intv:10,pat:54,dishes:["grilledfish","chowder","fishwrap","fryup"],map:[
-"#f#o#z#t#####",
-"#........MM.#",
-"C...p....~~.P",
-"C........~~.P",
-"#...q....~~.S",
-"B........~~.F",
-"#........~~.T",
-"###WW###K####"]},
-{w:6,name:"Moonlit Service",time:190,intv:10,pat:52,dishes:["chowder","fishwrap","fryup"],map:[
-"#f#o#z#######",
-"#......~....#",
-"C.p....~.q..S",
-"#.11111#....P",
-"t......~....#",
-"C......~....B",
-"#......~....T",
-"########WWFK#"]},
+"#...........#",
+"##.#######.##",
+"#.p.......q.#",
+"##.###.###.##",
+"#...#...#...#",
+"#.C.#.P.#.S.#",
+"#B#C#K#T#F#W#"]},
+{w:6,name:"Full Garden Menu",time:210,intv:13,pat:64,dishes:["grilledfish","chowder","fishwrap","fryup"],map:[
+"#o#t##W##z###",
+"#....#.#....#",
+"f.C..#.#..S.#",
+"#.C..#.#..F.#",
+"#.p..#.#..q.#",
+"#.K..#.#..P.#",
+"##.........T#",
+"####B###W####"]},
+{w:6,name:"Moonlit Service",time:220,intv:13,pat:62,dishes:["chowder","fishwrap","fryup"],map:[
+"#########W###",
+"f...#####...#",
+"o.C.MMMMM.P.S",
+"t.p.MMMMM.q.#",
+"z.C.MMMMM.P.F",
+"#...#####...#",
+"##.######K.T#",
+"##B#######W##"]},
 {w:7,name:"First Wok",time:150,intv:13,pat:66,dishes:["cornroast"],map:[
 "#c#c####WW###",
 "#...........#",
@@ -1597,33 +1617,33 @@ const LEVELS=[
 "B...........#",
 "#..p.....q..#",
 "#############"]},
-{w:7,name:"Crowd Crush",time:175,intv:11,pat:56,dishes:["stuffedpepper","chickenwrap"],map:[
-"#z#h#t#e#####",
-"#...........#",
-"#.#C#S#.##..#",
-"#M~~~~~~~~~~#",
-"#MBC#S#~#T~~#",
-"n..........p#",
-"#.q.....k...#",
-"###WW##K#####"]},
-{w:7,name:"Grand Night Market",time:180,intv:10,pat:54,dishes:["cornroast","chickenwrap","roastfeast","stuffedpepper"],map:[
-"#z#h#t#e#n###",
-"#...........#",
-"C...p.......S",
-"C...........F",
-"k...q.......#",
-"B...........T",
+{w:7,name:"Crowd Crush",time:205,intv:14,pat:66,dishes:["stuffedpepper","chickenwrap"],map:[
+"#e#h#n#t#####",
+"#.....#.....#",
+"#.C.#.#.S.C.#",
+"#.....#.....#",
+"#..p.....q..T",
+"#.....#.....#",
+"##.B.###.W.K#",
+"####k###z####"]},
+{w:7,name:"Grand Night Market",time:210,intv:13,pat:64,dishes:["cornroast","chickenwrap","roastfeast","stuffedpepper"],map:[
+"#o#t#z#W#####",
 "c...........#",
-"#o##WW###K###"]},
-{w:7,name:"Street King",time:190,intv:10,pat:52,dishes:["chickenwrap","roastfeast","stuffedpepper"],map:[
-"#z#h#t#######",
-"#......#....#",
-"C.p....#.q..S",
-"#.11111#....F",
-"e......#....B",
-"C......#....#",
-"n......#....T",
-"##k#o###WW#K#"]},
+"e.QQQQQQQQQ.C",
+"h.Q###S#F#Q.#",
+"k.Q#######Q.C",
+"n.QQQQQQQQQ.T",
+"##.p.....q.K#",
+"####B###W####"]},
+{w:7,name:"Street King",time:220,intv:13,pat:62,dishes:["chickenwrap","roastfeast","stuffedpepper"],map:[
+"#t#z#########",
+"e...#######.#",
+"h.C.MMMMMMM.S",
+"k.p.MMMMMMMqF",
+"n.C.MMMMMMM.#",
+"o...#######.T",
+"##.K#######.#",
+"##B########W#"]},
 {w:8,name:"Steep Start",time:150,intv:13,pat:66,dishes:["porridge"],map:[
 "#s#s####WW###",
 "#...........#",
@@ -1687,35 +1707,35 @@ const LEVELS=[
 "#..~~~~~~...#",
 "B.p......q..T",
 "###WW##K#####"]},
-{w:8,name:"Ryokan Galley",time:175,intv:11,pat:56,dishes:["porridge","berrytoast","sweettoast"],map:[
-"#s#w#y#m#b###",
+{w:8,name:"Ryokan Galley",time:205,intv:14,pat:66,dishes:["porridge","berrytoast","sweettoast"],map:[
+"#######W#####",
+"b...........#",
+"m.QQQQQQQQQ.C",
+"s.Q###P#P#Q.#",
+"w.Q#######Q.C",
+"y.QQQQQQQQQ.T",
+"##.p.....q.K#",
+"####B###W####"]},
+{w:8,name:"Full Kaiseki",time:210,intv:13,pat:64,dishes:["porridge","berrytoast","sweettoast","chillbowl"],map:[
+"#b#m#s#W#y###",
 "#...........#",
-"#.#C#P###T#.#",
-"#M~~~~~~~~~~#",
-"#M#C#P#K#W#~#",
-"B...........#",
-"#..p.....q..#",
-"#############"]},
-{w:8,name:"Full Kaiseki",time:180,intv:10,pat:54,dishes:["porridge","berrytoast","sweettoast","chillbowl"],map:[
-"#s#w#y#m#b###",
-"#...........#",
-"C...p.......P",
-"C...........P",
-"#...q.......#",
-"B...........T",
-"#...........#",
-"###WW###K####"]},
-{w:8,name:"Whiteout Service",time:190,intv:10,pat:52,dishes:["porridge","sweettoast","chillbowl"],map:[
-"#s#w#m#######",
-"#......~....#",
-"C.p....~.q..P",
-"#.11111#....P",
-"y......~....#",
-"C......~....B",
-"b......~....T",
-"########WW#K#"]},
-{w:9,name:"Docking Broth",time:150,intv:13,pat:64,dishes:["circuitsoup"],map:[
-"#n#r####WW###",
+"#..CC##PP#..#",
+"#..#######..#",
+"#..#######..#",
+"#..KT##BW#..#",
+"#...p...q...#",
+"########w####"]},
+{w:8,name:"Whiteout Service",time:220,intv:13,pat:62,dishes:["porridge","sweettoast","chillbowl"],map:[
+"#########W###",
+"b...#####...#",
+"m.C.MMMMM.#.P",
+"s.p.MMMMM.q.#",
+"w.C.MMMMM.#.P",
+"y...#####...#",
+"##.######K.T#",
+"##B#######W##"]},
+{w:9,name:"Docking Broth",time:150,intv:13,pat:64,dishes:["cloudsoup"],map:[
+"#o#r####WW###",
 "#...........#",
 "#.C.111111#.#",
 "#.p.......q.#",
@@ -1723,8 +1743,8 @@ const LEVELS=[
 "#...........#",
 "#B..P..K..T.#",
 "#############"]},
-{w:9,name:"Ration Ramen",time:155,intv:12,pat:62,dishes:["circuitsoup","stuffedpepper"],map:[
-"#n#r#e#k#####",
+{w:9,name:"Ration Ramen",time:155,intv:12,pat:62,dishes:["cloudsoup","chowder"],map:[
+"#o#r#f#k#####",
 "#...........#",
 "#.##.....##.#",
 "#.pC.....Pq.#",
@@ -1732,17 +1752,17 @@ const LEVELS=[
 "#.....C.....#",
 "#B.P....K..T#",
 "####WW#######"]},
-{w:9,name:"Zero-G Rolls",time:160,intv:12,pat:60,dishes:["chickenwrap","stuffedpepper"],map:[
-"#z#h#t#e#n#k#",
+{w:9,name:"Zero-G Noodles",time:160,intv:12,pat:60,dishes:["boltbites","fryup"],map:[
+"#f#o#t#e#n#k#",
 "#...........#",
 "#.C...#####.#",
 "#.p...#..q..#",
-"#.C...#.SS..#",
+"#.C...#.SF..#",
 "#...........#",
 "#B..K.....T.#",
 "#####WW######"]},
-{w:9,name:"Void Crossing",time:165,intv:11,pat:58,dishes:["circuitsoup","chickenwrap"],map:[
-"#z#h#t#n#r###",
+{w:9,name:"Void Crossing",time:165,intv:11,pat:58,dishes:["cloudsoup","chowder"],map:[
+"#f#o#t#n#r###",
 "#.....~.....#",
 "#.p...~..q..C",
 "#.....~.....C",
@@ -1750,17 +1770,17 @@ const LEVELS=[
 "S.....~.....P",
 "B.....~.....P",
 "####K##T##WW#"]},
-{w:9,name:"Cargo Belt",time:165,intv:11,pat:58,dishes:["stuffedpepper","chickenwrap","circuitsoup"],map:[
+{w:9,name:"Cargo Belt",time:165,intv:11,pat:58,dishes:["cloudsoup","boltbites","chowder"],map:[
 "#############",
 "#1111111111W#",
 "#...........#",
-"z...p....q..C",
-"h...........C",
-"t...........S",
+"f...p....q..C",
+"o...........C",
+"t...........F",
 "e...........P",
 "#B#n#T#K#r#k#"]},
-{w:9,name:"Orbit Ring",time:170,intv:11,pat:56,dishes:["circuitsoup","stuffedpepper"],map:[
-"#n#r#e#k#####",
+{w:9,name:"Orbit Ring",time:170,intv:11,pat:56,dishes:["cloudsoup","chowder"],map:[
+"#o#r#f#k#####",
 "#...........#",
 "#..~~~~~~...#",
 "C..~~~~~~...P",
@@ -1768,42 +1788,42 @@ const LEVELS=[
 "#..~~~~~~...#",
 "B.p......q..T",
 "###WW##K#####"]},
-{w:9,name:"Night Cycle",time:170,intv:10,pat:56,dishes:["chickenwrap","circuitsoup","stuffedpepper"],map:[
-"#z#h#t#e#n###",
+{w:9,name:"Night Cycle",time:170,intv:10,pat:56,dishes:["cloudsoup","chowder","boltbites"],map:[
+"#f#o#t#e#n###",
 "#...........#",
-"#.#C#S#P##..#",
+"#.#C#F#P##..#",
 "#M~~~~~~~~~~#",
-"#MBC#S#P#T~~#",
+"#MBC#F#P#T~~#",
 "k...........#",
 "#.q....p....#",
 "###WW##K##r##"]},
-{w:9,name:"Slurp Frenzy",time:175,intv:10,pat:54,dishes:["deluxewrap","circuitsoup"],map:[
-"#z#n#e#k#r###",
-"#...........#",
-"#.#C#C#P##..#",
-"#M~~~~~~~~~~#",
-"#M#C#C#P#T~~#",
-"B..........p#",
-"#.q.........#",
-"###WW##K#####"]},
-{w:9,name:"System Overload",time:180,intv:10,pat:52,dishes:["circuitsoup","stuffedpepper","chickenwrap","deluxewrap"],map:[
-"#z#h#t#e#n#k#",
-"#...........#",
-"C...p.......S",
-"C...........S",
-"r...q.......P",
-"B...........P",
-"#...........T",
-"###WW###K####"]},
-{w:9,name:"Command Deck",time:195,intv:9,pat:50,dishes:["deluxewrap","chickenwrap"],map:[
-"#z#n#t#######",
-"#......#....#",
-"C.p....#.q..S",
-"#.11111#....S",
-"e......#....#",
-"C......#....B",
-"h......#....T",
-"##k#####WW#K#"]},
+{w:9,name:"Slurp Frenzy",time:205,intv:13,pat:64,dishes:["cloudsoup","chowder"],map:[
+"#f#r###W#####",
+"#...#...#...#",
+"#.C.#.W.#.P.#",
+"#.p.......q.#",
+"#.C.#.K.#.#.#",
+"#...#...#...#",
+"##..#.#.#..P#",
+"##o##B###T###"]},
+{w:9,name:"System Overload",time:210,intv:13,pat:62,dishes:["cloudsoup","chowder","boltbites","fryup"],map:[
+"#o######B####",
+"#...~~~.....#",
+"#.C.~~~.S.F.#",
+"#.p.........#",
+"#.C.~~~.P.T.#",
+"f...~~~....W#",
+"##..~~~.q..##",
+"##r#####K####"]},
+{w:9,name:"Command Deck",time:225,intv:12,pat:60,dishes:["cloudsoup","chowder","boltbites"],map:[
+"#############",
+"f...#######.#",
+"o.C.MMMMMMM.F",
+"r.p.MMMMMMMqP",
+"#.C.MMMMMMM.P",
+"#...#######.T",
+"##.K#######.#",
+"##B########W#"]},
 {w:10,name:"Late-Night Banquet",time:150,intv:13,pat:64,dishes:["emberstew"],map:[
 "#u#r####WW###",
 "#...........#",
@@ -1867,33 +1887,33 @@ const LEVELS=[
 "B...........#",
 "#..p...q..X.#",
 "#############"]},
-{w:10,name:"Feast Rush",time:175,intv:10,pat:54,dishes:["pumpkinpie","candyapple","chocberries"],map:[
-"#d#u#a#m#y###",
+{w:10,name:"Feast Rush",time:205,intv:13,pat:64,dishes:["pumpkinpie","candyapple","chocberries"],map:[
+"#a#d#m#u#####",
 "#...........#",
-"#.#C#O#P##..#",
-"#M~~~~~~~~~~#",
-"#M#C#O#P#T~~#",
-"B..........p#",
-"#.q.....X...#",
-"###WW##K#####"]},
-{w:10,name:"Full Banquet",time:180,intv:9,pat:52,dishes:["emberstew","pumpkinpie","chocberries","candyapple"],map:[
-"#d#u#r#a#m###",
+"#.C.~~~~~.P.#",
+"#.C.~.W.~.O.#",
+"#...~.K.~...#",
+"#.p.~...~.q.#",
+"#X...P.....T#",
+"####B###y####"]},
+{w:10,name:"Full Banquet",time:210,intv:12,pat:62,dishes:["emberstew","pumpkinpie","chocberries","candyapple"],map:[
+"#a#d#m#r#u#y#",
 "#...........#",
-"C...p.......O",
-"C...........P",
-"y...q.......P",
-"B...........T",
-"X...........#",
-"###WW###K####"]},
-{w:10,name:"Midnight Ceremony",time:195,intv:9,pat:50,dishes:["pumpkinpie","emberstew","chocberries"],map:[
-"#d#u#y#####X#",
-"#......~....#",
-"C.p....~.q..O",
-"#.11111#....P",
-"r......~....P",
-"C......~....B",
-"m......~....T",
-"##K######WW##"]},
+"##.#######.##",
+"X.p.......q.#",
+"##.###.###.##",
+"#...#...#...#",
+"#.C.#.P.#.P.#",
+"#B#C#K#T#O#W#"]},
+{w:10,name:"Midnight Ceremony",time:225,intv:12,pat:60,dishes:["pumpkinpie","emberstew","chocberries"],map:[
+"#########W###",
+"d...#####...#",
+"m.C.MMMMM.P.P",
+"r.p.MMMMM.q.#",
+"u.C.MMMMM.#.O",
+"y...#####...#",
+"##.X#####K.T#",
+"##B#######W##"]},
 {w:11,name:"Base Camp",time:155,intv:12,pat:62,dishes:["captains"],map:[
 "#h#e#c##WW###",
 "#...........#",
@@ -1957,15 +1977,15 @@ const LEVELS=[
 "B...........#",
 "#.p..h.c.q..#",
 "######X######"]},
-{w:11,name:"Firework Quota",time:180,intv:9,pat:52,dishes:["midnightpie","deluxewrap"],map:[
-"#d#y#m#z#n###",
-"#...........#",
-"#.#C#O#P##..#",
-"#M~~~~~~~~~~#",
-"#MBC#C#P#T~~#",
-"e..........p#",
-"#.q.....X...#",
-"###WW##K##k##"]},
+{w:11,name:"Firework Quota",time:210,intv:12,pat:62,dishes:["midnightpie","deluxewrap"],map:[
+"#d#e#m#n#z###",
+"#.....#.....#",
+"#.C.#.#.P.C.#",
+"#.....#.....#",
+"#..p.....q..T",
+"#.....#.....#",
+"#X.B.P#O.W.K#",
+"####k###y####"]},
 {w:11,name:"Grand Festival Menu",time:185,intv:9,pat:50,dishes:["captains","deluxewrap","midnightpie","roastfeast"],map:[
 "#h#e#c#z#n#k#",
 "#...........#",
@@ -1975,15 +1995,15 @@ const LEVELS=[
 "y...........P",
 "m...........B",
 "#o#WW##T#K#X#"]},
-{w:11,name:"The Final Service",time:210,intv:9,pat:48,dishes:["deluxewrap","midnightpie"],map:[
-"#z#n#e#####X#",
-"#......~....#",
-"C.p....~.q..S",
-"#.11111#....O",
-"d......~....P",
-"C......~....B",
-"y......~....T",
-"##K#km##WW###"]}];
+{w:11,name:"The Final Service",time:240,intv:12,pat:58,dishes:["deluxewrap","midnightpie"],map:[
+"#y#z#########",
+"d...#######.#",
+"e.C.MMMMMMM.P",
+"k.p.MMMMMMMqO",
+"m.C.MMMMMMM.P",
+"n...#######.T",
+"#X.K#######.#",
+"##B########W#"]}];
 function starThresholds(L){
   const avg=L.dishes.reduce((s,d)=>s+DISHES[d].score,0)/L.dishes.length;
   const est=(L.time/L.intv)*avg*1.15;
@@ -2045,6 +2065,7 @@ function buildKitchen(li,members,teamIdx){
       else if(ch==='X'){t.type='ext';t.item={id:'ext'};}
       else if(ch==='~')t.type='hazard';
       else if(ch==='M'){t.type='hazard';t.rail='plat';}
+      else if(ch==='Q'){t.type='floor';t.route=true;}
       else if(ch>='1'&&ch<='4')
         {t.type='belt';t.dir=[[1,0],[-1,0],[0,-1],[0,1]][ch.charCodeAt(0)-49];}
       else if(CRATES[ch]){t.type='crate';t.ing=CRATES[ch];}
@@ -2069,9 +2090,48 @@ function buildKitchen(li,members,teamIdx){
     }
     return out;
   };
-  runsOf('plat').forEach((cells,i)=>{
+  /* a platform is the whole rectangle of track it slides inside: a one-tile
+     strip is a little skiff, a thicker one is a deck big enough for the crew */
+  const platBlocks=()=>{
+    const seen=new Set(),out=[];
+    for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+      if(grid[r][c].rail!=='plat'||seen.has(r+','+c))continue;
+      const q=[[r,c]],cells=[];seen.add(r+','+c);
+      while(q.length){
+        const cur=q.pop();cells.push({r:cur[0],c:cur[1]});
+        for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const nr=cur[0]+d[0],nc=cur[1]+d[1],k=nr+','+nc;
+          if(nr<0||nc<0||nr>=GROWS||nc>=GCOLS||seen.has(k))continue;
+          if(grid[nr][nc].rail!=='plat')continue;
+          seen.add(k);q.push([nr,nc]);
+        }
+      }
+      let r0=99,r1=-1,c0=99,c1=-1;
+      for(const x of cells){r0=Math.min(r0,x.r);r1=Math.max(r1,x.r);
+        c0=Math.min(c0,x.c);c1=Math.max(c1,x.c);}
+      out.push({r0,r1,c0,c1,n:cells.length});
+    }
+    return out;
+  };
+  platBlocks().forEach((g,i)=>{
+    const W=g.c1-g.c0+1,H=g.r1-g.r0+1;
+    if(W*H!==g.n)return;                       /* a ragged block is not a deck */
+    const along=W>H;
+    let size=Math.min(along?H:W,(along?W:H)-1);
+    if(size%2===0)size--;                      /* odd, so the deck sits on a tile */
+    if(size<1)return;
+    const half=(size-1)>>1,cells=[];
+    if(along){
+      const rr=g.r0+((H-1)>>1);
+      for(let c=g.c0+half;c<=g.c1-half;c++)cells.push({r:rr,c});
+    } else {
+      const cc=g.c0+((W-1)>>1);
+      for(let r=g.r0+half;r<=g.r1-half;r++)cells.push({r,c:cc});
+    }
     if(cells.length<2)return;
-    plats.push({cells,pos:0,dir:1,spd:0.72+0.08*(i%3),waitT:PLAT_DWELL,docked:true,
+    plats.push({cells,pw:size,ph:size,pos:0,dir:1,/* a big deck is the only road across, so it runs like a shuttle, not a barge */
+      spd:(0.72+0.08*(i%3))*(size>1?2.4:1),
+      waitT:PLAT_DWELL,docked:true,
       cx:cells[0].c*TS+TS/2,cy:cells[0].r*TS+TS/2,px:0,py:0});
   });
   /* appliances stay bolted down — only the raft and the timed gate move */
@@ -2106,7 +2166,41 @@ function buildKitchen(li,members,teamIdx){
     else{c1=PCOLS[slot][0];c2=PCOLS[slot][1];}
     players.push(mkPlayer(i,sp,c1,c2,slot));
   });
-  G={li,L,grid,thr,mode:playerMode,teamIdx,orderIdx:0,world:WORLDS[L.w],potR,ovenR,plats,machines,
+  /* a parade dragon runs a closed circuit through the kitchen, shutting the
+     stations along it for a few seconds at a time */
+  const parade=[];
+  {
+    const isR=(r,c)=>r>=0&&c>=0&&r<GROWS&&c<GCOLS&&grid[r][c].route;
+    const K=(r,c)=>r*GCOLS+c, seen=new Set();
+    for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+      if(!grid[r][c].route||seen.has(K(r,c)))continue;
+      const comp=[],q=[{r,c}];seen.add(K(r,c));
+      while(q.length){
+        const cur=q.pop();comp.push(cur);
+        for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const nr=cur.r+d[0],nc=cur.c+d[1];
+          if(!isR(nr,nc)||seen.has(K(nr,nc)))continue;
+          seen.add(K(nr,nc));q.push({r:nr,c:nc});
+        }
+      }
+      const deg=x=>{let n=0;for(const d of [[1,0],[-1,0],[0,1],[0,-1]])if(isR(x.r+d[0],x.c+d[1]))n++;return n;};
+      if(comp.length<8||!comp.every(x=>deg(x)===2))continue;   /* needs a real circuit */
+      const order=[comp[0]],used=new Set([K(comp[0].r,comp[0].c)]);
+      while(order.length<comp.length){
+        const cur=order[order.length-1];let nxt=null;
+        for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const nr=cur.r+d[0],nc=cur.c+d[1];
+          if(isR(nr,nc)&&!used.has(K(nr,nc))){nxt={r:nr,c:nc};break;}
+        }
+        if(!nxt)break;
+        used.add(K(nxt.r,nxt.c));order.push(nxt);
+      }
+      if(order.length!==comp.length)continue;
+      parade.push({cells:order,pos:0,spd:2.2,
+        len:Math.max(3,Math.round(order.length*0.22)),block:new Set()});
+    }
+  }
+  G={li,L,grid,thr,mode:playerMode,teamIdx,orderIdx:0,world:WORLDS[L.w],potR,ovenR,plats,machines,parade,
     players,
     orders:[],orderT:0,score:0,combo:0,timeLeft:L.time,plates:4,dirty:0,returns:[],projs:[],
     served:0,missed:0,state:'countdown',cd:3.6,hasSink,hasExt,popups:[],ordersDirty:true,beltT:0,shake:0};
@@ -2121,7 +2215,7 @@ function levelIsSplit(li){
     if(ch==='p')p=[r,c];else if(ch==='q')q=[r,c];
   }
   if(!p||!q)return SPLIT_CACHE[li]=false;
-  const walk=(r,c)=>'.pqM'.includes(L.map[r][c]);
+  const walk=(r,c)=>'.pqQM'.includes(L.map[r][c]);
   const seen=new Set([p.join(',')]),dq=[p];
   while(dq.length){
     const [r,c]=dq.pop();
@@ -2178,9 +2272,12 @@ function buildLevel(li){
 }
 function mkPlayer(idx,sp,col,col2,slot){
   const s=(slot==null)?idx:slot;
-  return {idx,slot:s,x:sp.c*TS+TS/2,y:sp.r*TS+TS/2,spawnX:sp.c*TS+TS/2,spawnY:sp.r*TS+TS/2,fallT:0,fx:0,fy:-1,held:null,
-    ctrl:CTRLS[s],col,col2,working:false,walkT:0,chopSnd:0,mx:0,my:0,
+  const cpu=slotIsBot(s);
+  const p={idx,slot:s,x:sp.c*TS+TS/2,y:sp.r*TS+TS/2,spawnX:sp.c*TS+TS/2,spawnY:sp.r*TS+TS/2,fallT:0,fx:0,fy:-1,held:null,
+    ctrl:cpu?botCtrl(s):CTRLS[s],col,col2,working:false,walkT:0,chopSnd:0,mx:0,my:0,
     style:chefStyle(s+1)};
+  if(cpu)p.bot={t:0,hold:0,age:0,numb:0,shake:0,plan:null,focus:null,from:[],plain:[],field:[],needs:new Set(),wants:[],stuck:0};
+  return p;
 }
 const SPD=250,PR=19;
 function solidAt(r,c){
@@ -2193,10 +2290,19 @@ function collides(x,y){
     if(solidAt(Math.floor((y+o[1])/TS),Math.floor((x+o[0])/TS)))return true;
   return false;
 }
+function paradeAt(r,c){
+  for(const pd of (G.parade||[]))if(pd.block.has(r*GCOLS+c))return true;
+  return false;
+}
 function tryMove(p,others,dx,dy){
   if(!dx&&!dy)return true;
   const nx=p.x+dx,ny=p.y+dy;
   if(collides(nx,ny))return false;
+  if(G.parade&&G.parade.length){
+    const nr=Math.floor(ny/TS),nc=Math.floor(nx/TS);
+    const cr=Math.floor(p.y/TS),cc=Math.floor(p.x/TS);
+    if((nr!==cr||nc!==cc)&&paradeAt(nr,nc)&&!paradeAt(cr,cc))return false;
+  }
   if(others)for(const o of (others.length!==undefined?others:[others])){
     if(o===p)continue;
     const d2=(nx-o.x)*(nx-o.x)+(ny-o.y)*(ny-o.y);
@@ -2209,6 +2315,8 @@ const FALL_T=5;
 /* boarding a raft should be forgiving: it waits at each end, its deck catches
    you if you so much as clip it, and it pulls you the rest of the way aboard */
 const PLAT_DWELL=0.85, PLAT_GRIP=TS*0.68, PLAT_PULL=120, HAZ_GRACE=0.2;
+/* the deck you can stand on, with a little forgiveness at the rail */
+const platGrip=pl=>({x:(pl.pw||1)*TS/2+13, y:(pl.ph||1)*TS/2+13});
 const HAZ_MSG={water:'🌊 Overboard! Fished out in',lava:'🔥 Into the coals! Back in',
   sky:'☁️ Off the mountain! Back in',void:'🕳️ Down it goes! Back in'};
 const HAZ_DEF='🕳️ Into the service pit! Back in';
@@ -2216,9 +2324,11 @@ function hazardAt(x,y){
   const r=Math.floor(y/TS),c=Math.floor(x/TS);
   if(r<0||c<0||r>=GROWS||c>=GCOLS)return false;
   if(G.grid[r][c].type!=='hazard')return false;
-  /* a raft under your feet keeps you dry */
-  for(const pl of (G.plats||[]))
-    if(Math.abs(x-pl.cx)<PLAT_GRIP&&Math.abs(y-pl.cy)<PLAT_GRIP)return false;
+  /* a deck under your feet keeps you dry */
+  for(const pl of (G.plats||[])){
+    const g=platGrip(pl);
+    if(Math.abs(x-pl.cx)<g.x&&Math.abs(y-pl.cy)<g.y)return false;
+  }
   return true;
 }
 function checkHaz(p,dt){
@@ -2265,12 +2375,15 @@ function updateDynamics(dt){
     pl.px=nx-pl.cx;pl.py=ny-pl.cy;
     pl.cx=nx;pl.cy=ny;
     /* ferry whoever is aboard — clipping the deck counts as aboard */
+    const grip=platGrip(pl);
     for(const p of G.players){
       if(p.fallT>0||p.gone)continue;
       const dx=pl.cx-p.x, dy=pl.cy-p.y;
-      if(Math.abs(dx)>=PLAT_GRIP||Math.abs(dy)>=PLAT_GRIP)continue;
+      if(Math.abs(dx)>=grip.x||Math.abs(dy)>=grip.y)continue;
       if(!collides(p.x+pl.px,p.y))p.x+=pl.px;
       if(!collides(p.x,p.y+pl.py))p.y+=pl.py;
+      /* the magnet is for a one-tile skiff; on a real deck you stand where you like */
+      if((pl.pw||1)>1||(pl.ph||1)>1)continue;
       /* half a step on is enough: slide them the rest of the way aboard */
       const hr=Math.floor(p.y/TS),hc=Math.floor(p.x/TS);
       const gt=G.grid[hr]&&G.grid[hr][hc];
@@ -2278,6 +2391,34 @@ function updateDynamics(dt){
       const step=PLAT_PULL*dt;
       if(Math.abs(dx)>1.5){const mv=Math.sign(dx)*Math.min(step,Math.abs(dx));if(!collides(p.x+mv,p.y))p.x+=mv;}
       if(Math.abs(dy)>1.5){const mv=Math.sign(dy)*Math.min(step,Math.abs(dy));if(!collides(p.x,p.y+mv))p.y+=mv;}
+    }
+  }
+  for(const pd of (G.parade||[])){
+    const n=pd.cells.length;
+    pd.pos=(pd.pos+pd.spd*dt)%n;
+    pd.block.clear();
+    const head=Math.round(pd.pos)%n;
+    for(let i=0;i<pd.len;i++){
+      const c2=pd.cells[((head-i)%n+n)%n];
+      pd.block.add(c2.r*GCOLS+c2.c);
+    }
+    /* nobody gets crushed — you just get shouldered out of the road */
+    for(const p of G.players){
+      if(p.fallT>0||p.gone)continue;
+      const pr=Math.floor(p.y/TS),pc=Math.floor(p.x/TS);
+      if(!pd.block.has(pr*GCOLS+pc))continue;
+      let best=null,bd=Infinity;
+      for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nr=pr+d[0],nc=pc+d[1];
+        if(nr<0||nc<0||nr>=GROWS||nc>=GCOLS)continue;
+        if(G.grid[nr][nc].type!=='floor'||pd.block.has(nr*GCOLS+nc))continue;
+        const dd=Math.hypot(nc*TS+TS/2-p.x,nr*TS+TS/2-p.y);
+        if(dd<bd){bd=dd;best={r:nr,c:nc};}
+      }
+      if(!best)continue;
+      const dx=best.c*TS+TS/2-p.x, dy=best.r*TS+TS/2-p.y, L2=Math.hypot(dx,dy)||1, mv=190*dt;
+      if(!collides(p.x+dx/L2*mv,p.y))p.x+=dx/L2*mv;
+      if(!collides(p.x,p.y+dy/L2*mv))p.y+=dy/L2*mv;
     }
   }
   for(const m of (G.machines||[])){
@@ -2511,7 +2652,7 @@ function actPick(p){
     }
     else if(t.type==='pot'){
       if(t.item){
-        if(t.item.id==='burnt'){p.held=t.item;t.item=null;resetSt(t);Snd.pick();}
+        if(t.item.id==='burnt'){p.held=t.item;t.item=null;resetSt(t);Snd.pick();showToastOnce('🔥 Burnt — take it to the bin.');}
         else showToast('🍽️ Use a plate to serve from the pot!');
       } else if(t.parts&&t.parts.length){
         showToastOnce('🫗 Hold your chop key here to tip the pot out.');
@@ -2574,6 +2715,10 @@ function actPick(p){
       if(t.item){
         if(h.id==='plate'&&t.item.id!=='burnt'&&canAdd(h,t.item.id)){
           h.parts.push(t.item.id);t.item=null;resetSt(t);Snd.place();}
+        else if(t.item.id==='burnt'){
+          Snd.bad();
+          showToastOnce('🔥 Burnt! Put down what you are holding, then lift it out — or hold your chop key here to scrape the pot.');
+        }
         else Snd.bad();
       } else if(methBlocked(h,'pot')){methRefuse(h,'pot');}
       else if(potCanAdd(t.parts,h.id)){t.parts.push(h.id);p.held=null;resetSt(t);Snd.place();}
@@ -2609,40 +2754,71 @@ function mergeHeld(p,h,t){
   }
   Snd.bad();
 }
+/* one chef's contribution to a station for this frame; every chef working the
+   same station adds their own dt, so two pairs of hands really are twice as fast */
+function workStation(p,t,dt){
+  if(t.type==='board'&&canChop(t.item)&&methBlocked(t.item,'chop')){
+    if(!p.warnedChop){p.warnedChop=1;methRefuse(t.item,'chop');}
+    return false;
+  }
+  if(t.type==='board'&&canChop(t.item)){
+    if(t.chopLock===t.item)return false;   /* just made this — let go before mincing it */
+    t.chopT+=dt;t.item.p=t.chopT;t.item.pm='chop';p.working=true;t.chopAnimT=performance.now()/1000;
+    p.chopSnd+=dt;if(p.chopSnd>0.19){p.chopSnd=0;Snd.chop();}
+    if(t.chopT>=1.6){
+      const out=CHOP[t.item.id];
+      t.item={id:out||'mush'};t.chopT=0;t.chopLock=t.item;
+      if(out)Snd.ding();else{Snd.bad();showToast('🥣 Minced beyond recognition — nobody will order that!');}
+    }
+    return true;
+  }
+  if(t.type==='sink'&&G.dirty>0){
+    t.washT+=dt;p.working=true;
+    if(t.washT>=2.2){t.washT=0;G.dirty--;G.plates++;Snd.ding();}
+    return true;
+  }
+  if(t.type==='pot'&&((t.item&&t.item.id==='burnt')||(!t.item&&t.parts&&t.parts.length))){
+    /* tip the pot out — undoes a bad mix, and scrapes out anything burnt */
+    t.dumpT=(t.dumpT||0)+dt;p.working=true;
+    if(t.dumpT>=1.4){
+      const wasBurnt=!!(t.item&&t.item.id==='burnt');
+      t.dumpT=0;t.item=null;t.parts=[];t.cook=0;t.burn=0;Snd.place();
+      showToast(wasBurnt?'🫗 Burnt lot scraped out — start again.':'🫗 Pot tipped out — start again.');
+    }
+    return true;
+  }
+  return false;
+}
+const HELP_R=TS*1.55;
 function actWork(p,dt,ctrl){
   p.working=false;
-  if(p.fallT>0)return;
-  if(!anyDown((ctrl||p.ctrl).work)){p.warnedChop=0;p.chopDone=0;p.chopDoneItem=null;return;}
-  const t=frontTile(p);if(!t)return;
-  if(t.fire){
+  if(p.fallT>0){p.workTile=null;return;}
+  if(!anyDown((ctrl||p.ctrl).work)){
+    p.warnedChop=0;
+    const was=p.workTile;p.workTile=null;
+    if(was&&was.chopLock&&!G.players.some(q=>q.workTile===was))was.chopLock=0;
+    return;
+  }
+  const t=frontTile(p);
+  if(t&&t.fire){
+    p.workTile=null;
     if(p.held&&p.held.id==='ext'){
       t.douseT+=dt;p.working=true;
       if(t.douseT>=1.2){t.fire=false;t.douseT=0;resetSt(t);Snd.ding();}
     } else showToastOnce('🧯 You need the extinguisher!');
     return;
   }
-  if(p.held)return;
-  if(t.type==='board'&&canChop(t.item)&&methBlocked(t.item,'chop')){
-    if(!p.warnedChop){p.warnedChop=1;methRefuse(t.item,'chop');}
-    return;
+  if(p.held){p.workTile=null;return;}
+  if(t&&workStation(p,t,dt)){p.workTile=t;return;}
+  if(t&&(t.type==='board'||t.type==='sink'||t.type==='pot')){p.workTile=t;return;}
+  /* most boards and sinks only have one open side, so a second pair of hands
+     lends a hand from alongside whoever is already at it */
+  for(const q of G.players){
+    if(q===p||q.gone||q.fallT>0||!q.workTile)continue;
+    if(Math.hypot(q.x-p.x,q.y-p.y)>HELP_R)continue;
+    if(workStation(p,q.workTile,dt)){p.workTile=q.workTile;return;}
   }
-  if(t.type==='board'&&canChop(t.item)&&p.chopDone&&p.chopDoneItem===t.item)return;
-  if(t.type==='board'&&canChop(t.item)){
-    t.chopT+=dt;t.item.p=t.chopT;t.item.pm='chop';p.working=true;t.chopAnimT=performance.now()/1000;
-    p.chopSnd+=dt;if(p.chopSnd>0.19){p.chopSnd=0;Snd.chop();}
-    if(t.chopT>=1.6){
-      const out=CHOP[t.item.id];
-      t.item={id:out||'mush'};t.chopT=0;p.chopDone=1;p.chopDoneItem=t.item;
-      if(out)Snd.ding();else{Snd.bad();showToast('🥣 Minced beyond recognition — nobody will order that!');}
-    }
-  } else if(t.type==='sink'&&G.dirty>0){
-    t.washT+=dt;p.working=true;
-    if(t.washT>=2.2){t.washT=0;G.dirty--;G.plates++;Snd.ding();}
-  } else if(t.type==='pot'&&!t.item&&t.parts&&t.parts.length){
-    /* tip the pot out — the only way to undo a bad mix */
-    t.dumpT=(t.dumpT||0)+dt;p.working=true;
-    if(t.dumpT>=1.4){t.dumpT=0;t.parts=[];t.cook=0;t.burn=0;Snd.place();showToast('🫗 Pot tipped out — start again.');}
-  }
+  p.workTile=null;
 }
 const canThrow=it=>it&&it.id!=='plate'&&it.id!=='pizzaraw'&&it.id!=='ext';
 function throwDepositFor(t,it){
@@ -2763,6 +2939,9 @@ function ignite(t){
   G.shake=0.5;Snd.fire();
 }
 function updateStations(dt){
+  /* a finished chop stays locked until every chef at that board lets go */
+  for(const row of G.grid)for(const t of row)
+    if(t.chopLock&&(t.chopLock!==t.item||!G.players.some(q=>q.workTile===t)))t.chopLock=0;
   for(const row of G.grid)for(const t of row){
     if(t.fire)continue;
     const it=t.item;
@@ -2860,6 +3039,935 @@ function updateReturns(dt){
   }
 }
 let lastTickSec=-1;
+/* <<<BOT>>> */
+/* ==================== CPU CHEFS ====================
+   A CPU chef is an ordinary player driven by a virtual keyboard, so every rule
+   the humans play by — collisions, chop timing, burning, falling in — applies
+   to it unchanged. The brain re-decides on a tick set by its difficulty and
+   only ever commits to one physical action at a time. */
+const BOT_TIERS=[
+  {n:'Line Cook',e:'🍳',think:0.60,dither:0.34,dash:0.00,look:2.2},
+  {n:'Sous Chef', e:'🔪',think:0.24,dither:0.10,dash:0.45,look:3.5},
+  {n:'Head Chef', e:'👑',think:0.04,dither:0.00,dash:1.00,look:6.0}];
+const botTier=()=>BOT_TIERS[Math.min(2,Math.max(0,SAVE.cpuDiff|0))];
+function cpuCount(){
+  /* online games are staffed by real people; never more bots than chefs-1 */
+  if(NET.started||NET.role)return 0;
+  return Math.max(0,Math.min(chefCount(playerMode)-1,SAVE.cpu|0));
+}
+const slotIsBot=slot=>slot>=chefCount(playerMode)-cpuCount();
+
+/* ---- virtual keyboard: one private set of key codes per chef slot ---- */
+const BOTK={};
+function botCtrl(slot){
+  if(!BOTK[slot]){const k=n=>['BOT'+slot+':'+n];
+    BOTK[slot]={up:k('up'),dn:k('dn'),lf:k('lf'),rt:k('rt'),
+                pick:k('pick'),work:k('work'),dash:k('dash')};}
+  return BOTK[slot];
+}
+function botKeys(p,up,dn,lf,rt,work){
+  const c=p.ctrl;
+  Keys.down[c.up[0]]=!!up;Keys.down[c.dn[0]]=!!dn;
+  Keys.down[c.lf[0]]=!!lf;Keys.down[c.rt[0]]=!!rt;
+  Keys.down[c.work[0]]=!!work;
+}
+function botRelease(p){if(p.bot)botKeys(p,0,0,0,0,0);}
+
+/* ---- geometry ---- */
+const botAt=p=>({r:Math.floor(p.y/TS),c:Math.floor(p.x/TS)});
+const SHOVE=12;   /* how far a chef will walk to get round another one */
+function botFlood(gr,gc,me){
+  /* walking distance from every floor tile to (gr,gc), so a chef can steer by
+     stepping to whichever neighbour is closer even as it moves. Squares another
+     chef is standing in cost extra, so the path bends around them instead of
+     shoving — but stays passable, because people move. */
+  const N=GROWS*GCOLS,d=new Array(N).fill(-1);
+  if(gr<0||gc<0||gr>=GROWS||gc>=GCOLS)return d;
+  if(G.grid[gr][gc].type!=='floor')return d;
+  let busy=null;
+  if(me){
+    busy=new Set();
+    for(const q of G.players){
+      if(q===me||q.gone||q.fallT>0)continue;
+      busy.add(Math.floor(q.y/TS)*GCOLS+Math.floor(q.x/TS));
+    }
+  }
+  const start=gr*GCOLS+gc;
+  d[start]=0;
+  const q=[start],inq=new Set([start]);
+  while(q.length){
+    const cur=q.shift();inq.delete(cur);
+    const r=(cur/GCOLS)|0,c=cur%GCOLS;
+    for(const v of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nr=r+v[0],nc=c+v[1];
+      if(nr<0||nc<0||nr>=GROWS||nc>=GCOLS)continue;
+      const k=nr*GCOLS+nc;
+      if(G.grid[nr][nc].type!=='floor')continue;
+      /* the parade is only passing through, so it costs a detour, not a wall */
+      const w=1+((busy&&busy.has(k))?SHOVE:0)+
+        ((G.parade&&G.parade.length&&paradeAt(nr,nc))?6:0);
+      if(d[k]>=0&&d[k]<=d[cur]+w)continue;
+      d[k]=d[cur]+w;
+      if(!inq.has(k)){inq.add(k);q.push(k);}
+    }
+  }
+  return d;
+}
+function botSides(t){
+  const out=[];
+  for(const v of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const r=t.r+v[0],c=t.c+v[1];
+    if(r<0||c<0||r>=GROWS||c>=GCOLS)continue;
+    if(G.grid[r][c].type==='floor')out.push({r,c});
+  }
+  return out;
+}
+/* how far this chef must walk to stand at a tile; Infinity if it cannot */
+function botCost(from,t){
+  if(t.type==='floor')  {const d=from[t.r*GCOLS+t.c];return d<0?Infinity:d;}
+  let best=Infinity;
+  for(const s of botSides(t)){const d=from[s.r*GCOLS+s.c];if(d>=0&&d<best)best=d;}
+  return best;
+}
+
+/* ---- rafts: the only way across a chasm, so the brain has to plan for one ---- */
+function botDockEnds(pl){
+  /* every square you can step onto the deck from, at each end of its run */
+  const hr=((pl.ph||1)-1)>>1, hc=((pl.pw||1)-1)>>1;
+  const end=i=>{
+    const cell=pl.cells[i],out=[],seen=new Set();
+    for(let r=cell.r-hr;r<=cell.r+hr;r++)for(let c=cell.c-hc;c<=cell.c+hc;c++)
+      for(const v of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nr=r+v[0],nc=c+v[1],k=nr+','+nc;
+        if(nr<0||nc<0||nr>=GROWS||nc>=GCOLS||seen.has(k))continue;
+        if(G.grid[nr][nc].type!=='floor')continue;
+        seen.add(k);out.push({r:nr,c:nc});
+      }
+    return out;
+  };
+  return [end(0),end(pl.cells.length-1)];
+}
+/* how close the deck's edge is to a square on the bank */
+function botDeckGap(pl,r,c){
+  const x=c*TS+TS/2,y=r*TS+TS/2;
+  return Math.max(Math.abs(pl.cx-x)-(pl.pw||1)*TS/2,
+                  Math.abs(pl.cy-y)-(pl.ph||1)*TS/2);
+}
+const RIDE_COST=10;
+function botFloodX(sr,sc){
+  /* walking distances, counting a raft crossing as a long but possible leg */
+  const d=botFlood(sr,sc);
+  for(let pass=0;pass<3;pass++){
+    let grew=false;
+    for(const pl of (G.plats||[])){
+      const ends=botDockEnds(pl);
+      for(let i=0;i<2;i++){
+        let near=Infinity;
+        for(const q of ends[i]){const v=d[q.r*GCOLS+q.c];if(v>=0&&v<near)near=v;}
+        if(near===Infinity)continue;
+        for(const q of ends[1-i]){
+          const base=near+RIDE_COST,k=q.r*GCOLS+q.c;
+          if(d[k]>=0&&d[k]<=base)continue;
+          const sub=botFlood(q.r,q.c);
+          for(let j=0;j<d.length;j++){
+            if(sub[j]<0)continue;
+            const cand=base+sub[j];
+            if(d[j]<0||d[j]>cand){d[j]=cand;grew=true;}
+          }
+        }
+      }
+    }
+    if(!grew)break;
+  }
+  return d;
+}
+function botCrossing(p,field){
+  /* a raft whose one end this chef can walk to and whose other end reaches the goal */
+  const b=p.bot;
+  for(const pl of (G.plats||[])){
+    const ends=botDockEnds(pl);
+    for(let i=0;i<2;i++){
+      let board=null,bd=Infinity,land=null,ld=Infinity;
+      for(const q of ends[i]){const v=b.plain[q.r*GCOLS+q.c];if(v>=0&&v<bd){bd=v;board=q;}}
+      for(const q of ends[1-i]){const v=field[q.r*GCOLS+q.c];if(v>=0&&v<ld){ld=v;land=q;}}
+      if(board&&land)return {pl,board,land,endI:1-i,field:botFlood(board.r,board.c)};
+    }
+  }
+  return null;
+}
+
+/* ---- job claims, so two chefs never chop the same onion ---- */
+function botClaims(){return G.botClaims||(G.botClaims={});}
+function botTaken(p,tag){
+  const c=botClaims()[tag];
+  return !!c&&c.slot!==p.slot&&G.timeLeft<c.t+1.4;
+}
+function botHold(p,tag){botClaims()[tag]={slot:p.slot,t:G.timeLeft};}
+const tagOf=t=>t.r+','+t.c;
+
+/* ---- what the pass is still waiting for ---- */
+function botPlatesOut(){
+  const out=[];
+  for(const row of G.grid)for(const t of row)
+    if(t.item&&t.item.id==='plate')out.push({t,plate:t.item});
+  return out;
+}
+function botSupply(){
+  /* everything already made or on its way, so nobody cooks a second one */
+  const s={},add=id=>{if(id)s[id]=(s[id]||0)+1;};
+  for(const row of G.grid)for(const t of row){
+    if(t.type==='crate')continue;
+    if(t.item&&t.item.id!=='plate'&&t.item.id!=='ext')add(t.item.id);
+    if(t.type==='board'&&t.item&&CHOP[t.item.id])add(CHOP[t.item.id]);
+    if((t.type==='stove'||t.type==='fryer')&&t.item){
+      const M=stMap(t);if(M[t.item.id])add(M[t.item.id].out);}
+    if(t.type==='pot'&&t.parts&&t.parts.length){const m=potMatch(t.parts);if(m)add(m.out);}
+    if(t.type==='oven'&&t.item&&t.item.id==='pizzaraw'){
+      const rc=G.ovenR.find(r=>r.needs.length===t.item.parts.length&&
+        r.needs.every(x=>t.item.parts.includes(x)));
+      if(rc)add(rc.out);}
+  }
+  for(const q of G.players)if(q.held&&q.held.id!=='plate'&&q.held.id!=='ext')add(q.held.id);
+  return s;
+}
+function botWants(){
+  /* the parts open orders still need, most impatient order first, minus what a
+     plate already holds and minus anything already cooking somewhere */
+  const need=[];
+  const orders=G.orders.slice().sort((a,b)=>a.pat-b.pat);
+  const plates=botPlatesOut().map(x=>x.plate.parts.slice())
+    .concat(G.players.filter(q=>q.held&&q.held.id==='plate').map(q=>q.held.parts.slice()));
+  for(const o of orders){
+    const dp=DISHES[o.dish].parts;
+    let bi=-1,bn=-1;
+    plates.forEach((pp,i)=>{
+      if(pp.every(x=>dp.includes(x))&&pp.length>bn){bn=pp.length;bi=i;}});
+    const have=bi>=0?plates[bi].slice():[];
+    if(bi>=0)plates.splice(bi,1);
+    for(const pid of dp){
+      const i=have.indexOf(pid);
+      if(i>=0){have.splice(i,1);continue;}
+      need.push(pid);
+    }
+  }
+  const sup=botSupply(),out=[];
+  for(const pid of need){
+    if(sup[pid]>0){sup[pid]--;continue;}
+    out.push(pid);
+  }
+  return out;
+}
+function botTree(pid,acc){
+  if(acc.has(pid))return acc;
+  acc.add(pid);
+  const s=srcOf(pid);
+  if(s)s.from.forEach(f=>botTree(f,acc));
+  return acc;
+}
+function botNeedSet(){
+  const acc=new Set();
+  for(const o of G.orders)for(const pid of DISHES[o.dish].parts)botTree(pid,acc);
+  return acc;
+}
+
+/* ---- finding things ---- */
+function botNear(p,pred,tagPre){
+  let best=null,bd=Infinity;
+  const dud=p.bot.dud;
+  for(const row of G.grid)for(const t of row){
+    if(!pred(t))continue;
+    if(dud&&dud[tagOf(t)]>0)continue;
+    if(tagPre&&botTaken(p,tagPre+tagOf(t)))continue;
+    const d=botCost(p.bot.from,t);
+    if(d<bd){bd=d;best=t;}
+  }
+  return best;
+}
+function botPass(p){
+  /* the counter the crew plates up on: free, reachable, closest to the window */
+  const win=botNear(p,t=>t.type==='window');
+  if(!win)return null;
+  const wf=botFlood(botSides(win)[0]?botSides(win)[0].r:0,
+                    botSides(win)[0]?botSides(win)[0].c:0);
+  let best=null,bd=Infinity;
+  for(const row of G.grid)for(const t of row){
+    if(t.type!=='counter')continue;
+    if(t.item&&t.item.id!=='plate')continue;
+    if(botCost(p.bot.from,t)===Infinity)continue;
+    const d=botCost(wf,t);
+    if(d<bd){bd=d;best=t;}
+  }
+  return best;
+}
+
+/* ---- lobbing things over a chasm, the way a split kitchen is meant to work ---- */
+function botLand(r,c,dx,dy,item){
+  /* the same flight tryThrow works out, so the brain aims where it will land */
+  let lastF={r,c},dep=null,er=r,ec=c;
+  for(let i=1;i<=4;i++){
+    const rr=r+dy*i,cc=c+dx*i;
+    if(rr<0||cc<0||rr>=GROWS||cc>=GCOLS)break;
+    const t=G.grid[rr][cc];
+    if(t.type==='floor'){
+      if(!t.item)lastF={r:rr,c:cc};
+      if(i===4){dep={k:'floor'};er=lastF.r;ec=lastF.c;}
+      continue;
+    }
+    if(t.type==='hazard'){if(i===4){dep={k:'haz'};er=rr;ec=cc;}continue;}
+    dep=throwDepositFor(t,item);
+    if(dep){er=rr;ec=cc;}
+    else{dep={k:'floor'};er=lastF.r;ec=lastF.c;}
+    break;
+  }
+  if(!dep){dep={k:'floor'};er=lastF.r;ec=lastF.c;}
+  if(dep.k==='haz'||dep.k==='trash')return null;
+  if(dep.k==='floor'&&er===r&&ec===c)return null;
+  return {r:er,c:ec,k:dep.k};
+}
+function botOnMySide(p,r,c){
+  const b=p.bot,t=G.grid[r][c];
+  if(t.type==='floor')return b.plain[r*GCOLS+c]>=0;
+  return botSides(t).some(s=>b.plain[s.r*GCOLS+s.c]>=0);
+}
+const THROW_SCORE={pot:0,cook:0,tile:1,floor:3};
+function botMateReach(p){
+  /* everywhere the rest of the crew can walk without a raft */
+  const b=p.bot;
+  if(b.mateReach)return b.mateReach;
+  const acc=new Array(GROWS*GCOLS).fill(false);
+  for(const q of G.players){
+    if(q===p||q.gone)continue;
+    const f=botFlood(Math.floor(q.y/TS),Math.floor(q.x/TS));
+    for(let i=0;i<acc.length;i++)if(f[i]>=0)acc[i]=true;
+  }
+  return b.mateReach=acc;
+}
+function botThrowAcross(p,h){
+  /* worth doing only when the gap really is the obstacle: either this chef
+     cannot get there at all, or somebody else is already over there */
+  if(!canThrow(h))return null;
+  const b=p.bot;
+  let best=null,bs=Infinity;
+  for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+    const walk=b.plain[r*GCOLS+c];
+    if(walk<0)continue;
+    for(const v of [[0,1],[0,-1],[1,0],[-1,0]]){
+      const L=botLand(r,c,v[0],v[1],h);
+      if(!L||botOnMySide(p,L.r,L.c))continue;
+      if(L.k==='floor'&&G.grid[L.r][L.c].item)continue;
+      const k=L.r*GCOLS+L.c;
+      const mine=G.grid[L.r][L.c].type==='floor'?b.from[k]
+        :Math.min(...botSides(G.grid[L.r][L.c]).map(q=>b.from[q.r*GCOLS+q.c]).filter(x=>x>=0),Infinity);
+      if(mine!==Infinity&&isFinite(mine)&&!botMateReach(p)[k])continue;
+      const sc=walk+(THROW_SCORE[L.k]||3)*6;
+      if(sc<bs){bs=sc;best={r,c,dx:v[0],dy:v[1]};}
+    }
+  }
+  if(!best)return null;
+  return {t:G.grid[best.r][best.c],on:true,act:'throw',
+          dx:best.dx,dy:best.dy,tag:'lob'+best.r+','+best.c};
+}
+
+/* ---- turning a wanted part into the next physical action ---- */
+const STATION_FOR={chop:'board',grill:'stove',fry:'fryer',pot:'pot',oven:'oven'};
+const botLoose=t=>t.item&&(t.type==='counter'||t.type==='floor'||t.type==='belt'||
+  (t.type==='board'&&!CHOP[t.item.id]));
+/* picking something up is only progress if it has somewhere to go: a free
+   machine for anything half-made, a plate with room for anything finished */
+function botUseful(p,id){
+  const need=p.bot.needs;
+  if(srcOfNext(id,need))return !!botDropStation(p,id);
+  /* wrappers and fillings are not plate food — they pair up on a counter */
+  if(isPzPart(id)&&need.has(id)&&[...need].some(x=>OVEN_OUTS.includes(x)))return true;
+  return botPlatesOut().some(x=>canAdd(x.plate,id)&&botCost(p.bot.from,x.t)!==Infinity);
+}
+function botFetch(p,pid,depth){
+  /* the one thing this chef should pick up next in order to end up with pid */
+  if(depth>5)return null;
+  const s=srcOf(pid);
+  if(!s){
+    const cr=botNear(p,t=>t.type==='crate'&&t.ing===pid);
+    return cr?{t:cr,act:'pick',tag:'fetch'+pid}:null;
+  }
+  if(s.st==='oven'){
+    /* a filled wrapper on the side just needs carrying to the steamer */
+    const raw=botNear(p,t=>t.item&&t.item.id==='pizzaraw'&&ovenReady(t.item)&&botLoose(t),'take');
+    if(raw)return {t:raw,act:'pick',tag:'take'+tagOf(raw)};
+  }
+  for(const f of s.from){
+    if(botHasStaged(s,f))continue;
+    const loose=botNear(p,t=>t.item&&t.item.id===f&&botLoose(t),'take');
+    if(loose&&botUseful(p,f))return {t:loose,act:'pick',tag:'take'+tagOf(loose)};
+    if(loose)continue;
+    const sub=botFetch(p,f,depth+1);
+    if(sub)return sub;
+  }
+  return null;
+}
+function botHasStaged(s,f){
+  /* is this input already in position, so nobody should fetch a second one? */
+  for(const q of G.players)if(q.held&&q.held.id===f)return true;
+  const kind=STATION_FOR[s.st];
+  for(const row of G.grid)for(const t of row){
+    if(s.st==='oven'){
+      if(t.item&&t.item.id==='pizzaraw'&&t.item.parts.includes(f))return true;
+      /* a wrapper waiting anywhere is staged; its filling still is not */
+      if(f==='dough_b'&&t.item&&t.item.id==='dough_b'&&
+         (t.type==='counter'||t.type==='floor'||t.type==='board'||t.type==='belt'))return true;
+      continue;
+    }
+    if(t.type!==kind)continue;
+    if(s.st==='pot'&&t.parts&&t.parts.includes(f))return true;
+    if(t.item&&t.item.id===f)return true;
+  }
+  return false;
+}
+
+/* where should the thing in my hands go next? */
+function botDropStation(p,id){
+  const need=p.bot.needs;
+  if(CHOP[id]&&need.has(CHOP[id]))
+    return botNear(p,t=>t.type==='board'&&!t.item&&!t.fire,'st');
+  if(GRILL[id]&&need.has(GRILL[id].out))
+    return botNear(p,t=>t.type==='stove'&&!t.item&&!t.fire,'st');
+  if(FRY[id]&&need.has(FRY[id].out))
+    return botNear(p,t=>t.type==='fryer'&&!t.item&&!t.fire,'st');
+  for(const rc of G.potR){
+    if(!rc.needs.includes(id)||!need.has(rc.out))continue;
+    const pot=botNear(p,t=>t.type==='pot'&&!t.item&&!t.fire&&potCanAdd(t.parts,id),'st');
+    if(pot)return pot;
+  }
+  return null;
+}
+
+/* ---- the decision itself ---- */
+/* grill, fryer and steamer output can be lifted bare-handed; the pot cannot */
+function botHandOut(t){
+  if(t.fire)return null;
+  if((t.type==='stove'||t.type==='fryer')&&t.item&&GRILL_OUTS.includes(t.item.id))return t.item.id;
+  if(t.type==='oven'&&t.item&&OVEN_OUTS.includes(t.item.id))return t.item.id;
+  return null;
+}
+function botReadyOut(t){
+  /* anything finished that a plate can take straight off the heat */
+  if(t.fire)return null;
+  if(t.type==='pot'&&t.item&&t.item.id!=='burnt')return t.item.id;
+  return botHandOut(t);
+}
+function botJunk(p,t){
+  const it=t.item;
+  if(t.fire||!it||it.id==='plate'||it.id==='ext')return false;
+  if(it.id==='burnt'||RUINED(it.id))return t.type!=='trash'&&t.type!=='pot';
+  if(t.type==='stove'||t.type==='fryer'){
+    const M=stMap(t);
+    if(M[it.id])return false;                       /* still cooking */
+    if(GRILL_OUTS.includes(it.id))return !p.bot.needs.has(it.id);
+    return true;                                    /* wrong thing on the heat */
+  }
+  if(t.type==='oven')
+    return it.id!=='pizzaraw'&&!(OVEN_OUTS.includes(it.id)&&p.bot.needs.has(it.id));
+  return false;
+}
+function botDecide(p){
+  const b=p.bot,h=p.held,need=b.needs;
+
+  /* 1. fire beats everything — an unattended one spreads */
+  const fire=botNear(p,t=>t.fire);
+  if(fire&&G.hasExt){
+    if(h&&h.id==='ext')return {t:fire,act:'work',tag:'fire'+tagOf(fire)};
+    if(!h){
+      const ex=botNear(p,t=>t.type==='ext'&&t.item&&t.item.id==='ext');
+      if(ex)return {t:ex,act:'pick',tag:'ext'};
+    }
+  }
+  if(h&&h.id==='ext'&&!fire){
+    const stand=botNear(p,t=>t.type==='ext'&&!t.item);
+    if(stand)return {t:stand,act:'pick',tag:'extback'};
+  }
+
+  /* 1b. a machine holding something dead blocks the line until it is emptied */
+  if(!h){
+    const junk=botNear(p,t=>botJunk(p,t),'junk');
+    if(junk)return {t:junk,act:'pick',tag:'junk'+tagOf(junk)};
+  }
+
+  /* 2. anything ruined goes straight in the bin */
+  if(h&&(RUINED(h.id)||h.id==='burnt')){
+    const bin=botNear(p,t=>t.type==='trash');
+    if(bin)return {t:bin,act:'pick',tag:'bin'};
+  }
+
+  if(h)return botRoute(p,h);
+
+  /* --- empty handed --- */
+
+  /* 3. a finished plate is a served order waiting to happen */
+  for(const {t,plate} of botPlatesOut()){
+    if(matchOrder(plate)<0)continue;
+    if(botTaken(p,'serve'+tagOf(t)))continue;
+    if(botCost(b.from,t)===Infinity)continue;
+    return {t,act:'pick',tag:'serve'+tagOf(t)};
+  }
+
+  /* 4. get it off the heat before it burns — eight seconds is not long */
+  const hot=botNear(p,t=>botHandOut(t)!==null,'ready');
+  if(hot)return {t:hot,act:'pick',tag:'ready'+tagOf(hot)};
+
+  /* 5. the pot only gives its dish up to a plate */
+  const potOut=botNear(p,t=>t.type==='pot'&&!t.fire&&t.item&&t.item.id!=='burnt','ready');
+  if(potOut){
+    const plate=botPlatesOut().find(x=>canAdd(x.plate,potOut.item.id)&&botCost(b.from,x.t)!==Infinity);
+    if(plate)return {t:plate.t,act:'pick',tag:'lift'+tagOf(plate.t)};
+    if(G.plates>0){
+      const st=botNear(p,t=>t.type==='plates');
+      if(st)return {t:st,act:'pick',tag:'getplate'};
+    }
+  }
+
+  /* 6. a pot that has burnt or been mixed wrong is dead weight until scraped */
+  const badpot=botNear(p,t=>t.type==='pot'&&!t.fire&&
+    ((t.item&&t.item.id==='burnt')||
+     (!t.item&&t.parts&&t.parts.length&&!potMatch(t.parts)&&
+      !G.potR.some(rc=>t.parts.every(x=>rc.needs.includes(x))))),'pot');
+  if(badpot)return {t:badpot,act:'work',tag:'pot'+tagOf(badpot)};
+
+  /* 7. keep chopping whatever is already on a board and wanted */
+  const board=botNear(p,t=>t.type==='board'&&!t.fire&&t.item&&
+    CHOP[t.item.id]&&need.has(CHOP[t.item.id])&&t.chopLock!==t.item,'chop');
+  if(board)return {t:board,act:'work',tag:'chop'+tagOf(board)};
+
+  /* 8. no clean plates and a sink full of dirty ones */
+  if(G.plates===0&&G.dirty>0&&G.hasSink){
+    const sink=botNear(p,t=>t.type==='sink','sink');
+    if(sink)return {t:sink,act:'work',tag:'sink'+tagOf(sink)};
+  }
+
+  /* 9. a plate on the pass, so finished parts have somewhere to land */
+  const out=botPlatesOut();
+  const inHand=G.players.filter(q=>q.held&&q.held.id==='plate').length;
+  if(G.plates>0&&G.orders.length&&out.length+inHand<2){
+    const roomless=!out.some(x=>b.wants.some(pid=>canAdd(x.plate,pid)));
+    if(roomless&&(!out.length||b.wants.some(pid=>(botSupply()[pid]||0)>0))){
+      const st=botNear(p,t=>t.type==='plates');
+      if(st)return {t:st,act:'pick',tag:'getplate'};
+    }
+  }
+
+  /* 10. see the component this chef took on through to the plate */
+  if(b.focus){
+    const job=botFetch(p,b.focus,0);
+    if(job&&botCost(b.from,job.t)!==Infinity&&!(job.tag&&botTaken(p,job.tag)))return job;
+  }
+  for(const pid of b.wants){
+    if(pid===b.focus)continue;
+    const job=botFetch(p,pid,0);
+    if(job&&botCost(b.from,job.t)!==Infinity){
+      if(job.tag&&botTaken(p,job.tag))continue;
+      return job;
+    }
+  }
+
+  return null;
+}
+/* has the component this chef took on either arrived or stopped being needed? */
+function botFocusDone(p){
+  const f=p.bot.focus;
+  return !f||!p.bot.needs.has(f)||!p.bot.wants.includes(f);
+}
+function botPickFocus(p){
+  const b=p.bot;
+  for(const pid of b.wants){
+    if(botTaken(p,'focus:'+pid))continue;
+    b.focus=pid;botHold(p,'focus:'+pid);return;
+  }
+  b.focus=b.wants[0]||null;
+}
+
+/* what to do with whatever is in my hands */
+function botRoute(p,h){
+  const b=p.bot,need=b.needs;
+
+  if(h.id==='plate'){
+    if(matchOrder(h)>=0){
+      const win=botNear(p,t=>t.type==='window');
+      if(win)return {t:win,act:'pick',tag:'win'+tagOf(win)};
+    }
+    const ready=botNear(p,t=>{const o=botReadyOut(t);return o!==null&&canAdd(h,o);},'ready');
+    if(ready)return {t:ready,act:'pick',tag:'ready'+tagOf(ready)};
+    const loose=botNear(p,t=>t.item&&t.item.id!=='plate'&&platePartId(t.item)&&
+      canAdd(h,t.item.id)&&(t.type==='counter'||t.type==='floor'||t.type==='belt'||
+      (t.type==='board'&&!CHOP[t.item.id])),'take');
+    if(loose)return {t:loose,act:'pick',tag:'take'+tagOf(loose)};
+    if(h.parts.length){
+      const pass=botPass(p);
+      if(pass&&!pass.item)return {t:pass,act:'pick',tag:'pass'+tagOf(pass)};
+      return null;
+    }
+    /* one spare plate on the pass is plenty; a second goes back on the stack */
+    const spareOut=botPlatesOut().some(x=>!x.plate.parts.length)||
+      G.players.some(q=>q!==p&&q.held&&q.held.id==='plate'&&!q.held.parts.length);
+    if(spareOut){
+      const back=botNear(p,t=>t.type==='plates');
+      if(back)return {t:back,act:'pick',tag:'stack'};
+    }
+    /* an empty plate belongs on the pass, ready for the next thing out */
+    const pass=botPass(p);
+    if(pass&&!pass.item)return {t:pass,act:'pick',tag:'pass'+tagOf(pass)};
+    const spare=botNear(p,t=>t.type==='counter'&&!t.item,'st');
+    if(spare)return {t:spare,act:'pick',tag:'pass'+tagOf(spare)};
+    const st=botNear(p,t=>t.type==='plates');
+    if(st)return {t:st,act:'pick',tag:'stack'};
+    return null;
+  }
+
+  if(h.id==='pizzaraw'){
+    if(ovenReady(h)){
+      const ov=botNear(p,t=>t.type==='oven'&&!t.item&&!t.fire,'st');
+      if(ov)return {t:ov,act:'pick',tag:'oven'+tagOf(ov)};
+      return null;
+    }
+    const miss=botNear(p,t=>t.item&&canAddOvenPart(h.parts,t.item.id)&&
+      (t.type==='counter'||t.type==='board'||t.type==='floor'),'take');
+    if(miss)return {t:miss,act:'pick',tag:'take'+tagOf(miss)};
+    const spot=botNear(p,t=>t.type==='counter'&&!t.item,'st');
+    if(spot)return {t:spot,act:'pick',tag:'put'+tagOf(spot)};
+    return null;
+  }
+
+  /* a steamer part meets its partner on a counter */
+  if(isPzPart(h.id)&&need.size){
+    const wantsBao=[...need].some(x=>OVEN_OUTS.includes(x));
+    if(wantsBao){
+      const mate=botNear(p,t=>t.item&&((t.item.id==='pizzaraw'&&canAddOvenPart(t.item.parts,h.id))||
+        (isPzPart(t.item.id)&&t.item.id!==h.id&&(t.item.id==='dough_b'||h.id==='dough_b')))&&
+        (t.type==='counter'||t.type==='board'||t.type==='floor'),'take');
+      if(mate)return {t:mate,act:'pick',tag:'merge'+tagOf(mate)};
+      if(h.id==='dough_b'){
+        const spot=botNear(p,t=>t.type==='counter'&&!t.item,'st');
+        if(spot)return {t:spot,act:'pick',tag:'put'+tagOf(spot)};
+      }
+    }
+  }
+
+  /* a finished part goes onto a plate */
+  if(!srcOfNext(h.id,need)){
+    const plate=botPlatesOut().find(x=>canAdd(x.plate,h.id)&&botCost(b.from,x.t)!==Infinity);
+    if(plate)return {t:plate.t,act:'pick',tag:'add'+tagOf(plate.t)};
+    if(need.has(h.id)){const lob=botThrowAcross(p,h);if(lob)return lob;}
+    const spot=botNear(p,t=>t.type==='counter'&&!t.item,'st');
+    if(spot&&(G.plates>0||botPlatesOut().length))
+      return {t:spot,act:'pick',tag:'put'+tagOf(spot)};
+    if(!need.has(h.id)){
+      const bin=botNear(p,t=>t.type==='trash');
+      if(bin)return {t:bin,act:'pick',tag:'bin'};
+    }
+    if(spot)return {t:spot,act:'pick',tag:'put'+tagOf(spot)};
+    return null;
+  }
+
+  /* it still needs a machine */
+  const st=botDropStation(p,h.id);
+  if(st)return {t:st,act:'pick',tag:'st'+tagOf(st)};
+  const lob=botThrowAcross(p,h);
+  if(lob)return lob;
+  const spot=botNear(p,t=>t.type==='counter'&&!t.item,'st');
+  if(spot)return {t:spot,act:'pick',tag:'put'+tagOf(spot)};
+  return null;
+}
+/* does this item still have a processing step ahead of it that we want? */
+function srcOfNext(id,need){
+  if(CHOP[id]&&need.has(CHOP[id]))return true;
+  if(GRILL[id]&&need.has(GRILL[id].out))return true;
+  if(FRY[id]&&need.has(FRY[id].out))return true;
+  for(const rc of G.potR)if(rc.needs.includes(id)&&need.has(rc.out))return true;
+  return false;
+}
+
+/* ---- driving the body ---- */
+function botFace(p,t){
+  const a=botAt(p);
+  let fx=Math.sign(t.c-a.c),fy=Math.sign(t.r-a.r);
+  if(fx&&fy){if(Math.abs(t.c-a.c)>=Math.abs(t.r-a.r))fy=0;else fx=0;}
+  if(!fx&&!fy)fy=-1;
+  p.fx=fx;p.fy=fy;
+}
+function botToward(p,x,y){
+  /* on a slick floor a chef has to steer where it will be, not where it is,
+     and lean the other way in time to stop */
+  const ice=G.world.ice;
+  const la=0, dz=4;
+  const dx=x-(p.x+(p.mx||0)*la), dy=y-(p.y+(p.my||0)*la);
+  botKeys(p,dy<-dz,dy>dz,dx<-dz,dx>dz,0);
+}
+function botBlocked(r,c,me){
+  for(const q of G.players){
+    if(q===me||q.gone||q.fallT>0)continue;
+    if(Math.floor(q.y/TS)===r&&Math.floor(q.x/TS)===c)return true;
+  }
+  return false;
+}
+function botSteer(p,dt,field){
+  const b=p.bot,a=botAt(p),f=field||b.field;
+  const here=f[a.r*GCOLS+a.c];
+  const nb=[];
+  for(const v of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const r=a.r+v[0],c=a.c+v[1];
+    if(r<0||c<0||r>=GROWS||c>=GCOLS)continue;
+    const d=f[r*GCOLS+c];
+    if(d>=0)nb.push({r,c,d,busy:botBlocked(r,c,p)});
+  }
+  let best=null,bd=Infinity;
+  /* the field already bends round other chefs, so simply walk downhill */
+  for(const n of nb)if(!n.busy&&n.d<here&&n.d<bd){bd=n.d;best=n;}
+  if(!best)for(const n of nb)if(n.d<here&&n.d<bd){bd=n.d;best=n;}
+  if(!best){
+    const cx=a.c*TS+TS/2,cy=a.r*TS+TS/2;
+    if(Math.hypot(cx-p.x,cy-p.y)<6){botRelease(p);return true;}
+    botToward(p,cx,cy);
+    return false;
+  }
+  botToward(p,best.c*TS+TS/2,best.r*TS+TS/2);
+  if(best.d>4&&Math.random()<botTier().dash*dt*2)tryDash(p);
+  return false;
+}
+/* walk there, taking the raft when the gap leaves no other way.
+   Crossing runs as its own little state machine — walk to the jetty, wait for
+   the deck, ride it over, step off — and nothing else may interrupt it. */
+function botNav(p,dt){
+  const b=p.bot,a=botAt(p);
+  const afloat=G.grid[a.r][a.c].type==='hazard';
+
+  if(!b.cross&&!afloat&&b.field[a.r*GCOLS+a.c]<0){
+    const X=botCrossing(p,b.field);
+    if(X){X.ph='walk';X.age=0;b.cross=X;b.crossField=botFlood(X.board.r,X.board.c,p);}
+  }
+  if(b.cross){
+    const X=b.cross,L=X.land,B=X.board,pl=X.pl;
+    X.age+=dt;
+    b.riding=true;
+    if(a.r===L.r&&a.c===L.c){b.cross=null;b.riding=false;botTally('cross');}
+    else if(X.age>26){b.cross=null;b.riding=false;}   /* something is wrong — start over */
+    else if(afloat){
+      X.ph='ride';
+      const lx=L.c*TS+TS/2,ly=L.r*TS+TS/2;
+      /* step off the instant the far bank is a stride from the rail */
+      if(botDeckGap(pl,L.r,L.c)<TS*0.7)botToward(p,lx,ly);
+      else botToward(p,pl.cx,pl.cy);
+      return;
+    }
+    else if(a.r!==B.r||a.c!==B.c){
+      X.ph='walk';
+      if(!b.crossField)b.crossField=botFlood(B.r,B.c,p);
+      botSteer(p,dt,b.crossField);
+      return;
+    }
+    else{
+      X.ph='wait';
+      /* stand on the jetty until the deck is alongside, then step across */
+      const bx=B.c*TS+TS/2,by=B.r*TS+TS/2;
+      if(botDeckGap(pl,B.r,B.c)<TS*0.62){
+        /* aim for the near rail, not the far middle of a big deck */
+        const ax=Math.max(pl.cx-(pl.pw||1)*TS/2+TS*0.5,
+              Math.min(pl.cx+(pl.pw||1)*TS/2-TS*0.5,bx));
+        const ay=Math.max(pl.cy-(pl.ph||1)*TS/2+TS*0.5,
+              Math.min(pl.cy+(pl.ph||1)*TS/2-TS*0.5,by));
+        botToward(p,ax,ay);
+      }
+      else botToward(p,bx,by);
+      return;
+    }
+  }
+  b.riding=false;
+  if(afloat){
+    /* adrift with no plan: make for the nearest solid ground */
+    let best=null,bd=Infinity;
+    for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+      if(G.grid[r][c].type!=='floor')continue;
+      const d=Math.hypot(c*TS+TS/2-p.x,r*TS+TS/2-p.y);
+      if(d<bd){bd=d;best={r,c};}
+    }
+    if(best)botToward(p,best.c*TS+TS/2,best.r*TS+TS/2);
+    return;
+  }
+  botSteer(p,dt);
+}
+function botArrived(p,plan){
+  const a=botAt(p);
+  if(plan.on)return a.r===plan.t.r&&a.c===plan.t.c;
+  if(plan.t.type==='floor')
+    return Math.abs(a.r-plan.t.r)+Math.abs(a.c-plan.t.c)===1;
+  return botSides(plan.t).some(s=>s.r===a.r&&s.c===a.c);
+}
+
+function botAct(p,dt){
+  const b=p.bot;
+  if(G.state!=='play'||p.gone){botRelease(p);return;}
+  if(p.fallT>0){botRelease(p);b.plan=null;b.cross=null;return;}
+  if(b.hold>0){b.hold-=dt;botRelease(p);return;}
+  b.age=(b.age||0)+dt;
+
+  /* last-resort unwedge: a chef that has gone nowhere and done nothing for a
+     few seconds shakes itself loose rather than standing there forever */
+  if(b.shake>0){
+    b.shake-=dt;
+    if(!b.shakeDir){
+      const a=botAt(p),open=[];
+      for(const v of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const r=a.r+v[1],c=a.c+v[0];
+        if(r<0||c<0||r>=GROWS||c>=GCOLS)continue;
+        if(G.grid[r][c].type==='floor'&&!botBlocked(r,c,p))open.push(v);
+      }
+      b.shakeDir=open.length?open[(Math.random()*open.length)|0]:[0,-1];
+    }
+    const d=b.shakeDir;
+    botKeys(p,d[1]<0,d[1]>0,d[0]<0,d[0]>0,0);
+    if(b.shake<=0){b.shakeDir=null;b.plan=null;b.cross=null;b.avoid=null;b.hold=0;}
+    return;
+  }
+  const px=b.lastX===undefined?p.x:b.lastX, py=b.lastY===undefined?p.y:b.lastY;
+  if(Math.hypot(p.x-px,p.y-py)>4||p.working||b.riding){b.numb=0;b.lastX=p.x;b.lastY=p.y;}
+  else{
+    b.numb=(b.numb||0)+dt;
+    if(b.numb>2.6){b.numb=0;b.shake=0.55;b.shakeDir=null;b.lastX=p.x;b.lastY=p.y;return;}
+  }
+
+  const spot=botAt(p);
+  const afloat=G.grid[spot.r]&&G.grid[spot.r][spot.c].type==='hazard';
+  if(afloat){
+    /* mid-crossing there is nothing to reconsider — the deck decides where we go */
+    if(b.plan&&b.plan.tag)botHold(p,b.plan.tag);
+    b.stuck=0;
+    botNav(p,dt);
+    return;
+  }
+  /* a chef sticks to the job in hand; it only looks up when that job is done,
+     has been taken out from under it, or something is on fire */
+  const tier=botTier();
+  if(b.avoid){b.avoid.t-=dt;if(b.avoid.t<=0)b.avoid=null;}
+  if(b.dud)for(const k in b.dud){b.dud[k]-=dt;if(b.dud[k]<=0)delete b.dud[k];}
+  const alarm=b.plan&&b.plan.tag&&!b.plan.tag.startsWith('fire')&&!b.plan.tag.startsWith('ext')
+    &&!!botAnyFire()&&G.hasExt;
+  if(!b.plan||b.age>4.5||alarm||!botPlanOk(p,b.plan)){
+    b.age=0;
+    b.plain=botFlood(spot.r,spot.c);
+    b.from=(G.plats&&G.plats.length)?botFloodX(spot.r,spot.c):b.plain;
+    b.needs=botNeedSet();
+    b.wants=botWants();
+    b.mateReach=null;
+    if(botFocusDone(p))botPickFocus(p);
+    if(b.focus)botHold(p,'focus:'+b.focus);
+    if(b.cross&&b.cross.ph!=='walk')b.cross=null;
+    let plan=(tier.dither&&Math.random()<tier.dither*0.35)?null:botDecide(p);
+    if(plan&&b.avoid&&plan.tag===b.avoid.tag){
+      b.avoid.hits=(b.avoid.hits||0)+1;
+      if(b.avoid.hits>2)b.avoid=null;else plan=null;
+    }
+    if(plan){
+      let goal=null,gd=Infinity;
+      const cand=plan.on?[{r:plan.t.r,c:plan.t.c}]:botSides(plan.t);
+      for(const s of cand){
+        let d=b.from[s.r*GCOLS+s.c];
+        if(d<0)continue;
+        if(botBlocked(s.r,s.c,p))d+=SHOVE;
+        if(d<gd){gd=d;goal=s;}
+      }
+      if(goal){plan.gr=goal.r;plan.gc=goal.c;b.plan=plan;b.field=botFlood(goal.r,goal.c,p);
+        if(b.cross&&b.field[b.cross.land.r*GCOLS+b.cross.land.c]<0){b.cross=null;b.crossField=null;}}
+      else b.plan=null;
+    } else b.plan=null;
+    if(!b.plan)b.hold=tier.think;
+  }
+  const plan=b.plan;
+  if(!plan){botIdle(p,dt);return;}
+  if(plan.tag)botHold(p,plan.tag);
+
+  if(!botArrived(p,plan)){
+    botNav(p,dt);
+    b.stuck=(!b.riding&&Math.abs(p.mx)+Math.abs(p.my)<12)?(b.stuck||0)+dt:0;
+    if(b.stuck>1.4){
+      b.stuck=0;
+      if(plan.tag&&!b.cross)b.avoid={tag:plan.tag,t:2.5};
+      b.plan=null;b.cross=null;b.hold=0.25;
+    }
+    return;
+  }
+  if(plan.act==='throw'){
+    p.fx=plan.dx;p.fy=plan.dy;
+    botKeys(p,0,0,0,0,0);
+    const gt=G;tryThrow(p);G=gt;
+    botTally('lob');
+    b.plan=null;b.hold=tier.think;
+    return;
+  }
+  botFace(p,plan.t);
+  if(plan.act==='work'){botKeys(p,0,0,0,0,1);return;}
+  botKeys(p,0,0,0,0,0);
+  const was=(p.held&&p.held.id)+'/'+(plan.t.item&&plan.t.item.id)+'/'+G.plates;
+  const g0=G;actPick(p);G=g0;
+  const now=(p.held&&p.held.id)+'/'+(plan.t.item&&plan.t.item.id)+'/'+G.plates;
+  if(was===now&&plan.tag){
+    b.avoid={tag:plan.tag,t:3};
+    (b.dud||(b.dud={}))[tagOf(plan.t)]=3;   /* that square did nothing — leave it */
+  }
+  botTally(plan.tag);
+  b.plan=null;b.hold=tier.think;
+}
+function botTally(tag){
+  if(!G.botActs)G.botActs={};
+  const k=String(tag||'?').replace(/[0-9,]+/g,'');
+  G.botActs[k]=(G.botActs[k]||0)+1;
+}
+function botAnyFire(){
+  for(const row of G.grid)for(const t of row)if(t.fire)return t;
+  return null;
+}
+function botPlanOk(p,plan){
+  const t=plan.t,h=p.held;
+  if(plan.act==='throw')return !!h&&canThrow(h);
+  if(plan.act==='work'){
+    if(plan.tag.startsWith('chop'))
+      return t.type==='board'&&t.item&&CHOP[t.item.id]&&p.bot.needs.has(CHOP[t.item.id])&&t.chopLock!==t.item;
+    if(plan.tag.startsWith('sink'))return G.dirty>0&&G.plates<2;
+    if(plan.tag.startsWith('pot'))
+      return (t.item&&t.item.id==='burnt')||(!t.item&&t.parts&&t.parts.length&&!potMatch(t.parts));
+    if(plan.tag.startsWith('fire'))return !!t.fire&&!!h&&h.id==='ext';
+    return true;
+  }
+  /* picking something up: it has to still be there */
+  if(!h){
+    if(t.type==='plates')return G.plates>0;
+    if(t.type==='crate')return true;
+    if(plan.tag.startsWith('take')||plan.tag.startsWith('serve')||plan.tag.startsWith('lift'))
+      return !!t.item;
+    if(plan.tag.startsWith('ready'))return botReadyOut(t)!==null;
+    if(plan.tag.startsWith('ext'))return !!t.item;
+    return true;
+  }
+  /* putting something down: the spot has to still be free */
+  if(plan.tag.startsWith('put')||plan.tag.startsWith('st')||plan.tag.startsWith('oven'))
+    return !t.item;
+  if(plan.tag.startsWith('pass'))return !t.item;
+  return true;
+}
+function botIdle(p,dt){
+  /* nothing to do: drift somewhere out of the way rather than block a doorway */
+  const b=p.bot,here=botAt(p);
+  if(!b.plain||!b.plain.length)b.plain=botFlood(here.r,here.c);
+  const far=b.rest?Math.hypot(b.rest.c*TS+TS/2-p.x,b.rest.r*TS+TS/2-p.y):999;
+  if(!b.rest||far<TS*0.7){
+    const open=[];
+    for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+      const d=b.plain?b.plain[r*GCOLS+c]:-1;
+      if(d>=3&&!G.grid[r][c].item&&!botBlocked(r,c,p))open.push({r,c});
+    }
+    b.rest=open.length?open[(Math.random()*open.length)|0]:null;
+    if(!b.rest)b.rest=null;
+    if(b.rest){b.field=botFlood(b.rest.r,b.rest.c,p);b.cross=null;}
+  }
+  if(b.cross||(b.rest&&b.field))botNav(p,dt);else botRelease(p);
+}
+
+/* <<</BOT>>> */
 function update(dt){
   if(G.netClient){netClientFrame(dt);return;}
   if(NET.role==='host'&&NET.started)netApplyRemoteKeys();
@@ -2897,6 +4005,7 @@ function updateCore(dt){
     movePlayer(solo,null,dt,MERGED);
     actWork(solo,dt,MERGED);
   } else {
+    for(const pl of G.players)if(pl.bot)botAct(pl,dt);
     for(const pl of G.players){movePlayer(pl,G.players,dt);actWork(pl,dt);}
   }
   updateDynamics(dt);
@@ -3105,6 +4214,21 @@ const EFONT='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'
 function em(size){ctx.font=size+'px '+EFONT;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
   ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function crewOn(tl){
+  let n=0;for(const q of G.players)if(q.workTile===tl&&q.working)n++;
+  return n;
+}
+function crewBar(tl,x,y,frac,col){
+  const n=crewOn(tl);
+  drawBar(x+8,y+4,TS-16,frac,n>1?'#7cf5a0':col);
+  if(n>1){
+    ctx.font='bold 12px "Trebuchet MS",sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.strokeStyle='rgba(0,0,0,0.75)';ctx.lineWidth=3.5;
+    ctx.strokeText('×'+n,x+TS-9,y+17);
+    ctx.fillStyle='#9dffb8';ctx.fillText('×'+n,x+TS-9,y+17);
+    ctx.textAlign='center';
+  }
+}
 function drawBar(x,y,w,frac,col,bg){
   ctx.fillStyle=bg||'#00000090';rr(x,y,w,7,3);ctx.fill();
   ctx.fillStyle=col;rr(x+1,y+1,Math.max(2,(w-2)*clamp(frac,0,1)),5,2);ctx.fill();
@@ -3305,12 +4429,14 @@ function drawIngredient(x,y,id,s){
       ctx.fillStyle='#9c5a2e';rr(x+(o[0]-4)*s,y+(o[1]-3.5)*s,9*s,8*s,2.5*s);ctx.fill();oL(1.2*s);
       ctx.fillStyle='#c8824a';rr(x+(o[0]-3)*s,y+(o[1]-2.5)*s,6*s,2.2*s,1.5*s);ctx.fill();
     }break;}
-  case 'potato':{ /* noodle dough ball */
-    shE(x,y+8*s,9*s,3.5*s);
-    ctx.fillStyle='#f0e0c0';ctx.beginPath();ctx.arc(x,y,9*s,0,7);ctx.fill();oL(1.5*s);
-    ctx.strokeStyle='#d8c49c';ctx.lineWidth=1.2*s;
-    ctx.beginPath();ctx.arc(x-2*s,y-1*s,4*s,0.5,2.5);ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,0.55)';ctx.beginPath();ctx.arc(x-3*s,y-4*s,2.5*s,0,7);ctx.fill();
+  case 'potato':{ /* noodle dough: a scored yellow slab — never a ball */
+    shE(x,y+8*s,11*s,3.5*s);
+    ctx.fillStyle='#e0bb55';rr(x-11*s,y-6*s,22*s,13*s,3*s);ctx.fill();oL(1.5*s);
+    ctx.fillStyle='#f3d986';rr(x-11*s,y-6*s,22*s,5.5*s,3*s);ctx.fill();
+    ctx.strokeStyle='rgba(150,115,30,0.55)';ctx.lineWidth=1.2*s;
+    for(const dx of [-5.5,0,5.5]){
+      ctx.beginPath();ctx.moveTo(x+dx*s,y-5.5*s);ctx.lineTo(x+dx*s,y+6.5*s);ctx.stroke();}
+    ctx.fillStyle='rgba(255,255,255,0.5)';rr(x-9*s,y-4.5*s,7*s,2*s,1*s);ctx.fill();
     break;}
   case 'potato_c':{ /* fresh noodle bundle */
     shE(x,y+7*s,11*s,3.5*s);
@@ -3342,17 +4468,24 @@ function drawIngredient(x,y,id,s){
     ctx.fillStyle='#d84a3a';ctx.beginPath();ctx.arc(x+4.5*s,y-3.4*s,1.5*s,0,7);ctx.fill();
     ctx.fillStyle='#e88a8d';ctx.beginPath();ctx.arc(x-2*s,y+4*s,1.4*s,0,7);ctx.fill();
     break;}
-  case 'carrot':{ /* whole carrot */
-    shE(x,y+8*s,10*s,3.5*s);
-    ctx.save();ctx.translate(x,y);ctx.rotate(0.5);
-    ctx.fillStyle='#e8823c';
-    ctx.beginPath();ctx.moveTo(-10*s,-4*s);ctx.quadraticCurveTo(0,-6.5*s,10*s,-1*s);
-    ctx.quadraticCurveTo(11*s,0,10*s,1*s);ctx.quadraticCurveTo(0,4*s,-10*s,2*s);
+  case 'carrot':{ /* carrot: a fat cone pointing down, leafy tuft on top */
+    shE(x,y+9*s,7*s,3.2*s);
+    ctx.save();ctx.translate(x,y);ctx.rotate(0.26);
+    ctx.fillStyle='#3f8f43';
+    for(const a of [-0.62,0,0.62]){
+      ctx.save();ctx.rotate(a);
+      ctx.beginPath();ctx.ellipse(0,-11*s,2.1*s,4.2*s,0,0,7);ctx.fill();
+      ctx.restore();}
+    ctx.fillStyle='#ef8524';
+    ctx.beginPath();
+    ctx.moveTo(-5.6*s,-7.5*s);ctx.quadraticCurveTo(-6.6*s,-1*s,-1.2*s,9.5*s);
+    ctx.quadraticCurveTo(0,11.2*s,1.2*s,9.5*s);
+    ctx.quadraticCurveTo(6.6*s,-1*s,5.6*s,-7.5*s);
     ctx.closePath();ctx.fill();oL(1.4*s);
-    ctx.strokeStyle='#c9662a';ctx.lineWidth=1*s;
-    for(const dx of [-4,1,6]){ctx.beginPath();ctx.moveTo(dx*s,-3.5*s);ctx.lineTo((dx+1)*s,2.5*s);ctx.stroke();}
-    ctx.fillStyle='#4d9e4f';
-    ctx.beginPath();ctx.ellipse(-11.5*s,-2*s,3.5*s,2*s,-0.7,0,7);ctx.fill();
+    ctx.strokeStyle='rgba(150,60,10,0.45)';ctx.lineWidth=1*s;
+    for(const dy of [-4,0,4]){
+      const w=4.7-Math.abs(dy)*0.24;
+      ctx.beginPath();ctx.moveTo(-w*s,dy*s);ctx.lineTo(w*s,(dy+1.2)*s);ctx.stroke();}
     ctx.restore();break;}
   case 'carrot_c':{ /* julienne sticks */
     shE(x,y+7*s,10*s,3.5*s);
@@ -3377,15 +4510,28 @@ function drawIngredient(x,y,id,s){
       ctx.fillStyle='#f0a04a';rr(px,py,9*s,8*s,2*s);ctx.fill();oL(1.2*s);
       ctx.fillStyle='#3d6b3f';rr(px,py,9*s,2.6*s,2*s);ctx.fill();
     }break;}
-  case 'oats':{ /* raw rice heap */
-    shE(x,y+7*s,11*s,3.5*s);
-    ctx.fillStyle='#f2ecd8';
-    ctx.beginPath();ctx.ellipse(x,y+2*s,11*s,6.5*s,0,Math.PI,0);
+  case 'oats':{ /* rice: a hessian sack, open at the top with grains showing */
+    shE(x,y+9*s,9*s,3.2*s);
+    ctx.fillStyle='#c9a76b';
+    ctx.beginPath();
+    ctx.moveTo(x-8*s,y-4*s);
+    ctx.quadraticCurveTo(x-10*s,y+6*s,x-7*s,y+9.5*s);
+    ctx.lineTo(x+7*s,y+9.5*s);
+    ctx.quadraticCurveTo(x+10*s,y+6*s,x+8*s,y-4*s);
     ctx.closePath();ctx.fill();oL(1.4*s);
-    ctx.strokeStyle='#d8d2b8';ctx.lineWidth=1.1*s;ctx.lineCap='round';
-    for(const o of [[-6,0],[-2,-3],[3,-1],[7,1],[0,2]]){
-      ctx.beginPath();ctx.moveTo(x+o[0]*s,y+o[1]*s);ctx.lineTo(x+(o[0]+1.6)*s,y+(o[1]-1.6)*s);ctx.stroke();}
-    ctx.lineCap='butt';break;}
+    ctx.strokeStyle='rgba(120,88,44,0.4)';ctx.lineWidth=1*s;
+    for(const dy of [1,4.5]){
+      ctx.beginPath();ctx.moveTo(x-8.6*s,y+dy*s);ctx.lineTo(x+8.6*s,y+dy*s);ctx.stroke();}
+    for(const dx of [-4,0,4]){
+      ctx.beginPath();ctx.moveTo(x+dx*s,y-3*s);ctx.lineTo(x+dx*s,y+9*s);ctx.stroke();}
+    /* rolled-open neck full of white grains */
+    ctx.fillStyle='#f6f2e6';
+    ctx.beginPath();ctx.ellipse(x,y-4.5*s,8.4*s,3.6*s,0,0,7);ctx.fill();oL(1.3*s);
+    ctx.fillStyle='#ffffff';
+    for(const o of [[-4,-5.5],[-1,-4],[2.5,-5.8],[5,-4.2],[0,-6.5]]){
+      ctx.save();ctx.translate(x+o[0]*s,y+o[1]*s);ctx.rotate(o[0]*0.16);
+      ctx.beginPath();ctx.ellipse(0,0,1.9*s,1*s,0,0,7);ctx.fill();ctx.restore();}
+    break;}
   case 'porridge':{ /* steamed rice in a bowl */
     shE(x,y+8*s,11*s,3.5*s);
     ctx.fillStyle='#7a4f3a';
@@ -3449,16 +4595,23 @@ function drawIngredient(x,y,id,s){
       ctx.fillStyle='#7ac47f';ctx.beginPath();ctx.ellipse(x+o[0]*s,y+o[1]*s,3*s,2.3*s,0.3,0,7);ctx.fill();oL(1*s);
       ctx.fillStyle='#a8dcab';ctx.beginPath();ctx.arc(x+(o[0]-0.8)*s,y+(o[1]-0.8)*s,0.9*s,0,7);ctx.fill();
     }break;}
-  case 'pepper':{ /* whole chili */
-    shE(x,y+8*s,10*s,3.5*s);
-    ctx.save();ctx.translate(x,y);ctx.rotate(0.35);
-    ctx.fillStyle='#d84a3a';
-    ctx.beginPath();ctx.moveTo(-9*s,-3*s);
-    ctx.quadraticCurveTo(2*s,-6*s,10*s,1*s);
-    ctx.quadraticCurveTo(11*s,3*s,9*s,3.5*s);
-    ctx.quadraticCurveTo(0,4*s,-9*s,0);ctx.closePath();ctx.fill();oL(1.4*s);
-    ctx.fillStyle='#f28a7a';ctx.beginPath();ctx.ellipse(-3*s,-2.5*s,4*s,1.4*s,0.15,0,7);ctx.fill();
-    ctx.fillStyle='#4d9e4f';rr(-12*s,-4.5*s,5*s,3*s,1.5*s);ctx.fill();
+  case 'pepper':{ /* chili: a thin, deep-red hook with a stalk */
+    shE(x,y+9*s,6*s,3*s);
+    ctx.save();ctx.translate(x,y);ctx.rotate(-0.18);
+    ctx.fillStyle='#bd2b25';
+    ctx.beginPath();
+    ctx.moveTo(-3*s,-7.5*s);
+    ctx.bezierCurveTo(4.5*s,-4.5*s,7.5*s,2.5*s,2*s,9.5*s);
+    ctx.quadraticCurveTo(0.6*s,11.4*s,-0.6*s,9.8*s);
+    ctx.bezierCurveTo(4*s,2.5*s,1.2*s,-2.5*s,-5*s,-6*s);
+    ctx.closePath();ctx.fill();oL(1.4*s);
+    ctx.fillStyle='rgba(255,150,140,0.5)';
+    ctx.beginPath();ctx.ellipse(1.6*s,-1.5*s,1.2*s,3.8*s,0.4,0,7);ctx.fill();
+    ctx.fillStyle='#3f8f43';
+    ctx.beginPath();ctx.ellipse(-3.8*s,-8.2*s,3.6*s,2.3*s,-0.5,0,7);ctx.fill();
+    ctx.strokeStyle='#3f8f43';ctx.lineWidth=1.7*s;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-4.8*s,-9.2*s);ctx.lineTo(-6.8*s,-12*s);ctx.stroke();
+    ctx.lineCap='butt';
     ctx.restore();break;}
   case 'pepper_c':{ /* chili rings */
     shE(x,y+7*s,10*s,3.5*s);
@@ -3468,13 +4621,24 @@ function drawIngredient(x,y,id,s){
       ctx.strokeStyle='#f2d8b0';ctx.lineWidth=0.9*s;
       ctx.beginPath();ctx.arc(x+o[0]*s,y+o[1]*s,2.6*s,0,7);ctx.stroke();
     }break;}
-  case 'tortilla':{ /* rice paper */
+  case 'tortilla':{ /* rice paper: a stack of thin translucent sheets */
     shE(x,y+8*s,11*s,3.5*s);
-    ctx.fillStyle='rgba(255,253,246,0.85)';ctx.beginPath();ctx.arc(x,y,11*s,0,7);ctx.fill();
-    ctx.strokeStyle='rgba(190,180,155,0.9)';ctx.lineWidth=1.5*s;ctx.beginPath();ctx.arc(x,y,11*s,0,7);ctx.stroke();
-    ctx.strokeStyle='rgba(210,200,175,0.6)';ctx.lineWidth=1*s;
-    ctx.beginPath();ctx.arc(x,y,7*s,0,7);ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.ellipse(x-4*s,y-4*s,4*s,2*s,-0.6,0,7);ctx.fill();
+    for(const k of [2,1,0]){
+      const oy=k*2.6*s, ox=-k*1.8*s;
+      ctx.fillStyle=k?'rgba(214,222,224,0.9)':'rgba(238,246,248,0.94)';
+      ctx.beginPath();ctx.ellipse(x+ox,y+3*s-oy,11*s,4.6*s,-0.06,0,7);ctx.fill();
+      ctx.strokeStyle='rgba(140,158,164,0.85)';ctx.lineWidth=1.3*s;
+      ctx.beginPath();ctx.ellipse(x+ox,y+3*s-oy,11*s,4.6*s,-0.06,0,7);ctx.stroke();
+    }
+    /* the crosshatch weave that says rice paper */
+    ctx.save();
+    ctx.beginPath();ctx.ellipse(x-3.6*s,y-2.2*s,11*s,4.6*s,-0.06,0,7);ctx.clip();
+    ctx.strokeStyle='rgba(120,140,148,0.45)';ctx.lineWidth=0.9*s;
+    for(let i=-3;i<=3;i++){
+      ctx.beginPath();ctx.moveTo(x-3.6*s+i*3.4*s,y-7*s);ctx.lineTo(x-3.6*s+i*3.4*s+3*s,y+3*s);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-3.6*s+i*3.4*s,y-7*s);ctx.lineTo(x-3.6*s+i*3.4*s-3*s,y+3*s);ctx.stroke();
+    }
+    ctx.restore();
     break;}
   case 'cocoa':{ /* teriyaki bottle */
     shE(x,y+9*s,7*s,3*s);
@@ -3490,12 +4654,15 @@ function drawIngredient(x,y,id,s){
     ctx.fillStyle='#7a4a26';ctx.beginPath();ctx.ellipse(x,y+0.5*s,8.5*s,4*s,0,0,7);ctx.fill();
     ctx.fillStyle='#a8744a';ctx.beginPath();ctx.ellipse(x-2.5*s,y-1*s,3.5*s,1.4*s,-0.2,0,7);ctx.fill();
     break;}
-  case 'dough':{ /* dumpling dough ball */
+  case 'dough':{ /* dumpling dough: a floured white ball */
     shE(x,y+8*s,9*s,3.5*s);
-    ctx.fillStyle='#f5e8d0';ctx.beginPath();ctx.arc(x,y,9*s,0,7);ctx.fill();oL(1.5*s);
-    ctx.fillStyle='rgba(255,255,255,0.7)';ctx.beginPath();ctx.arc(x-3*s,y-3.5*s,3*s,0,7);ctx.fill();
-    ctx.fillStyle='#e0d0b0';ctx.beginPath();ctx.arc(x+3*s,y+3*s,1.4*s,0,7);ctx.fill();
-    ctx.beginPath();ctx.arc(x-5*s,y+4*s,1*s,0,7);ctx.fill();
+    ctx.fillStyle='#f6e9cf';ctx.beginPath();ctx.arc(x,y,9*s,0,7);ctx.fill();oL(1.5*s);
+    ctx.fillStyle='rgba(255,255,255,0.95)';ctx.beginPath();ctx.arc(x-3*s,y-3.5*s,3.4*s,0,7);ctx.fill();
+    ctx.fillStyle='rgba(186,170,142,0.6)';
+    for(const o of [[3.4,3.2],[-5,4.2],[5,-4],[0.5,6.2],[-2.4,-6]]){
+      ctx.beginPath();ctx.arc(x+o[0]*s,y+o[1]*s,0.95*s,0,7);ctx.fill();}
+    ctx.strokeStyle='rgba(186,170,142,0.65)';ctx.lineWidth=1.2*s;
+    ctx.beginPath();ctx.arc(x+1*s,y+1*s,3.4*s,0.4,2.6);ctx.stroke();
     break;}
   case 'dough_b':{ /* rolled wrapper */
     shE(x,y+7*s,12*s,3.5*s);
@@ -3503,19 +4670,40 @@ function drawIngredient(x,y,id,s){
     ctx.fillStyle='#f0d49a';ctx.beginPath();ctx.ellipse(x,y,15*s,9*s,0,0,7);ctx.fill();oL(1.3*s);
     ctx.fillStyle='#e0bd7e';ctx.beginPath();ctx.ellipse(x,y,10*s,5.5*s,0,0,7);ctx.fill();
     break;}
-  case 'apple_pie': case 'berry_pie': case 'pumpkin_pie':{ /* steamed buns */
+  case 'apple_pie': case 'berry_pie': case 'pumpkin_pie':{ /* three buns, three shapes */
     shE(x,y+8*s,10*s,3.5*s);
-    const body=(id==='pumpkin_pie')?'#f5d8a8':'#f8f4ec';
-    ctx.fillStyle=body;
-    ctx.beginPath();ctx.ellipse(x,y+1*s,10.5*s,8*s,0,0,7);ctx.fill();oL(1.5*s);
-    ctx.strokeStyle='rgba(0,0,0,0.16)';ctx.lineWidth=1.2*s;
-    for(const a of [-0.9,-0.3,0.3,0.9]){
-      ctx.beginPath();ctx.moveTo(x,y-6.5*s);
-      ctx.quadraticCurveTo(x+a*6*s,y-3*s,x+a*7*s,y+1*s);ctx.stroke();}
-    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(x-4*s,y-3*s,3.5*s,2*s,-0.4,0,7);ctx.fill();
-    if(id==='berry_pie'){ctx.fillStyle='#8a5a3a';ctx.beginPath();ctx.arc(x,y-6*s,2*s,0,7);ctx.fill();}
-    if(id==='pumpkin_pie'){ctx.fillStyle='#3d6b3f';ctx.beginPath();ctx.arc(x,y-6*s,2*s,0,7);ctx.fill();}
-    if(id==='apple_pie'){ctx.fillStyle='#e8b23c';ctx.beginPath();ctx.arc(x,y-6*s,2*s,0,7);ctx.fill();}
+    if(id==='pumpkin_pie'){            /* kabocha manju: ridged orange dome, green stem */
+      ctx.fillStyle='#eda94e';
+      ctx.beginPath();ctx.ellipse(x,y+1*s,10.5*s,8*s,0,0,7);ctx.fill();oL(1.5*s);
+      ctx.strokeStyle='rgba(150,85,20,0.5)';ctx.lineWidth=1.3*s;
+      for(const a of [-6,-2,2,6]){
+        ctx.beginPath();ctx.moveTo(x+a*s,y-5.5*s);
+        ctx.quadraticCurveTo(x+a*1.45*s,y+1*s,x+a*s,y+7.5*s);ctx.stroke();}
+      ctx.fillStyle='#3d6b3f';rr(x-1.7*s,y-9.5*s,3.4*s,4.2*s,1.2*s);ctx.fill();
+    } else if(id==='berry_pie'){       /* mushroom bao: pleated purse, cap on top */
+      ctx.fillStyle='#ece5d6';
+      ctx.beginPath();
+      ctx.moveTo(x-9.5*s,y+2.5*s);
+      ctx.quadraticCurveTo(x-10*s,y-4*s,x-3.2*s,y-6*s);
+      ctx.quadraticCurveTo(x,y-10.5*s,x+3.2*s,y-6*s);
+      ctx.quadraticCurveTo(x+10*s,y-4*s,x+9.5*s,y+2.5*s);
+      ctx.quadraticCurveTo(x,y+10*s,x-9.5*s,y+2.5*s);
+      ctx.closePath();ctx.fill();oL(1.5*s);
+      ctx.strokeStyle='rgba(0,0,0,0.22)';ctx.lineWidth=1.2*s;
+      for(const a of [-1,-0.35,0.35,1]){
+        ctx.beginPath();ctx.moveTo(x,y-6.5*s);
+        ctx.quadraticCurveTo(x+a*5*s,y-1*s,x+a*8*s,y+3.5*s);ctx.stroke();}
+      ctx.fillStyle='#6b4a34';
+      ctx.beginPath();ctx.ellipse(x,y-8.2*s,3.8*s,2.4*s,0,0,7);ctx.fill();
+    } else {                           /* chicken bao: round bun with a red stamp */
+      ctx.fillStyle='#f8f4ec';
+      ctx.beginPath();ctx.arc(x,y+0.5*s,9.5*s,0,7);ctx.fill();oL(1.5*s);
+      ctx.fillStyle='#ffffff';
+      ctx.beginPath();ctx.ellipse(x-4*s,y-3.5*s,3.6*s,2.2*s,-0.4,0,7);ctx.fill();
+      ctx.fillStyle='#d24a3a';ctx.beginPath();ctx.arc(x,y+0.5*s,3.3*s,0,7);ctx.fill();
+      ctx.fillStyle='rgba(255,190,180,0.8)';
+      ctx.beginPath();ctx.arc(x-1*s,y-0.6*s,1.1*s,0,7);ctx.fill();
+    }
     break;}
   case 'cloud_soup': case 'stew': case 'chowder': case 'circuit_soup':{ /* bowls */
     shE(x,y+8*s,11*s,3.5*s);
@@ -3958,6 +5146,55 @@ function drawRailsAndRafts(t,railCells){
       ctx.beginPath();ctx.moveTo(sx-py*1.4,sy-px*1.4);ctx.lineTo(sx+py*1.4,sy+px*1.4);ctx.stroke();
     }
   }
+  /* the parade route, and the dragon running it */
+  for(const pd of (G.parade||[])){
+    ctx.fillStyle='rgba(214,90,40,0.16)';
+    for(const c2 of pd.cells){rr(c2.c*TS+3,c2.r*TS+3,TS-6,TS-6,8);ctx.fill();}
+    ctx.strokeStyle='rgba(255,196,90,0.30)';ctx.lineWidth=3;ctx.setLineDash([9,9]);
+    ctx.beginPath();
+    pd.cells.forEach((c2,i)=>{
+      const x=c2.c*TS+TS/2,y=c2.r*TS+TS/2;
+      if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);
+    });
+    ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+  }
+  const paradeAtF=(pd,f)=>{
+    const n=pd.cells.length;
+    const a=((Math.floor(f)%n)+n)%n,b=(a+1)%n,u=f-Math.floor(f);
+    const A=pd.cells[a],B=pd.cells[b];
+    return {x:(A.c+(B.c-A.c)*u)*TS+TS/2,y:(A.r+(B.r-A.r)*u)*TS+TS/2};
+  };
+  for(const pd of (G.parade||[])){
+    for(let i=pd.len-1;i>=0;i--){
+      const q=paradeAtF(pd,pd.pos-i), head=(i===0);
+      const wob=Math.sin(t*7-i*0.9)*3;
+      ctx.fillStyle='rgba(0,0,0,0.22)';
+      ctx.beginPath();ctx.ellipse(q.x,q.y+22,25,9,0,0,7);ctx.fill();
+      /* body: scarlet segment with a gold ruff */
+      ctx.fillStyle=head?'#d8341f':(i%2?'#e05a24':'#cf4a1c');
+      ctx.beginPath();ctx.ellipse(q.x,q.y+wob*0.4,head?30:26,head?27:23,0,0,7);ctx.fill();
+      ctx.strokeStyle='#8f2410';ctx.lineWidth=3;ctx.stroke();
+      ctx.fillStyle='#ffc94d';
+      ctx.beginPath();ctx.ellipse(q.x,q.y+wob*0.4+(head?7:6),head?21:17,head?9:8,0,0,7);ctx.fill();
+      if(!head)continue;
+      /* head: eyes, horns and a grin, facing the way it is going */
+      const nx=paradeAtF(pd,pd.pos+0.45);
+      const dx=Math.sign(Math.round(nx.x-q.x))||0, dy=Math.sign(Math.round(nx.y-q.y))||0;
+      ctx.strokeStyle='#ffd76a';ctx.lineWidth=4;ctx.lineCap='round';
+      for(const sx of [-1,1]){
+        ctx.beginPath();ctx.moveTo(q.x+sx*13,q.y-18);ctx.lineTo(q.x+sx*19,q.y-30);ctx.stroke();
+      }
+      ctx.lineCap='butt';
+      for(const sx of [-1,1]){
+        ctx.fillStyle='#fff';
+        ctx.beginPath();ctx.arc(q.x+sx*11+dx*4,q.y-7+dy*3,7,0,7);ctx.fill();
+        ctx.fillStyle='#241018';
+        ctx.beginPath();ctx.arc(q.x+sx*11+dx*6,q.y-7+dy*5,3.6,0,7);ctx.fill();
+      }
+      ctx.strokeStyle='#8f2410';ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(q.x+dx*3,q.y+6+dy*2,9,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+    }
+  }
   /* rafts ferrying across the gap */
   for(const pl of (G.plats||[])){
     const a=pl.cells[0],b=pl.cells[pl.cells.length-1];
@@ -3968,42 +5205,45 @@ function drawRailsAndRafts(t,railCells){
     ctx.moveTo(a.c*TS+TS/2,a.r*TS+TS/2);ctx.lineTo(b.c*TS+TS/2,b.r*TS+TS/2);
     ctx.stroke();ctx.setLineDash([]);
     const x=pl.cx,y=pl.cy,wood=(G.world.haz==='water');
+    /* the deck is drawn to its real size, so you can see what you can stand on */
+    const hw=(pl.pw||1)*TS/2-3, hh=(pl.ph||1)*TS/2-6, w2=hw*2, h2=hh*2;
     ctx.fillStyle='rgba(0,0,0,0.30)';
-    ctx.beginPath();ctx.ellipse(x,y+16,30,11,0,0,7);ctx.fill();
+    ctx.beginPath();ctx.ellipse(x,y+hh-14,hw*0.92,11,0,0,7);ctx.fill();
     const bob=wood?Math.sin(t*2.2+a.c)*1.6:0;
     ctx.save();ctx.translate(0,bob);
     if(wood){
-      ctx.fillStyle='#8a5f3a';rr(x-33,y-30,66,60,7);ctx.fill();
-      ctx.strokeStyle='#5d3f26';ctx.lineWidth=3;rr(x-33,y-30,66,60,7);ctx.stroke();
+      ctx.fillStyle='#8a5f3a';rr(x-hw,y-hh,w2,h2,7);ctx.fill();
+      ctx.strokeStyle='#5d3f26';ctx.lineWidth=3;rr(x-hw,y-hh,w2,h2,7);ctx.stroke();
       ctx.strokeStyle='#6e4a2c';ctx.lineWidth=2;
-      for(let i=1;i<4;i++){
-        ctx.beginPath();ctx.moveTo(x-33,y-30+i*15);ctx.lineTo(x+33,y-30+i*15);ctx.stroke();
+      for(let py2=y-hh+15;py2<y+hh-4;py2+=15){
+        ctx.beginPath();ctx.moveTo(x-hw,py2);ctx.lineTo(x+hw,py2);ctx.stroke();
       }
       ctx.strokeStyle='#c9a86a';ctx.lineWidth=3.5;
-      ctx.beginPath();ctx.moveTo(x-33,y-22);ctx.lineTo(x+33,y-22);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(x-33,y+22);ctx.lineTo(x+33,y+22);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-hw,y-hh+8);ctx.lineTo(x+hw,y-hh+8);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-hw,y+hh-8);ctx.lineTo(x+hw,y+hh-8);ctx.stroke();
     } else {
       /* a steel service platform, hazard-striped like the real thing */
-      ctx.fillStyle='#8c939c';rr(x-33,y-30,66,60,7);ctx.fill();
-      ctx.fillStyle='#a7aeb7';rr(x-27,y-24,54,48,5);ctx.fill();
-      ctx.strokeStyle='#5b626b';ctx.lineWidth=3;rr(x-33,y-30,66,60,7);ctx.stroke();
+      ctx.fillStyle='#8c939c';rr(x-hw,y-hh,w2,h2,7);ctx.fill();
+      ctx.fillStyle='#a7aeb7';rr(x-hw+6,y-hh+6,w2-12,h2-12,5);ctx.fill();
+      ctx.strokeStyle='#5b626b';ctx.lineWidth=3;rr(x-hw,y-hh,w2,h2,7);ctx.stroke();
       ctx.save();
-      ctx.beginPath();rr(x-33,y-30,66,8,3);ctx.clip();
-      for(let i=-4;i<9;i++){
+      ctx.beginPath();rr(x-hw,y-hh,w2,8,3);ctx.clip();
+      for(let i=-4;i*9<w2+40;i++){
         ctx.fillStyle=(i%2)?'#2b2b2b':'#e8b81f';
-        ctx.beginPath();ctx.moveTo(x-33+i*9,y-30);ctx.lineTo(x-33+i*9+9,y-30);
-        ctx.lineTo(x-33+i*9+2,y-22);ctx.lineTo(x-33+i*9-7,y-22);ctx.fill();
+        ctx.beginPath();ctx.moveTo(x-hw+i*9,y-hh);ctx.lineTo(x-hw+i*9+9,y-hh);
+        ctx.lineTo(x-hw+i*9+2,y-hh+8);ctx.lineTo(x-hw+i*9-7,y-hh+8);ctx.fill();
       }
       ctx.restore();
       ctx.strokeStyle='#767d86';ctx.lineWidth=2;
-      for(let i=1;i<4;i++){
-        ctx.beginPath();ctx.moveTo(x-27,y-24+i*12);ctx.lineTo(x+27,y-24+i*12);ctx.stroke();
+      for(let py2=y-hh+18;py2<y+hh-6;py2+=12){
+        ctx.beginPath();ctx.moveTo(x-hw+6,py2);ctx.lineTo(x+hw-6,py2);ctx.stroke();
       }
     }
     /* chevrons showing which way it is heading */
     ctx.strokeStyle='rgba(0,0,0,0.38)';ctx.lineWidth=4;ctx.lineCap='round';
     const d=pl.dir>0?1:-1;
-    for(const o of [-11,7]){
+    const off=Math.max(11,(horiz?hw:hh)-16);
+    for(const o of [-off,off-4]){
       ctx.beginPath();
       if(horiz){ctx.moveTo(x+o-5*d,y-9);ctx.lineTo(x+o+5*d,y);ctx.lineTo(x+o-5*d,y+9);}
       else{ctx.moveTo(x-9,y+o-5*d);ctx.lineTo(x,y+o+5*d);ctx.lineTo(x+9,y+o-5*d);}
@@ -4013,7 +5253,7 @@ function drawRailsAndRafts(t,railCells){
     if(pl.docked){
       const pulse=(0.5+0.35*Math.abs(Math.sin(t*4))).toFixed(2);
       ctx.strokeStyle='rgba(255,214,79,'+pulse+')';ctx.lineWidth=4;
-      rr(x-37,y-34,74,68,9);ctx.stroke();
+      rr(x-hw-4,y-hh-4,(hw+4)*2,(hh+4)*2,9);ctx.stroke();
     }
     ctx.restore();
   }
@@ -4347,7 +5587,7 @@ function drawTileOverlay(tl,t){
   }
   else if(tl.item&&tl.type==='ext'){em(26);ctx.fillText('🧯',cx,cy);}
   /* progress bars */
-  if(tl.type==='board'&&tl.chopT>0)drawBar(x+8,y+4,TS-16,tl.chopT/1.6,'#ffd54f');
+  if(tl.type==='board'&&tl.chopT>0)crewBar(tl,x,y,tl.chopT/1.6,'#ffd54f');
   if((tl.type==='stove'||tl.type==='fryer')&&tl.item){
     const M=stMap(tl);
     if(M[tl.item.id])drawBar(x+8,y+4,TS-16,tl.cook/M[tl.item.id].t,'#ffa726');
@@ -4375,8 +5615,8 @@ function drawTileOverlay(tl,t){
       drawSteam(cx,y+8,1);
     }
   }
-  if(tl.type==='sink'&&tl.washT>0)drawBar(x+8,y+4,TS-16,tl.washT/2.2,'#80deea');
-  if(tl.type==='pot'&&tl.dumpT>0)drawBar(x+8,y+4,TS-16,tl.dumpT/1.4,'#b0653a');
+  if(tl.type==='sink'&&tl.washT>0)crewBar(tl,x,y,tl.washT/2.2,'#80deea');
+  if(tl.type==='pot'&&tl.dumpT>0)crewBar(tl,x,y,tl.dumpT/1.4,'#b0653a');
   if(tl.fire){
     em(30+Math.sin(t*11+tl.c)*5);ctx.fillText('🔥',cx,cy-4);
     em(17+Math.sin(t*13+tl.r)*4);ctx.fillText('🔥',cx+12,cy-16);
@@ -4549,6 +5789,7 @@ function drawPlayer(p,t){
     ctx.strokeStyle='#00000080';ctx.lineWidth=3;
     let tag='P'+(p.slot+1);
     if(G.teamIdx>=0)tag=TEAM_DEFS[G.teamIdx].n[0]+(p.idx+1);
+    if(p.bot)tag=BOT_TIERS[Math.min(2,Math.max(0,SAVE.cpuDiff|0))].e+' CPU';
     ctx.strokeText(tag,x,y-34);
     ctx.fillText(tag,x,y-34);
   }
@@ -4641,6 +5882,88 @@ function dishIconURL(k){
   return DISH_ICON_CACHE[k]=oc.toDataURL();
 }
 const ST_EMO={chop:'🔪',fry:'🍤',grill:'🔥',pot:'🍲',oven:'♨️'};
+/* the prep badges are drawn rather than borrowed from the emoji font: at card
+   size the system glyphs turn to mush, and the steamer's one reads as nothing */
+const STEP_ICON_CACHE={};
+function drawStepArt(st){
+  const ink='#3a2c4a';
+  const line=(w,c)=>{ctx.strokeStyle=c||ink;ctx.lineWidth=w;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();};
+  if(st==='chop'){                                   /* chef's knife, tip up-right */
+    ctx.save();ctx.rotate(-0.36);ctx.translate(-3,3);
+    ctx.beginPath();                                 /* long blade: straight spine, swept edge */
+    ctx.moveTo(-2,-14);ctx.lineTo(55,-5);
+    ctx.quadraticCurveTo(22,13,-2,15);ctx.closePath();
+    ctx.fillStyle='#d7e2ee';ctx.fill();line(5.5);
+    ctx.beginPath();ctx.moveTo(4,-8);ctx.lineTo(40,-2);line(3.6,'#9aabc0');
+    ctx.fillStyle='#573d4c';rr(-50,-13,49,27,10);ctx.fill();line(5.5);
+    ctx.beginPath();ctx.moveTo(-2,-13);ctx.lineTo(-2,14);line(5,'#b3c1d1');
+    ctx.restore();return;
+  }
+  if(st==='grill'){                                  /* open flame */
+    ctx.beginPath();ctx.moveTo(1,-50);
+    ctx.bezierCurveTo(25,-23,38,-6,38,12);
+    ctx.bezierCurveTo(38,35,20,49,0,49);
+    ctx.bezierCurveTo(-20,49,-38,35,-38,12);
+    ctx.bezierCurveTo(-38,-8,-16,-16,-7,-36);
+    ctx.closePath();ctx.fillStyle='#ff6a1f';ctx.fill();line(5.5);
+    ctx.beginPath();ctx.moveTo(3,-12);
+    ctx.bezierCurveTo(18,3,20,14,16,24);
+    ctx.bezierCurveTo(12,35,0,39,-6,32);
+    ctx.bezierCurveTo(-16,23,-11,6,3,-12);
+    ctx.closePath();ctx.fillStyle='#ffd23f';ctx.fill();return;
+  }
+  if(st==='fry'){                                    /* basket of golden pieces */
+    ctx.fillStyle='#f0a838';
+    [[-19,-16,16],[13,-19,15],[-2,-30,13]].forEach(b=>{
+      ctx.beginPath();ctx.arc(b[0],b[1],b[2],0,7);ctx.fill();line(5,'#8a5a12');});
+    ctx.fillStyle='#5b6676';
+    ctx.beginPath();ctx.moveTo(-42,-4);ctx.lineTo(42,-4);
+    ctx.lineTo(29,38);ctx.quadraticCurveTo(0,45,-29,38);ctx.closePath();
+    ctx.fill();line(5.5);
+    ctx.strokeStyle='#98a5b6';ctx.lineWidth=3.2;
+    [[-24,2,-17,34],[0,2,0,38],[24,2,17,34]].forEach(l=>{
+      ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);ctx.stroke();});
+    ctx.beginPath();ctx.moveTo(-42,-4);ctx.lineTo(42,-4);line(6.5,'#414c5c');
+    return;
+  }
+  if(st==='pot'){                                    /* steel pot on the simmer */
+    ctx.fillStyle='#8d97a8';rr(-32,-12,64,46,11);ctx.fill();line(5.5);
+    ctx.fillStyle='#5b6472';rr(-48,-8,15,18,6);ctx.fill();line(5);
+    ctx.fillStyle='#5b6472';rr(33,-8,15,18,6);ctx.fill();line(5);
+    ctx.fillStyle='#c3ccd8';rr(-41,-28,82,17,8);ctx.fill();line(5.5);
+    ctx.fillStyle='#ff9b45';ctx.beginPath();ctx.ellipse(0,-20,29,5.5,0,0,7);ctx.fill();
+    return;
+  }
+  if(st==='oven'){                                   /* bamboo steamer basket */
+    ctx.strokeStyle='#9aa6ba';ctx.lineWidth=5.4;ctx.lineCap='round';
+    [-20,4].forEach(x=>{ctx.beginPath();ctx.moveTo(x,-32);
+      ctx.quadraticCurveTo(x+12,-42,x+3,-52);ctx.stroke();});
+    ctx.fillStyle='#d9a860';rr(-34,-10,68,42,9);ctx.fill();line(5.5);
+    ctx.strokeStyle='#a9762f';ctx.lineWidth=3.6;
+    [6,19].forEach(y=>{ctx.beginPath();ctx.moveTo(-28,y);ctx.lineTo(28,y);ctx.stroke();});
+    ctx.fillStyle='#eec98d';rr(-42,-28,84,20,9);ctx.fill();line(5.5);
+    ctx.strokeStyle='#c39a56';ctx.lineWidth=3.2;
+    ctx.beginPath();ctx.moveTo(-31,-18);ctx.lineTo(31,-18);ctx.stroke();
+    return;
+  }
+}
+/* a light disc keeps the badge readable on the card and over the art behind it */
+function stepURL(st){
+  if(STEP_ICON_CACHE[st])return STEP_ICON_CACHE[st];
+  const SZ=128,oc=document.createElement('canvas');oc.width=SZ;oc.height=SZ;
+  const old=ctx,pm=ICON_MODE;ctx=oc.getContext('2d');ICON_MODE=true;
+  try{
+    ctx.save();ctx.translate(SZ/2,SZ/2);
+    ctx.beginPath();ctx.arc(0,0,61,0,7);
+    ctx.fillStyle='#fffaf0';ctx.fill();
+    ctx.strokeStyle='#3a2c4a';ctx.lineWidth=6;ctx.stroke();
+    ctx.save();ctx.beginPath();ctx.arc(0,0,58,0,7);ctx.clip();
+    ctx.scale(0.98,0.98);drawStepArt(st);ctx.restore();
+    ctx.restore();
+  }finally{ctx=old;ICON_MODE=pm;}
+  return STEP_ICON_CACHE[st]=oc.toDataURL();
+}
+function stepBadge(st){return '<img class="stbi" src="'+stepURL(st)+'" alt="'+st+'">';}
 const ST_ORDER=['chop','fry','grill','pot','oven'];
 const BASIC_CACHE={};
 function srcOf(pid){
@@ -4679,7 +6002,7 @@ function dishBasics(k){
 function basicsHTML(k){
   return dishBasics(k).list.map(e=>
     '<span class="ing">'+partIcon(e.id)+
-    (e.sts.length?'<sup class="ingst">'+e.sts.map(s=>ST_EMO[s]).join('')+'</sup>':'')+
+    (e.sts.length?'<span class="ingst">'+e.sts.map(stepBadge).join('')+'</span>':'')+
     '</span>').join('');
 }
 function stepHTML(k){return (DISH_STEPS[k]||'').replace(/\{(\w+)\}/g,(m,id)=>ING[id]?partIcon(id):m);}
@@ -4730,7 +6053,7 @@ function showScreen(id){
   $('#scr-'+id).classList.add('active');
   screen=id;
   const gc=$('#gchat');
-  if(gc){gc.style.display=(id==='game'&&NET.role)?'block':'none';gc.classList.add('dim');}
+  if(gc){gc.style.display=(id==='game'&&NET.role)?'flex':'none';gc.classList.add('dim');}
   fit();
   Music.play(id==='game'&&G?('w'+G.L.w):'menu');
 }
@@ -5161,7 +6484,8 @@ function snapWorld(w){
   }
   return {st:w.state,cd:Math.round((w.cd||0)*10),tl:Math.round(w.timeLeft*10),
     sc:w.score,cb:w.combo,sv:w.served,ms:w.missed,pl:w.plates,dt:w.dirty,
-    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0,(p.dashT||0)>0?1:0,p.ddx||0,p.ddy||0,Math.round((p.fallT||0)*10)]),
+    ps:w.players.map(p=>[Math.round(p.x),Math.round(p.y),p.fx,p.fy,p.working?1:0,serIt(p.held),p.gone?1:0,(p.dashT||0)>0?1:0,p.ddx||0,p.ddy||0,Math.round((p.fallT||0)*10),
+      p.workTile?p.workTile.r:-1,p.workTile?p.workTile.c:-1]),
     ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),
     pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),
     pt:(w.plats||[]).map(pl=>[Math.round(pl.pos*100),pl.dir,Math.round((pl.waitT||0)*20)]),
@@ -5203,6 +6527,7 @@ function applyWorldSnap(w,s,viewed){
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
     p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
     p.dashT=a[7]?0.12:0;p.ddx=a[8]||0;p.ddy=a[9]||0;p.fallT=(a[10]||0)/10;
+    p.workTile=(a[11]>=0&&a[12]>=0)?w.grid[a[11]][a[12]]:null;
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
   });
   if(viewed&&w.score>oldSc)Snd.serve();
@@ -5287,21 +6612,41 @@ $('#btn-join').onclick=()=>{
 $('#btn-board').onclick=()=>{Snd.init();renderBoard();showScreen('board');};
 $('#btn-modes-back').onclick=()=>showScreen('title');
 $('#btn-board-back').onclick=()=>showScreen('title');
-document.querySelectorAll('.tsbtn').forEach(b=>b.onclick=()=>{
+document.querySelectorAll('.tsbtn[data-rounds]').forEach(b=>b.onclick=()=>{
   Snd.init();TOURN_PICK=+b.dataset.rounds;
   const seg=b.parentElement;
-  seg.querySelectorAll('.tsbtn').forEach(x=>x.classList.toggle('sel',x===b));
+  seg.querySelectorAll('.tsbtn[data-rounds]').forEach(x=>x.classList.toggle('sel',x===b));
 });
+$('#cpu-less').onclick=()=>{Snd.init();SAVE.cpu=Math.max(0,(SAVE.cpu|0)-1);SaveIO.save(SAVE);refreshCpuUI();};
+$('#cpu-more').onclick=()=>{Snd.init();SAVE.cpu=Math.min(7,(SAVE.cpu|0)+1);SaveIO.save(SAVE);refreshCpuUI();};
+document.querySelectorAll('[data-cpud]').forEach(b=>b.onclick=()=>{
+  Snd.init();SAVE.cpuDiff=+b.dataset.cpud;SaveIO.save(SAVE);refreshCpuUI();});
+refreshCpuUI();
+/* a CPU chef needs no keyboard seat, so it opens up the bigger modes locally */
+function humanSeats(m){return MODES[m].chefs-Math.min(SAVE.cpu|0,MODES[m].chefs-1);}
+function refreshCpuUI(){
+  const n=SAVE.cpu|0;
+  $('#cpu-n').textContent=n;
+  document.querySelectorAll('[data-cpud]').forEach(x=>
+    x.classList.toggle('sel',+x.dataset.cpud===(SAVE.cpuDiff|0)));
+  document.querySelectorAll('.modebtn[data-mode]').forEach(b=>{
+    const m=+b.dataset.mode;
+    if(MODES[m])b.classList.toggle('olonly',humanSeats(m)>2);
+  });
+  const t=BOT_TIERS[Math.min(2,Math.max(0,SAVE.cpuDiff|0))];
+  $('#cpuhint').innerHTML=n
+    ? `${n} CPU chef${n>1?'s':''} at <b>${t.e} ${t.n}</b> — they take the last ${n===1?'seat':n+' seats'}, so a 2v2 with 3 CPUs is you against a full krew. CPU chefs need no keyboard, so they open up the bigger modes on this machine.`
+    : 'add CPU chefs to fill out a krew or give yourself an opponent — they cook, wash up and put fires out on their own';
+}
 document.querySelectorAll('.modebtn').forEach(b=>{
   const m=+b.dataset.mode;
-  if(MODES[m]&&MODES[m].chefs>2)b.classList.add('olonly');
   b.onclick=()=>{
     Snd.init();
-    if(MODES[m].chefs>2){
+    if(humanSeats(m)>2){
       showScreen('online');
       $('#ol-entry').style.display='';$('#ol-lobby').style.display='none';
       $('#ol-name').value=SAVE.pname||'CHEF';
-      olMsg('🌐 '+MODES[m].n+' needs '+MODES[m].chefs+' chefs — host a room and invite them.');
+      olMsg('🌐 '+MODES[m].n+' seats '+humanSeats(m)+' people — host a room, or add CPU chefs to play it here.');
       return;
     }
     setMode(m);TOURN=null;
