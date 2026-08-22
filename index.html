@@ -129,7 +129,7 @@
     border:1px solid #ffffff26;border-radius:9px;padding:8px 10px}
   .chatrow input:focus{outline:none;border-color:#ffca4d}
   /* the chat lives in the HUD, filling the gap beside the queued orders */
-  #gchat{flex:1 1 auto;min-width:0;height:140px;z-index:7;display:none;
+  #gchat{flex:1 1 auto;min-width:0;height:150px;z-index:7;display:none;
     flex-direction:column;justify-content:flex-end;padding:4px 0}
   #gchat .chatlog{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;
     background:#0e0a16aa;font-size:12.5px;line-height:1.45;margin-bottom:5px;padding:6px 9px;
@@ -185,10 +185,10 @@
 
   /* ---------- Game ---------- */
   #scr-game{background:#141020;border-radius:18px;overflow:hidden}
-  #hud{width:960px;height:158px;background:linear-gradient(#241933,#1c1329);display:flex;align-items:center;
+  #hud{width:960px;height:168px;background:linear-gradient(#241933,#1c1329);display:flex;align-items:center;
     padding:0 12px;gap:10px;border-bottom:3px solid #00000060}
-  #orders{display:flex;gap:8px;flex:0 1 auto;min-width:0;height:148px;align-items:center;overflow:hidden}
-  .ordercard{width:126px;height:146px;background:var(--cream);border-radius:12px;color:var(--ink);
+  #orders{display:flex;gap:8px;flex:0 1 auto;min-width:0;height:158px;align-items:center;overflow:hidden}
+  .ordercard{width:126px;height:156px;background:var(--cream);border-radius:12px;color:var(--ink);
     display:flex;flex-direction:column;align-items:center;padding-top:2px;box-shadow:0 3px 6px rgba(0,0,0,.4);
     position:relative;flex:0 0 auto;animation:slidein .3s ease}
   @keyframes slidein{from{transform:translateY(-110px)}to{transform:translateY(0)}}
@@ -203,15 +203,15 @@
     box-shadow:inset 0 0.14em 0 #ffffff,0 0.1em 0.12em rgba(0,0,0,0.15)}
   .dishicon{width:66px;height:66px;display:block;margin:0 auto}
   .dishicon.rsm{width:40px;height:40px;margin:0 auto}
-  .ordercard .parts{font-size:0;letter-spacing:0;height:46px;flex:0 0 auto;width:100%;
+  .ordercard .parts{font-size:0;letter-spacing:0;height:56px;flex:0 0 auto;width:100%;
     display:flex;align-items:flex-start;justify-content:center;gap:4px;overflow:hidden}
   .ing{display:inline-flex;flex-direction:column;align-items:center;margin:0;flex:0 0 auto}
-  .ingst{display:flex;align-items:center;gap:4px;margin-top:-8px;line-height:0}
+  .ingst{display:flex;align-items:center;gap:4px;margin-top:3px;line-height:0}
   .stbi{width:25px;height:25px;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
   .rbasics{margin-top:5px;font-size:0;opacity:.95;display:flex;flex-wrap:wrap;gap:3px 7px}
   .rbasics .picon{width:26px;height:26px}
   .rbasics .stbi{width:22px;height:22px}
-  .rbasics .ingst{margin-top:-7px}
+  .rbasics .ingst{margin-top:3px}
   .ordercard .parts .picon{width:28px;height:28px;margin:0}
   .ordercard .nm2{font-size:11px;font-weight:bold;color:#6b5b7d;text-transform:uppercase;letter-spacing:.2px;
     height:29px;line-height:1.18;padding:0 3px;margin-bottom:3px;overflow:hidden;text-align:center;width:100%;
@@ -225,7 +225,7 @@
   #timer.low{color:var(--bad);animation:urge .5s linear infinite}
   #score{font-size:22px;color:var(--accent2);font-weight:bold}
   #combo{font-size:15px;color:#80deea;height:18px;font-weight:bold}
-  #stage{position:relative;width:960px;height:608px;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:960px;height:598px;display:flex;align-items:center;justify-content:center}
   #cv{background:#141020}
   .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
     background:rgba(20,12,32,.82);z-index:5;text-align:center}
