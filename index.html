@@ -2303,11 +2303,8 @@ function tryMove(p,others,dx,dy){
     const cr=Math.floor(p.y/TS),cc=Math.floor(p.x/TS);
     if((nr!==cr||nc!==cc)&&paradeAt(nr,nc)&&!paradeAt(cr,cc))return false;
   }
-  if(others)for(const o of (others.length!==undefined?others:[others])){
-    if(o===p)continue;
-    const d2=(nx-o.x)*(nx-o.x)+(ny-o.y)*(ny-o.y);
-    if(d2<40*40){const c2=(p.x-o.x)*(p.x-o.x)+(p.y-o.y)*(p.y-o.y);if(d2<c2)return false;}
-  }
+  /* your krew never blocks you: everyone in a kitchen is on the same side, and
+     a chef stuck behind a team mate in a one-tile corridor is nobody's fun */
   p.x=nx;p.y=ny;return true;
 }
 const DASH_T=0.15,DASH_CD=0.25,DASH_MULT=2.1;
@@ -3075,12 +3072,12 @@ function botRelease(p){if(p.bot)botKeys(p,0,0,0,0,0);}
 
 /* ---- geometry ---- */
 const botAt=p=>({r:Math.floor(p.y/TS),c:Math.floor(p.x/TS)});
-const SHOVE=12;   /* how far a chef will walk to get round another one */
+const SHOVE=2;   /* a nudge to spread out, not a detour — chefs pass through */
 function botFlood(gr,gc,me){
   /* walking distance from every floor tile to (gr,gc), so a chef can steer by
      stepping to whichever neighbour is closer even as it moves. Squares another
-     chef is standing in cost extra, so the path bends around them instead of
-     shoving — but stays passable, because people move. */
+     chef is standing in cost a touch extra, so chefs spread out rather than
+     stack up — but nobody is ever blocked, because they walk through. */
   const N=GROWS*GCOLS,d=new Array(N).fill(-1);
   if(gr<0||gc<0||gr>=GROWS||gc>=GCOLS)return d;
   if(G.grid[gr][gc].type!=='floor')return d;
@@ -3803,8 +3800,16 @@ function botAct(p,dt){
   const b=p.bot;
   if(G.state!=='play'||p.gone){botRelease(p);return;}
   if(p.fallT>0){botRelease(p);b.plan=null;b.cross=null;return;}
-  if(b.hold>0){b.hold-=dt;botRelease(p);return;}
-  b.age=(b.age||0)+dt;
+
+  /* the unwedge clock runs on wall time, not on thinking turns: a head chef
+     replans every third frame, so counting only its planning ticks made it
+     four times slower to notice it had been standing still */
+  const px=b.lastX===undefined?p.x:b.lastX, py=b.lastY===undefined?p.y:b.lastY;
+  if(Math.hypot(p.x-px,p.y-py)>4||p.working||b.riding){b.numb=0;b.lastX=p.x;b.lastY=p.y;}
+  else{
+    b.numb=(b.numb||0)+dt;
+    if(b.numb>2.6){b.numb=0;b.shake=0.55;b.shakeDir=null;b.lastX=p.x;b.lastY=p.y;}
+  }
 
   /* last-resort unwedge: a chef that has gone nowhere and done nothing for a
      few seconds shakes itself loose rather than standing there forever */
@@ -3824,12 +3829,16 @@ function botAct(p,dt){
     if(b.shake<=0){b.shakeDir=null;b.plan=null;b.cross=null;b.avoid=null;b.hold=0;}
     return;
   }
-  const px=b.lastX===undefined?p.x:b.lastX, py=b.lastY===undefined?p.y:b.lastY;
-  if(Math.hypot(p.x-px,p.y-py)>4||p.working||b.riding){b.numb=0;b.lastX=p.x;b.lastY=p.y;}
-  else{
-    b.numb=(b.numb||0)+dt;
-    if(b.numb>2.6){b.numb=0;b.shake=0.55;b.shakeDir=null;b.lastX=p.x;b.lastY=p.y;return;}
+
+  if(b.hold>0){
+    b.hold-=dt;
+    /* with nothing to do a chef keeps ambling while it thinks — throttling the
+       drift to the thinking cadence left it standing perfectly still */
+    const sp=botAt(p),wet=G.grid[sp.r]&&G.grid[sp.r][sp.c].type==='hazard';
+    if(b.loaf&&!b.plan&&!b.cross&&!wet)botIdle(p,dt);else botRelease(p);
+    return;
   }
+  b.age=(b.age||0)+dt;
 
   const spot=botAt(p);
   const afloat=G.grid[spot.r]&&G.grid[spot.r][spot.c].type==='hazard';
@@ -3857,7 +3866,11 @@ function botAct(p,dt){
     if(botFocusDone(p))botPickFocus(p);
     if(b.focus)botHold(p,'focus:'+b.focus);
     if(b.cross&&b.cross.ph!=='walk')b.cross=null;
-    let plan=(tier.dither&&Math.random()<tier.dither*0.35)?null:botDecide(p);
+    const dither=!!(tier.dither&&Math.random()<tier.dither*0.35);
+    let plan=dither?null:botDecide(p);
+    /* a beat of hesitation is not the same as having nothing to do: only the
+       second one should send a chef ambling off across the kitchen */
+    b.loaf=!dither&&!plan;
     if(plan&&b.avoid&&plan.tag===b.avoid.tag){
       b.avoid.hits=(b.avoid.hits||0)+1;
       if(b.avoid.hits>2)b.avoid=null;else plan=null;
@@ -3873,7 +3886,7 @@ function botAct(p,dt){
       }
       if(goal){plan.gr=goal.r;plan.gc=goal.c;b.plan=plan;b.field=botFlood(goal.r,goal.c,p);
         if(b.cross&&b.field[b.cross.land.r*GCOLS+b.cross.land.c]<0){b.cross=null;b.crossField=null;}}
-      else b.plan=null;
+      else{b.plan=null;b.loaf=true;}
     } else b.plan=null;
     if(!b.plan)b.hold=tier.think;
   }
@@ -5657,6 +5670,15 @@ function warnBar(tl,x,y,frac,t){
     ctx.fillStyle=flash?'#ff5252':'#ffd54f';ctx.fillText('!',x+TS-10,y+14);}
 }
 function drawPlayer(p,t){
+  /* now that chefs walk through each other, a stacked pair would read as one */
+  let overlap=0;
+  if(!p.gone&&p.fallT<=0){
+    for(const q of G.players){
+      if(q===p||q.gone||q.fallT>0)continue;
+      const d=Math.hypot(q.x-p.x,q.y-p.y);
+      if(d<34)overlap=Math.max(overlap,1-d/34);
+    }
+  }
   if(p.fallT>0){
     const ph=1-(p.fallT/FALL_T);
     if(p.fellAt&&p.fallT>FALL_T-1.1){
@@ -5679,6 +5701,7 @@ function drawPlayer(p,t){
     return;
   }
   if(p.gone)ctx.globalAlpha=0.45;
+  else if(overlap>0)ctx.globalAlpha=1-0.42*overlap;
   const moving=(Math.abs(p.mx||0)+Math.abs(p.my||0))>40;
   const bob=(p.working?Math.sin(t*18)*2.5:0)-(moving?Math.abs(Math.sin(p.walkT*1.7))*2.4:0);
   const x=p.x,y=p.y+bob;
