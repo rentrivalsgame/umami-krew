@@ -785,6 +785,12 @@ window.addEventListener('keyup',e=>{
   if(NET.started&&NET.role==='client'&&G)netClientKey(e.code,false);
 });
 window.addEventListener('blur',()=>{Keys.down={};});
+/* Space and Enter are gameplay keys; a button that kept focus from an earlier
+   click would be re-pressed by them at the worst possible moment. */
+if(document.addEventListener)document.addEventListener('click',e=>{
+  let n=e.target;
+  while(n&&n!==document){if(n.tagName==='BUTTON'){n.blur();break;}n=n.parentNode;}
+},true);
 
 /* =====================================================================
    DATA — ingredients, recipes, worlds
@@ -4158,8 +4164,12 @@ function finishLevel(){
     (rank>=0&&rank<10?`<br>🏆 <b style="color:#ffd54f">#${rank+1}</b> on your leaderboard!`:'');
   const nextBtn=$('#btn-res-next');
   nextBtn.style.display=(nextPlayable(G.li)>=0&&(SAVE.stars[G.li]||0)>0)?'block':'none';
-  if(G.netClient){nextBtn.style.display='none';$('#btn-res-retry').style.display='none';}
-  else if(!NET.started)$('#btn-res-retry').style.display='';
+  if(G.netClient){
+    nextBtn.style.display='none';$('#btn-res-retry').style.display='none';
+    /* the one visible button used to be Map, and it led somewhere private */
+    $('#btn-res-map').textContent='🚪 Leave room';
+    $('#res-detail').innerHTML+='<br><span style="color:#9fd0ff">🌐 waiting for the host to pick the next kitchen…</span>';
+  } else {$('#btn-res-map').textContent='🗺 Map';if(!NET.started)$('#btn-res-retry').style.display='';}
   $('#ov-results').classList.add('active');
   if(n>0)Snd.serve();else Snd.bad();
 }
@@ -4232,8 +4242,12 @@ function finishVersus(){
     (rank>=0&&rank<10?`<br>🏆 <b style="color:#ffd54f">#${rank+1}</b> on your leaderboard!`:'');
   const nextBtn=$('#btn-res-next');
   nextBtn.style.display=(nextPlayable(li)>=0&&(SAVE.stars[li]||0)>0)?'block':'none';
-  if(G.netClient){nextBtn.style.display='none';$('#btn-res-retry').style.display='none';}
-  else if(!NET.started)$('#btn-res-retry').style.display='';
+  if(G.netClient){
+    nextBtn.style.display='none';$('#btn-res-retry').style.display='none';
+    /* the one visible button used to be Map, and it led somewhere private */
+    $('#btn-res-map').textContent='🚪 Leave room';
+    $('#res-detail').innerHTML+='<br><span style="color:#9fd0ff">🌐 waiting for the host to pick the next kitchen…</span>';
+  } else {$('#btn-res-map').textContent='🗺 Map';if(!NET.started)$('#btn-res-retry').style.display='';}
   $('#ov-results').classList.add('active');
   Snd.serve();
 }
@@ -6320,7 +6334,14 @@ function showToast2(msg){/* toast outside game screen: reuse alert-free quick fl
   el.textContent='🔒 '+msg;el.style.color='#ff8a65';
   setTimeout(()=>{el.textContent=old;el.style.color='';},1600);
 }
-function startLevel(li){
+function startLevel(li,fromNet){
+  /* A guest's kitchen only ever starts on the host's word. Every local path in
+     the UI used to be able to call this — the results screen's Map button most
+     of all — and would quietly start a private, desynced copy of the game. */
+  if(NET.role==='client'&&NET.started&&!fromNet){
+    showToast('🌐 The host picks the next kitchen — hang tight!');
+    return;
+  }
   /* settle the CPU count before the kitchen is built: it decides which chefs are
      bots, and netHostStart has to hand the guests the very same number */
   if(NET.role==='host')
@@ -6651,7 +6672,7 @@ function netOnGame(from,d){
       /* set before the kitchen is built: it decides which chefs are CPUs */
       NET.cpu=d.cpu|0;NET.cpuDiff=d.cpuDiff|0;
       TOURN=d.tourn?{rounds:d.tourn.rounds,played:d.tourn.played,totals:d.tourn.totals.slice(),seq:[],coop:!MODES[d.mode].teams}:null;
-      setMode(d.mode);startLevel(d.li);
+      setMode(d.mode);startLevel(d.li,true);
       const ws=VS?VS.kitchens:[G];
       for(const w of ws){
         w.netClient=true;
@@ -7181,13 +7202,17 @@ $('#btn-recipes-close').onclick=()=>{
 };
 $('#btn-resume').onclick=()=>{togglePause();};
 $('#btn-restart').onclick=()=>{startLevel(G.li);};
-$('#btn-quit').onclick=()=>{TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
+$('#btn-quit').onclick=()=>{
+  if(NET.role==='client'){netReset();TOURN=null;G=null;VS=null;showScreen('title');showToast('👋 Left the room');return;}
+  TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
 $('#btn-pause-recipes').onclick=()=>{
   $('#ov-pause').classList.remove('active');
   buildRecipes();$('#ov-recipes').classList.add('active');
 };
 $('#btn-res-retry').onclick=()=>{startLevel(G.li);};
-$('#btn-res-map').onclick=()=>{TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
+$('#btn-res-map').onclick=()=>{
+  if(NET.role==='client'){netReset();TOURN=null;G=null;VS=null;showScreen('title');showToast('👋 Left the room');return;}
+  TOURN=null;$('#btn-res-next').textContent='Next Level ➜';G=null;VS=null;buildMap();showScreen('map');};
 $('#btn-res-next').onclick=()=>{
   if(TOURN&&TOURN.played<TOURN.rounds){startLevel(TOURN.seq[TOURN.played]);return;}
   const from=G.li,nx=nextPlayable(from);
@@ -8098,24 +8123,46 @@ function fpsChip(){
   }
   return el;
 }
+function fpsRender(){
+  const el=fpsChip();
+  el.style.color=FPSM.fps<30?'#ff8a80':(FPSM.fps<48?'#ffcf5a':'#9fe8a2');
+  el.textContent=FPSM.fps.toFixed(0)+' fps'+(FPSM.detail?
+    '  upd '+FPSM.upd.toFixed(1)+'ms  draw '+FPSM.ren.toFixed(1)+'ms  scene '+FPSM.amb.toFixed(1)+'ms'+
+    '\ncv '+cv.width+'x'+cv.height+'  bg '+bgcv.width+'x'+bgcv.height:'');
+  return el;
+}
+function fpsToggle(){
+  FPSM.detail=!FPSM.detail;FPSM.shown=FPSM.detail;
+  fpsRender().style.display=FPSM.detail?'':'none';
+}
+/* F9 turned out to be a hostile key — half the world's keyboards send a media
+   action instead unless Fn is held, and one browser grabs it for itself. So the
+   chip answers to anything reasonable: F9 where it survives, Ctrl+Shift+F, just
+   typing the letters f-p-s, or loading the game with ?fps in the address. */
+const FPS_SEQ={buf:'',t:0};
 window.addEventListener('keydown',e=>{
-  if(e.code==='F9'){FPSM.detail=!FPSM.detail;FPSM.shown=FPSM.detail;
-    fpsChip().style.display=FPSM.detail?'':'none';}
+  if(e.code==='F9'||((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.code==='KeyF')){
+    e.preventDefault();fpsToggle();return;
+  }
+  if(e.target&&e.target.tagName==='INPUT')return;
+  const k=(e.code||'').replace('Key','').toLowerCase();
+  if(k.length===1&&k>='a'&&k<='z'){
+    const now=performance.now();
+    if(now-FPS_SEQ.t>1200)FPS_SEQ.buf='';
+    FPS_SEQ.t=now;FPS_SEQ.buf=(FPS_SEQ.buf+k).slice(-3);
+    if(FPS_SEQ.buf==='fps')fpsToggle();
+  }
 });
+if(typeof location!=='undefined'&&/[?&]fps/.test(location.search)){FPSM.detail=true;FPSM.shown=true;}
 function fpsTick(dt){
   FPSM.t+=dt;FPSM.n++;
   if(FPSM.t<0.5)return;
   FPSM.fps=FPSM.fps*0.5+(FPSM.n/FPSM.t)*0.5;FPSM.t=0;FPSM.n=0;
   /* a struggling machine announces itself, so nobody has to guess again */
   FPSM.low=(FPSM.fps<40)?FPSM.low+0.5:0;
-  const el=fpsChip();
   if(FPSM.detail||FPSM.low>=2){
-    FPSM.shown=true;el.style.display='';
-    el.style.color=FPSM.fps<30?'#ff8a80':(FPSM.fps<48?'#ffcf5a':'#9fe8a2');
-    el.textContent=FPSM.fps.toFixed(0)+' fps'+(FPSM.detail?
-      '  upd '+FPSM.upd.toFixed(1)+'ms  draw '+FPSM.ren.toFixed(1)+'ms  scene '+FPSM.amb.toFixed(1)+'ms'+
-      '\ncv '+cv.width+'x'+cv.height+'  bg '+bgcv.width+'x'+bgcv.height:'');
-  } else if(FPSM.shown&&FPSM.low===0&&!FPSM.detail){FPSM.shown=false;el.style.display='none';}
+    FPSM.shown=true;fpsRender().style.display='';
+  } else if(FPSM.shown&&FPSM.low===0&&!FPSM.detail){FPSM.shown=false;fpsChip().style.display='none';}
 }
 function loop(ts){
   requestAnimationFrame(loop);
