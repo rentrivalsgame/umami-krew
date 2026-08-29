@@ -92,14 +92,39 @@ export class Hub {
         this.sendAll(r, { t: 'chat', from: ws.pid, name: ws.pname || 'Chef', msg: txt });
       } else if (m.t === 'lock') {
         const r = this.rooms.get(ws.room); if (r && ws === r.host) r.started = true;
+      } else if (m.t === 'ping') {
+        /* once the match is peer-to-peer nothing else crosses this socket, and an
+           idle websocket gets closed out from under us — by us, by Cloudflare, by
+           whatever NAT or corporate proxy sits in between. So: a heartbeat. */
+        this.send(ws, { t: 'pong', s: m.s });
+      } else if (m.t === 'resume') {
+        /* a reconnecting socket re-attaching to a match already in progress */
+        const code = String(m.code || '').toUpperCase();
+        let r = this.rooms.get(code);
+        if (!r && m.host) {
+          r = { host: null, peers: new Map(), nextId: 8, hostName: String(m.name || 'Host').slice(0, 12), started: true };
+          this.rooms.set(code, r);
+        }
+        if (!r) return this.send(ws, { t: 'err', m: 'Room not found' });
+        ws.room = code;
+        ws.pname = String(m.name || 'Chef').slice(0, 12);
+        if (m.host) { ws.pid = 0; ws.isHost = true; r.host = ws; r.hostName = ws.pname; }
+        else { ws.pid = m.id | 0; r.peers.set(ws.pid, ws); }
+        r.started = true;
+        this.send(ws, { t: 'resumed', code });
       }
     });
     const bye = () => {
       const r = this.rooms.get(ws.room); if (!r) return;
       if (ws.isHost) {
+        if (r.host !== ws) return;   /* an older socket the host has already replaced */
+        /* mid-match the host's chef lives on the peer connections, not on this
+           socket — dropping the room here is what kicked everyone to the title */
+        if (r.started) { r.host = null; return; }
         for (const p of r.peers.values()) this.send(p, { t: 'hostgone' });
         this.rooms.delete(ws.room);
       } else {
+        if (r.peers.get(ws.pid) !== ws) return;
         r.peers.delete(ws.pid);
         this.send(r.host, { t: 'gone', id: ws.pid });
         for (const p of r.peers.values()) this.send(p, { t: 'gone', id: ws.pid });

@@ -136,6 +136,9 @@
     -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14px);
     mask-image:linear-gradient(180deg,transparent 0,#000 14px)}
   #gchat .chatrow input{font-size:12.5px;padding:6px 9px;background:#0e0a16aa}
+  #gping{display:none;align-self:flex-start;font-size:11px;letter-spacing:.4px;
+    padding:2px 7px;margin-bottom:4px;border-radius:9px;background:#0e0a16aa;color:#8fd694}
+  #gping.mid{color:#ffcf5a} #gping.bad{color:#ff8a80}
   #gchat.dim{opacity:.75;transition:opacity .2s}
   #gchat.dim:hover,#gchat:focus-within{opacity:1}
   .tourseg{display:flex;gap:8px;justify-content:center;align-items:center;margin:0 auto 6px}
@@ -521,6 +524,7 @@
     <div id="hud">
       <div id="orders"></div>
       <div id="gchat">
+        <div id="gping"></div>
         <div id="gchatlog" class="chatlog game"></div>
         <div class="chatrow">
           <input id="gchatin" maxlength="160" spellcheck="false" placeholder="Press T to chat…">
@@ -2533,13 +2537,18 @@ function movePlayer(p,o,dt,ctrl){
     checkHaz(p,dt);
     return;
   }
+  stepMotion(p,o,dt,vx,vy);
+  checkHaz(p,dt);
+}
+/* the walking itself, with no side effects — the client predictor replays exactly
+   this so a chef you steer yourself moves the same on both machines */
+function stepMotion(p,o,dt,vx,vy){
   if(p.working){vx*=0.35;vy*=0.35;}
   const acc=Math.min(1,(G.world.ice?3.0:28)*dt);
   p.mx+=(vx*SPD-p.mx)*acc;
   p.my+=(vy*SPD-p.my)*acc;
   if(Math.abs(p.mx)>1&&!tryMove(p,o,p.mx*dt,0))p.mx=0;
   if(Math.abs(p.my)>1&&!tryMove(p,o,0,p.my*dt))p.my=0;
-  checkHaz(p,dt);
 }
 function frontAnyTile(p){
   const c=Math.floor(p.x/TS),r=Math.floor(p.y/TS);
@@ -6032,6 +6041,14 @@ function stepHTML(k){return (DISH_STEPS[k]||'').replace(/\{(\w+)\}/g,(m,id)=>ING
 function partIcon(pid){ return '<img class="picon" src="'+iconURL(pid)+'" alt="">'; }
 function fmtTime(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function updateHUD(){
+  {const gp=$('#gping');
+   if(gp){
+     const on=NET.started&&NET.role==='client'&&NET.prtt>0;
+     gp.style.display=on?'inline-block':'none';
+     if(on){const ms=Math.round(NET.prtt);
+       gp.textContent='📡 '+ms+'ms to host';
+       gp.className=ms<90?'':(ms<200?'mid':'bad');}
+   }}
   $('#timer').textContent=fmtTime(G.timeLeft);
   $('#timer').classList.toggle('low',G.timeLeft<=15&&G.state==='play');
   if(VS){
@@ -6175,7 +6192,8 @@ function buildRecipes(){
 }
 /* ---------------- online play (P2P host-authoritative) ---------------- */
 const NET={role:null,ws:null,code:null,myId:0,mySlot:0,peers:new Map(),names:{},styles:{},
-  keys:{},snapT:0,seq:0,lastSeq:-1,cur:null,started:false,wsURL:null};
+  keys:{},snapT:0,seq:0,lastSeq:-1,cur:null,started:false,wsURL:null,
+  beat:null,relinkT:null,relinks:0,srtt:0,prtt:0,pingT:0,pingN:0,pingAt:{}};
 const RTC_CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 function netURL(){
   if(NET.wsURL)return NET.wsURL;
@@ -6183,6 +6201,26 @@ function netURL(){
   return p+'://'+location.host+'/ws';
 }
 function netSendWS(o){if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify(o));}
+/* Nothing crosses the signaling socket once the match is peer-to-peer, and an
+   idle websocket is closed after a minute or two — by Cloudflare, by a NAT, by
+   whatever proxy sits in between. A level runs longer than that, so without a
+   heartbeat the socket dies mid-service and takes the game down with it. */
+function netBeatStart(){
+  netBeatStop();
+  NET.beat=setInterval(()=>{
+    if(!NET.ws||NET.ws.readyState!==1)return;
+    netSendWS({t:'ping',s:Date.now()});
+  },20000);
+}
+function netBeatStop(){if(NET.beat){clearInterval(NET.beat);NET.beat=null;}}
+/* is anyone still actually reachable over WebRTC? */
+function netPeersLive(){
+  for(const pr of NET.peers.values()){
+    const st=pr.pc&&pr.pc.connectionState;
+    if(st==='connected'||st==='connecting'||st==='new')return true;
+  }
+  return false;
+}
 function netToHost(o){ // client -> host
   const pr=NET.peers.get(0);
   if(pr&&pr.dcR&&pr.dcR.readyState==='open')pr.dcR.send(JSON.stringify(o));
@@ -6217,21 +6255,59 @@ function chatSend(inputId){
 }
 function chatReset(){CHAT.length=0;['#ol-chat','#gchatlog'].forEach(i=>{const e=$(i);if(e)e.innerHTML='';});}
 function netReset(){
+  netBeatStop();
+  if(NET.relinkT){clearTimeout(NET.relinkT);NET.relinkT=null;}
+  NET.relinks=0;NET.srtt=0;NET.prtt=0;NET.pingT=0;NET.pingN=0;NET.pingAt={};
   if(NET.ws){try{NET.ws.close();}catch(e){}}
   for(const pr of NET.peers.values()){try{pr.pc&&pr.pc.close();}catch(e){}}
   NET.role=null;NET.ws=null;NET.code=null;NET.peers=new Map();NET.names={};NET.styles={};
   NET.keys={};NET.started=false;NET.cur=null;NET.lastSeq=-1;NET.seq=0;NET.myId=0;NET.mySlot=0;NET.roster=null;
+  PRED.on=false;PRED.hist.length=0;PRED.ex=0;PRED.ey=0;
 }
 function netConnect(cb){
   const ws=new WebSocket(netURL());
   NET.ws=ws;
-  ws.onopen=()=>cb(null);
+  ws.onopen=()=>{netBeatStart();cb(null);};
   ws.onerror=()=>cb('Could not reach the game server.');
-  ws.onclose=()=>{if(NET.role){netAbort('Connection to server lost.');}};
+  ws.onclose=()=>{
+    if(!NET.role||NET.ws!==ws)return;   /* a socket we have already replaced */
+    NET.ws=null;netBeatStop();
+    /* mid-match this socket is a spare tyre: the game itself runs peer-to-peer.
+       Killing the match because the spare went flat is what threw the host out. */
+    if(NET.started&&netPeersLive()){netRelink();return;}
+    netAbort('Connection to server lost.');
+  };
   ws.onmessage=ev=>{
     let m;try{m=JSON.parse(ev.data);}catch(e){return;}
     netOnWS(m);
   };
+}
+/* quietly rebuild the signaling socket behind a running match */
+function netRelink(){
+  if(NET.relinkT||!NET.role||!NET.started)return;
+  if(NET.relinks>=6){NET.relinks=0;return;}  /* stop nagging; the peers still hold the game up */
+  const wait=Math.min(15000,1200*Math.pow(2,NET.relinks++));
+  NET.relinkT=setTimeout(()=>{
+    NET.relinkT=null;
+    if(!NET.role||!NET.started)return;
+    if(!netPeersLive()){netAbort('📡 Lost touch with the kitchen.');return;}
+    let ws;
+    try{ws=new WebSocket(netURL());}catch(e){netRelink();return;}
+    NET.ws=ws;
+    ws.onopen=()=>{
+      netSendWS({t:'resume',code:NET.code,id:NET.myId,
+        host:NET.role==='host'?1:0,name:SAVE.pname||'CHEF'});
+      netBeatStart();
+    };
+    ws.onerror=()=>{};
+    ws.onclose=()=>{
+      if(!NET.role||NET.ws!==ws)return;
+      NET.ws=null;netBeatStop();
+      if(NET.started&&netPeersLive()){netRelink();return;}
+      netAbort('Connection to server lost.');
+    };
+    ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}netOnWS(m);};
+  },wait);
 }
 function netAbort(msg){
   const wasIn=NET.role&&NET.started;
@@ -6250,6 +6326,7 @@ function hostAddPeer(id,name,style){
   pr.dcR.onmessage=ev=>netOnGame(id,JSON.parse(ev.data));
   pr.dcU.onmessage=ev=>netOnGame(id,JSON.parse(ev.data));
   pc.onicecandidate=e=>{if(e.candidate)netSendWS({t:'sig',to:id,d:{ice:e.candidate}});};
+  pc.onconnectionstatechange=()=>netPeerState(id,pc);
   pc.createOffer().then(o=>{pc.setLocalDescription(o);netSendWS({t:'sig',to:id,d:{sdp:o}});});
   netLobbyRender();
 }
@@ -6263,11 +6340,14 @@ function clientHandleSig(d){
       e.channel.onmessage=ev=>netOnGame(0,JSON.parse(ev.data));
     };
     pc.onicecandidate=e=>{if(e.candidate)netSendWS({t:'sig',to:0,d:{ice:e.candidate}});};
+    pc.onconnectionstatechange=()=>netPeerState(0,pc);
   }
   if(d.sdp){pr.pc.setRemoteDescription(d.sdp).then(()=>pr.pc.createAnswer()).then(a=>{pr.pc.setLocalDescription(a);netSendWS({t:'sig',to:0,d:{sdp:a}});});}
   else if(d.ice){pr.pc.addIceCandidate(d.ice).catch(()=>{});}
 }
 function netOnWS(m){
+  if(m.t==='pong'){if(m.s)NET.srtt=Date.now()-m.s;return;}
+  if(m.t==='resumed'){NET.relinks=0;return;}
   if(m.t==='room'){NET.code=m.code;NET.role='host';NET.names[0]=SAVE.pname||'CHEF';NET.styles[0]=chefStyle(1);netLobbyShow();}
   else if(m.t==='joined'){NET.myId=m.id;NET.role='client';NET.code=m.code||NET.code;NET.names[0]='Host';netLobbyShow();}
   else if(m.t==='err'){olMsg(m.m);}
@@ -6283,6 +6363,11 @@ function netOnWS(m){
   }
   else if(m.t==='peer'){hostAddPeer(m.id,m.name,m.style);}
   else if(m.t==='gone'){
+    /* their signaling socket blinked, not their game — if we can still reach them
+       over WebRTC they are very much still cooking, so leave the chef alone */
+    const live=m.viaPeer?null:NET.peers.get(m.id);
+    if(NET.started&&live&&live.pc&&
+       (live.pc.connectionState==='connected'||live.pc.connectionState==='connecting'))return;
     const slot=NET.slots?NET.slots.indexOf(m.id):-1;
     const nm=(NET.slotNames&&slot>=0&&NET.slotNames[slot])||NET.names[m.id]||'A chef';
     NET.peers.delete(m.id);delete NET.names[m.id];delete NET.styles[m.id];
@@ -6314,9 +6399,22 @@ function netOnWS(m){
   }
   else if(m.t==='rly'){netOnGame(m.from,m.d);}
 }
+/* The websocket used to be the only thing that told us a player had left, which
+   is backwards: the peer connection IS the game. Watch that instead. */
+function netPeerState(id,pc){
+  const st=pc.connectionState;
+  if(st!=='failed'&&st!=='closed')return;
+  if(!NET.peers.has(id))return;
+  if(id===0){                       /* client: the host itself is gone */
+    if(NET.role==='client')netAbort('📡 The host disconnected — game over. Back to the title screen.');
+    return;
+  }
+  netOnWS({t:'gone',id,viaPeer:1});
+}
 /* ---- game-level messages ---- */
 function netOnGame(from,d){
   if(NET.role==='host'){
+    if(d.t==='png'){netToPeer(from,{t:'pog',n:d.n});return;}
     const slot=NET.slotOf?NET.slotOf[from]:null;
     if(slot==null||!G)return;
     if(d.t==='in'){
@@ -6363,6 +6461,12 @@ function netOnGame(from,d){
       }
     }
     else if(d.t==='snap'){if(d.q>NET.lastSeq){NET.lastSeq=d.q;NET.cur=d;}}
+    else if(d.t==='pog'){
+      const t0=NET.pingAt[d.n];if(t0==null)return;
+      delete NET.pingAt[d.n];
+      const rtt=performance.now()-t0;
+      NET.prtt=NET.prtt?NET.prtt*0.7+rtt*0.3:rtt;   /* smoothed, so one bad packet doesn't lurch it */
+    }
     else if(d.t==='bye'){
       const ws=VS?VS.kitchens:[G];
       for(const w of (G?ws:[]))for(const p of w.players)if(p.slot===d.slot)p.gone=true;
@@ -6512,6 +6616,7 @@ function snapWorld(w){
     ords:w.orders.map(o=>[o.dish,Math.round(o.pat*10),o.pat0]),
     pj:(w.projs||[]).map(pr=>[Math.round(pr.cx),Math.round(pr.cy),Math.round(pr.z),serIt(pr.it)]),
     pt:(w.plats||[]).map(pl=>[Math.round(pl.pos*100),pl.dir,Math.round((pl.waitT||0)*20)]),
+    pr:(w.parade||[]).map(pd=>[Math.round(pd.pos*100),Math.round(pd.pos)%pd.cells.length]),
     mc:(w.machines||[]).map(m=>m.idx),tls};
 }
 function netSnap(){
@@ -6541,6 +6646,13 @@ function applyWorldSnap(w,s,viewed){
   w.projRender=s.pj||[];
   if(s.pt)s.pt.forEach((v,i)=>{const pl=(w.plats||[])[i];if(!pl)return;
     pl.pos=v[0]/100;pl.dir=v[1];pl.waitT=v[2]/20;pl.docked=pl.waitT>0;});
+  if(s.pr)s.pr.forEach((v,i)=>{
+    const pd=(w.parade||[])[i];if(!pd)return;
+    const n=pd.cells.length;
+    pd.pos=v[0]/100;pd.block.clear();
+    const head=((v[1]%n)+n)%n;   /* sent outright: rounding pos here would drift a cell */
+    for(let j=0;j<pd.len;j++){const c2=pd.cells[((head-j)%n+n)%n];pd.block.add(c2.r*GCOLS+c2.c);}
+  });
   if(s.mc)s.mc.forEach((ni,i)=>{const m=(w.machines||[])[i];if(!m||m.idx===ni)return;
     const from=m.cells[m.idx],to=m.cells[ni];
     const tf=w.grid[from.r][from.c],tt=w.grid[to.r][to.c];
@@ -6548,9 +6660,12 @@ function applyWorldSnap(w,s,viewed){
     tf.type=tf.base||'floor';tf.parts=null;tf.st='';
     m.idx=ni;m.ofx=(from.c-to.c)*TS;m.ofy=(from.r-to.r)*TS;});
   s.ps.forEach((a,i)=>{const p=w.players[i];if(!p)return;
-    p.nx=a[0];p.ny=a[1];p.fx=a[2];p.fy=a[3];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
+    const mine=PRED.on&&p===PRED.p;
+    p.nx=a[0];p.ny=a[1];p.working=!!a[4];p.held=desIt(a[5]);p.gone=!!a[6];
     p.dashT=a[7]?0.12:0;p.ddx=a[8]||0;p.ddy=a[9]||0;p.fallT=(a[10]||0)/10;
     p.workTile=(a[11]>=0&&a[12]>=0)?w.grid[a[11]][a[12]]:null;
+    if(mine){predReconcile(p);return;}   /* my own chef is steered locally */
+    p.fx=a[2];p.fy=a[3];
     if(p.x==null||Math.abs(p.x-p.nx)>140||Math.abs(p.y-p.ny)>140){p.x=p.nx;p.y=p.ny;}
   });
   if(viewed&&w.score>oldSc)Snd.serve();
@@ -6567,12 +6682,86 @@ function netApplySnap(s){
   const oldSt=applyWorldSnap(G,s,true);
   if(oldSt!=='done'&&s.st==='done'){finishLevel();}
 }
+/* ---- client-side prediction ----
+   A guest used to wait out the whole round trip before their own chef so much as
+   leaned: a keypress crossed the wire, waited up to a snapshot interval on the
+   host, came back, and was then eased into place by a lerp that never quite
+   arrived. Half a second of mush on a game measured in half-seconds.
+   The fix is the standard one: the guest walks its own chef immediately using the
+   same motion code the host runs, and the host's word is folded back in as a
+   small correction rather than as the only source of truth. Because chefs now
+   pass through each other, the only thing a walk collides with is the map, which
+   both machines agree on exactly — so the correction is almost always zero. */
+const PRED={on:false,p:null,hist:[],ex:0,ey:0,t:0};
+function predCanRun(p,w){
+  if(!p||p.gone||p.fallT>0||p.dashT>0)return false;
+  if(!w||w.state!=='play')return false;
+  const r=Math.floor(p.y/TS),c=Math.floor(p.x/TS);
+  const t=w.grid[r]&&w.grid[r][c];
+  if(!t||t.type==='hazard')return false;   /* afloat: the raft is the host's business */
+  return true;
+}
+function predSample(t){
+  const h=PRED.hist;
+  if(!h.length)return null;
+  for(let i=h.length-1;i>=0;i--)if(h[i].t<=t)return h[i];
+  return h[0];
+}
+function predReconcile(p){
+  const lag=Math.max(0,NET.prtt/2000)+0.025;        /* wire time + half a snapshot */
+  const was=predSample(PRED.t-lag);
+  if(!was){p.x=p.nx;p.y=p.ny;PRED.ex=PRED.ey=0;return;}
+  const ex=p.nx-was.x, ey=p.ny-was.y;
+  if(Math.hypot(ex,ey)>100){                        /* respawned, shoved, thrown */
+    p.x=p.nx;p.y=p.ny;p.mx=0;p.my=0;PRED.ex=PRED.ey=0;PRED.hist.length=0;return;
+  }
+  PRED.ex=ex;PRED.ey=ey;
+}
 function netClientFrame(dt){
   if(!G)return;
+  PRED.t=(PRED.t||0)+dt;
+  /* how far away is the host, really? the predictor needs the number, and so does
+     anyone trying to work out whether the game or their wifi is the problem */
+  NET.pingT+=dt;
+  if(NET.pingT>=1&&NET.started){NET.pingT=0;
+    const n=++NET.pingN;NET.pingAt[n]=performance.now();
+    netToHost({t:'png',n});
+    for(const k in NET.pingAt)if(performance.now()-NET.pingAt[k]>8000)delete NET.pingAt[k];}
+  let me=null;
+  if(NET.role==='client'&&NET.started){
+    /* in versus a kitchen holds only its own team, so the slot is not an index */
+    for(const w of (VS?VS.kitchens:[G])){
+      const f=w.players&&w.players.find(q=>q.slot===NET.mySlot);
+      if(f){me=f;break;}
+    }
+  }
+  PRED.p=me;
   if(NET.cur){netApplySnap(NET.cur);NET.cur=null;}
   const ws=VS?VS.kitchens:[G];
   for(const w of ws)for(const p of w.players){
-    if(p.nx!=null){const k=Math.min(1,dt*14);p.x+=(p.nx-p.x)*k;p.y+=(p.ny-p.y)*k;}
+    if(p===me&&predCanRun(p,w)){
+      /* walk my own chef right now, on this frame, off my own keyboard */
+      if(!PRED.on){PRED.on=true;PRED.hist.length=0;PRED.ex=PRED.ey=0;if(p.nx!=null){p.x=p.nx;p.y=p.ny;}}
+      let vx=0,vy=0;
+      if(anyDown(MERGED.up))vy--;if(anyDown(MERGED.dn))vy++;
+      if(anyDown(MERGED.lf))vx--;if(anyDown(MERGED.rt))vx++;
+      if(vx&&vy){vx*=0.7071;vy*=0.7071;}
+      if(vx||vy){
+        if(vx&&!vy){p.fx=Math.sign(vx);p.fy=0;}
+        else if(vy&&!vx){p.fx=0;p.fy=Math.sign(vy);}
+        p.walkT+=dt*6;
+      }
+      const g0=G;G=w;stepMotion(p,w.players,dt,vx,vy);G=g0;
+      PRED.hist.push({t:PRED.t,x:p.x,y:p.y});
+      while(PRED.hist.length>90)PRED.hist.shift();
+      /* bleed the host's correction in over about a sixth of a second */
+      const k2=Math.min(1,dt*6);
+      p.x+=PRED.ex*k2;p.y+=PRED.ey*k2;
+      PRED.ex-=PRED.ex*k2;PRED.ey-=PRED.ey*k2;
+      continue;
+    }
+    if(p===me&&PRED.on){PRED.on=false;PRED.hist.length=0;PRED.ex=PRED.ey=0;}
+    if(p.nx!=null){const k=Math.min(1,dt*20);p.x+=(p.nx-p.x)*k;p.y+=(p.ny-p.y)*k;}
     p.walkT=(Math.abs((p.nx||p.x)-p.x)+Math.abs((p.ny||p.y)-p.y)>2)?(p.walkT||0)+dt:0;
   }
   const cdov=$('#countdown');
@@ -7605,8 +7794,14 @@ function loop(ts){
     update(dt);
     if(G){render();updateHUD();}
     if(G&&NET.role==='host'&&NET.started){
+      /* a snapshot is about half a kilobyte, so 12Hz was never a bandwidth
+         decision — it was just costing everyone up to 83ms of stale world */
       NET.snapT+=dt;
-      if(NET.snapT>=1/12){NET.snapT=0;netBroadcast(netSnap(),true);}
+      /* a full room is seven copies of every snapshot going up one pipe, so ease
+         off a little there — a two-player match gets the full rate */
+      const hz=NET.peers.size>4?15:20;
+      if(NET.snapT>=1/hz){NET.snapT=0;netBroadcast(netSnap(),true);}
+
     }
   }
 }
