@@ -7213,11 +7213,17 @@ let appScale=1;
 let BGS=1;
 function sizeBg(){
   if(!bgcv||!bgcv.getContext)return;
-  BGS=Math.min(2.5,Math.max(1,window.devicePixelRatio||1));
-  bgcv.width=Math.round(window.innerWidth*BGS);
-  bgcv.height=Math.round(window.innerHeight*BGS);
-  bgcv.style.width=window.innerWidth+'px';
-  bgcv.style.height=window.innerHeight+'px';
+  /* The backdrop is soft scenery, not gameplay — it does not get to spend
+     8 megapixels a frame at 4K while the kitchen fights for fill rate. It
+     renders within a fixed pixel budget and lets CSS stretch the rest. */
+  const w=window.innerWidth,h=window.innerHeight;
+  BGS=Math.min(window.devicePixelRatio||1,2.5,Math.sqrt(1600000/Math.max(1,w*h)));
+  BGS=Math.max(0.5,BGS);
+  bgcv.width=Math.round(w*BGS);
+  bgcv.height=Math.round(h*BGS);
+  bgcv.style.width=w+'px';
+  bgcv.style.height=h+'px';
+  AMB_DIRTY=true;
 }
 function bhash(i,k){
   let h=Math.imul((i+7)*2654435761,(k+13)*40503)>>>0;
@@ -8069,7 +8075,7 @@ function fit(){
   APPDX=(onlineVS&&free>260)?-(free/2-14):0;
   app.style.transform=(APPDX?'translateX('+APPDX+'px) ':'')+'scale('+s+')';
   const hud=$('#hud');if(hud)hud.style.width=APPW+'px';
-  const nrs=Math.min(2.5,Math.max(1,(window.devicePixelRatio||1)*s));
+  const nrs=Math.min(2,Math.max(1,(window.devicePixelRatio||1)*s));
   if(Math.abs(nrs-RS)>0.01||cv.width!==Math.round(CW*RS)){
     RS=nrs;
     cv.width=Math.round(CW*RS);cv.height=Math.round(592*RS);
@@ -8080,14 +8086,59 @@ function fit(){
 window.addEventListener('resize',fit);fit();
 /* ---------------- main loop ---------------- */
 let lastT=0;
+var AMB_DIRTY=true,AMB_N=0,AMB_LAST='';   /* var: sizeBg touches this during the initial fit() */
+const FPSM={t:0,n:0,fps:60,low:0,shown:false,detail:false,upd:0,ren:0,amb:0};
+function fpsChip(){
+  let el=document.getElementById('fpschip');
+  if(!el){
+    el=document.createElement('div');el.id='fpschip';
+    el.style.cssText='position:fixed;left:8px;bottom:8px;z-index:99;font:11px monospace;'+
+      'color:#9fe8a2;background:#0e0a16cc;padding:4px 8px;border-radius:8px;pointer-events:none;display:none;white-space:pre';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+window.addEventListener('keydown',e=>{
+  if(e.code==='F9'){FPSM.detail=!FPSM.detail;FPSM.shown=FPSM.detail;
+    fpsChip().style.display=FPSM.detail?'':'none';}
+});
+function fpsTick(dt){
+  FPSM.t+=dt;FPSM.n++;
+  if(FPSM.t<0.5)return;
+  FPSM.fps=FPSM.fps*0.5+(FPSM.n/FPSM.t)*0.5;FPSM.t=0;FPSM.n=0;
+  /* a struggling machine announces itself, so nobody has to guess again */
+  FPSM.low=(FPSM.fps<40)?FPSM.low+0.5:0;
+  const el=fpsChip();
+  if(FPSM.detail||FPSM.low>=2){
+    FPSM.shown=true;el.style.display='';
+    el.style.color=FPSM.fps<30?'#ff8a80':(FPSM.fps<48?'#ffcf5a':'#9fe8a2');
+    el.textContent=FPSM.fps.toFixed(0)+' fps'+(FPSM.detail?
+      '  upd '+FPSM.upd.toFixed(1)+'ms  draw '+FPSM.ren.toFixed(1)+'ms  scene '+FPSM.amb.toFixed(1)+'ms'+
+      '\ncv '+cv.width+'x'+cv.height+'  bg '+bgcv.width+'x'+bgcv.height:'');
+  } else if(FPSM.shown&&FPSM.low===0&&!FPSM.detail){FPSM.shown=false;el.style.display='none';}
+}
 function loop(ts){
   requestAnimationFrame(loop);
   const dt=Math.min(0.05,(ts-lastT)/1000)||0.016;
   lastT=ts;
-  drawAmbient(ts/1000);
+  fpsTick(dt);
+  /* the scenery glides at half or quarter rate — it is a mural, not a chef */
+  AMB_N++;
+  const ambKey=screen+'|'+(G?G.li:-1)+'|'+((typeof VS!=='undefined'&&VS)?'v':'');
+  const ambEvery=(screen==='game')?4:2;
+  if(AMB_DIRTY||ambKey!==AMB_LAST||AMB_N%ambEvery===0){
+    AMB_DIRTY=false;AMB_LAST=ambKey;
+    const a0=performance.now();
+    drawAmbient(ts/1000);
+    FPSM.amb=FPSM.amb*0.9+(performance.now()-a0)*0.1;
+  }
   if(screen==='game'&&G){
+    const u0=performance.now();
     update(dt);
+    FPSM.upd=FPSM.upd*0.9+(performance.now()-u0)*0.1;
+    const r0=performance.now();
     if(G){render();updateHUD();}
+    FPSM.ren=FPSM.ren*0.9+(performance.now()-r0)*0.1;
     if(G&&NET.role==='host'&&NET.started){
       /* a snapshot is about half a kilobyte, so 12Hz was never a bandwidth
          decision — it was just costing everyone up to 83ms of stale world */
