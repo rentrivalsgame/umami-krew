@@ -4836,6 +4836,20 @@ function drawIngredient(x,y,id,s){
   if(K.st==='cook'&&id!=='burnt')drawSteam(x,y-9*s,s);
 }
 const EX=16; /* block extrusion height (pseudo-3D) */
+/* Two solid tiles fuse into one slab when they stand shoulder to shoulder at the
+   same height. This is most of what makes the kitchen read as furniture instead
+   of a field of pillows: a run of counters becomes one counter with one front
+   face, one rim, one shadow. Stations riding a rail keep their own silhouette —
+   they slide, so fusing them to the wall would tear visibly. */
+function solidJoin(tl,dr,dc){
+  const r=tl.r+dr,c=tl.c+dc;
+  if(r<0||c<0||r>=GROWS||c>=GCOLS)return false;
+  const n=G.grid[r][c];
+  if(n.type==='floor'||n.type==='hazard')return false;
+  if(n.rail||tl.rail)return false;
+  const eh=t2=>(t2.type==='belt')?6:EX;
+  return eh(n)===eh(tl);
+}
 function shade(col,amt){
   const n=parseInt(col.slice(1),16);
   const r=clamp((n>>16)+amt,0,255),g=clamp(((n>>8)&255)+amt,0,255),b=clamp((n&255)+amt,0,255);
@@ -5090,8 +5104,35 @@ function renderWorld(){
         }
         ctx.stroke();
       }
-      ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(x,y,TS,6);
-      ctx.fillStyle='rgba(0,0,0,0.10)';ctx.fillRect(x,y,4,TS);
+      /* the pit is sunken, so the bank throws shade into it — but only where
+         there IS a bank; the old unconditional strips striped open water */
+      const bank=(dr,dc)=>{const rr2=r+dr,cc2=c+dc;
+        if(rr2<0||cc2<0||rr2>=GROWS||cc2>=GCOLS)return true;
+        return G.grid[rr2][cc2].type!=='hazard';};
+      const dark=(HZ==='lava')?0.20:0.34;
+      if(HZ!=='sky'&&HZ!=='void'){
+        /* anchored to the room, so one pool deepens as one pool */
+        const dg=ctx.createLinearGradient(0,0,0,576);
+        dg.addColorStop(0,'rgba(0,8,22,0)');dg.addColorStop(1,'rgba(0,8,22,0.30)');
+        ctx.fillStyle=dg;ctx.fillRect(x,y,TS,TS);
+      }
+      if(bank(-1,0)){
+        const bg2=ctx.createLinearGradient(0,y,0,y+15);
+        bg2.addColorStop(0,'rgba(0,0,0,'+dark+')');bg2.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=bg2;ctx.fillRect(x,y,TS,15);
+        if(HZ==='water'){ctx.fillStyle='rgba(255,255,255,0.20)';ctx.fillRect(x,y,TS,2);}
+      }
+      if(bank(0,-1)){
+        const bg3=ctx.createLinearGradient(x,0,x+10,0);
+        bg3.addColorStop(0,'rgba(0,0,0,'+(dark*0.6)+')');bg3.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=bg3;ctx.fillRect(x,y,10,TS);
+      }
+      if(bank(0,1)){
+        const bg4=ctx.createLinearGradient(x+TS,0,x+TS-10,0);
+        bg4.addColorStop(0,'rgba(0,0,0,'+(dark*0.6)+')');bg4.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=bg4;ctx.fillRect(x+TS-10,y,10,TS);
+      }
+      if(bank(1,0)){ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(x,y+TS-3,TS,3);}
       continue;
     }
     drawFloor(x,y,r,c,t);
@@ -5101,6 +5142,25 @@ function renderWorld(){
   lw.addColorStop(0,'rgba(255,250,230,0.10)');
   lw.addColorStop(1,'rgba(15,8,40,0.12)');
   ctx.fillStyle=lw;ctx.fillRect(0,0,936,576);
+  /* cast shadows: every slab throws soft shade south onto the floor, and a
+     narrower one east — the room finally has a light coming from somewhere */
+  for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
+    const tl=G.grid[r][c];
+    if(tl.type==='floor'||tl.type==='hazard')continue;
+    const x=c*TS,y=r*TS,eh=(tl.type==='belt')?6:EX,d=Math.round(14*eh/EX);
+    const sN=G.grid[r+1]&&G.grid[r+1][c];
+    if(sN&&sN.type==='floor'){
+      const g2=ctx.createLinearGradient(0,y+TS-4,0,y+TS-4+d+4);
+      g2.addColorStop(0,'rgba(12,7,22,0.32)');g2.addColorStop(1,'rgba(12,7,22,0)');
+      ctx.fillStyle=g2;ctx.fillRect(x,y+TS-4,TS,d+4);
+    }
+    const eN=G.grid[r][c+1];
+    if(eN&&eN.type==='floor'){
+      const g3=ctx.createLinearGradient(x+TS-2,0,x+TS-2+Math.round(d*0.6),0);
+      g3.addColorStop(0,'rgba(12,7,22,0.17)');g3.addColorStop(1,'rgba(12,7,22,0)');
+      ctx.fillStyle=g3;ctx.fillRect(x+TS-2,y+2-eh,Math.round(d*0.6),TS-2+eh);
+    }
+  }
   drawRailsAndRafts(t,railCells);
   /* solid tiles + chefs, painter's order by row */
   const ps=G.players.slice().sort((a,b)=>a.y-b.y);
@@ -5331,27 +5391,47 @@ function drawSolidTile(tl,t){
   if(tl.type==='belt'){top='#3d3d46';side='#2b2b32';}
   if(tl.type==='ext'){top='#b03a30';side='#8c2b23';}
   const exh=(tl.type==='belt')?6:EX;
-  /* ground contact shadow */
-  ctx.fillStyle='rgba(0,0,0,0.28)';
-  rr(x+4,y+TS-13,TS-8,11,6);ctx.fill();
-  /* extruded slab: side/front */
-  ctx.fillStyle=shade(side,-6);
-  rr(x+3,y+3-exh,TS-6,TS-6+exh,9);ctx.fill();
-  /* front face lighting */
-  const fg=ctx.createLinearGradient(0,y+TS-3-exh,0,y+TS-3);
-  fg.addColorStop(0,side);fg.addColorStop(1,shade(side,-26));
-  ctx.fillStyle=fg;
-  rr(x+3,y+TS-3-exh-8,TS-6,exh+8,9);ctx.fill();
-  /* top face with directional light */
-  const tg=ctx.createLinearGradient(0,y+3-exh,0,y+TS-3-exh);
-  tg.addColorStop(0,shade(top,16));tg.addColorStop(0.5,top);tg.addColorStop(1,shade(top,-10));
+  const jN=solidJoin(tl,-1,0),jS=solidJoin(tl,1,0),jW=solidJoin(tl,0,-1),jE=solidJoin(tl,0,1);
+  /* a fused edge runs to the cell boundary (plus a hair of overdraw so the seam
+     never shows); an open edge keeps its inset and its rounded shoulder */
+  const XL=jW?x-0.6:x+3, XR=jE?x+TS+0.6:x+TS-3;
+  const YT=(jN?y-0.6:y+3)-exh, YB=(jS?y+TS+0.6:y+TS-3)-exh;
+  const R=9;
+  const rTL=(jN||jW)?0:R, rTR=(jN||jE)?0:R;
+  const rBL=(jS||jW)?0:R, rBR=(jS||jE)?0:R;
+  const frontBot=y+TS-3;
+  /* silhouette, a shade darker than the front — it peeks out as the outline */
+  ctx.fillStyle=shade(side,-42);
+  ctx.beginPath();ctx.roundRect(XL-(jW?0:1),YT-(jN?0:1),(XR-XL)+(jW?0:1)+(jE?0:1),((jS?YB:frontBot+1)-YT)+(jN?0:1),[rTL,rTR,jS?0:R,jS?0:R]);ctx.fill();
+  if(!jS){
+    /* front face, lit from above, falling into its own shadow at the base */
+    const fg=ctx.createLinearGradient(0,YB,0,frontBot);
+    fg.addColorStop(0,shade(side,6));fg.addColorStop(0.25,side);fg.addColorStop(1,shade(side,-30));
+    ctx.fillStyle=fg;
+    ctx.beginPath();ctx.roundRect(XL,YB-6,XR-XL,frontBot-YB+6,[0,0,rBR,rBL]);ctx.fill();
+  }
+  /* top face — the light is anchored to the room, not the tile, so a run of
+     counters shades as one surface with no banding at the seams */
+  const tg=ctx.createLinearGradient(0,-EX,0,576);
+  tg.addColorStop(0,shade(top,22));tg.addColorStop(0.5,top);tg.addColorStop(1,shade(top,-16));
   ctx.fillStyle=tg;
-  rr(x+3,y+3-exh,TS-6,TS-6,9);ctx.fill();
-  /* rims */
-  ctx.strokeStyle='rgba(255,255,255,0.20)';ctx.lineWidth=1.5;
-  rr(x+4.5,y+4.5-exh,TS-9,TS-9,7);ctx.stroke();
-  ctx.strokeStyle='rgba(0,0,0,0.30)';ctx.lineWidth=1;
-  rr(x+3,y+3-exh,TS-6,TS-6+exh,9);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(XL,YT,XR-XL,YB-YT,[rTL,rTR,rBR,rBL]);ctx.fill();
+  /* bevels, only where an edge is open to the room */
+  ctx.lineCap='round';
+  if(!jN){ctx.strokeStyle='rgba(255,255,255,0.26)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(XL+(rTL?8:0),YT+1.6);ctx.lineTo(XR-(rTR?8:0),YT+1.6);ctx.stroke();}
+  if(!jW){ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(XL+1.4,YT+(rTL?8:0));ctx.lineTo(XL+1.4,YB-(rBL?8:0));ctx.stroke();}
+  if(!jE){ctx.strokeStyle='rgba(0,0,0,0.14)';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(XR-1.4,YT+(rTR?8:0));ctx.lineTo(XR-1.4,YB-(rBR?8:0));ctx.stroke();}
+  if(!jS){
+    /* the counter lip: a bright rim where the top turns over, a dark seam under it */
+    ctx.strokeStyle='rgba(255,255,255,0.17)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(XL+(rBL?8:0),YB-1.4);ctx.lineTo(XR-(rBR?8:0),YB-1.4);ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,0.30)';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(XL+(rBL?7:0),YB+0.9);ctx.lineTo(XR-(rBR?7:0),YB+0.9);ctx.stroke();
+  }
+  ctx.lineCap='butt';
   ctx.save();ctx.translate(0,-exh);
   const cx=x+TS/2,cy=y+TS/2-4;
   switch(tl.type){
@@ -5620,6 +5700,10 @@ function drawTileOverlay(tl,t){
   const x=tl.c*TS,y=tl.r*TS,cx=x+TS/2,cy=y+TS/2-4;
   /* item (with cooking / chopping animations) */
   if(tl.item&&tl.type!=='ext'){
+    if(tl.type!=='crate'){
+      ctx.fillStyle='rgba(0,0,0,0.20)';
+      ctx.beginPath();ctx.ellipse(cx,cy+12,13,4.4,0,0,7);ctx.fill();
+    }
     const cooking=(tl.type==='stove'||tl.type==='fryer')&&stMap(tl)[tl.item.id];
     const chopActive=tl.type==='board'&&canChop(tl.item)&&tl.chopT>0&&(t-(tl.chopAnimT||0))<0.15;
     let jx=0,jr=0;
