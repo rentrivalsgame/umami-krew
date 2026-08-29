@@ -437,6 +437,16 @@
               <button class="tsbtn" data-rounds="10">×10</button>
               <button class="tsbtn" data-rounds="15">×15</button>
             </div>
+            <div class="tourseg" id="ol-cpuseg" style="margin:8px 0 4px;flex-wrap:wrap;justify-content:center">
+              <span class="tslbl">🤖 CPU chefs:</span>
+              <button class="tsbtn" id="ol-cpu-less">−</button>
+              <b id="ol-cpu-n" style="min-width:18px;display:inline-block;text-align:center;font-size:16px">0</b>
+              <button class="tsbtn" id="ol-cpu-more">+</button>
+              <button class="tsbtn" data-olcpud="0">🥄</button>
+              <button class="tsbtn" data-olcpud="1">🔪</button>
+              <button class="tsbtn" data-olcpud="2">👑</button>
+            </div>
+            <div class="lbhint" id="ol-cpuhint" style="display:block;margin-bottom:6px"></div>
             <div class="grplbl" style="text-align:center">pick a mode for this krew</div>
             <div class="modebtns" id="ol-modes" style="margin-bottom:6px"></div>
             <div class="lbhint" id="ol-hosthint" style="display:block">then choose a kitchen — it starts for everyone</div>
@@ -2362,7 +2372,16 @@ function escapeOk(br,bc){
   return true;
 }
 function updateDynamics(dt){
-  for(const pl of (G.plats||[])){
+  stepPlats(G,dt,true);
+  stepParade(G,dt,true);
+  stepMachines(G,dt,true);
+}
+/* Motion, split from consequence. The host runs all three with carry/shove on;
+   a guest runs them with those off, purely so the world keeps moving between
+   snapshots instead of standing still and then jumping. */
+function stepPlats(w,dt,carry){
+  const G0=G;G=w;
+  for(const pl of (w.plats||[])){
     const last=pl.cells.length-1;
     if((pl.waitT||0)>0)pl.waitT-=dt;      /* hold at each end so you can board */
     else{
@@ -2376,6 +2395,7 @@ function updateDynamics(dt){
     pl.px=nx-pl.cx;pl.py=ny-pl.cy;
     pl.cx=nx;pl.cy=ny;
     /* ferry whoever is aboard — clipping the deck counts as aboard */
+    if(!carry)continue;
     const grip=platGrip(pl);
     for(const p of G.players){
       if(p.fallT>0||p.gone)continue;
@@ -2394,7 +2414,11 @@ function updateDynamics(dt){
       if(Math.abs(dy)>1.5){const mv=Math.sign(dy)*Math.min(step,Math.abs(dy));if(!collides(p.x,p.y+mv))p.y+=mv;}
     }
   }
-  for(const pd of (G.parade||[])){
+  G=G0;
+}
+function stepParade(w,dt,shove){
+  const G0=G;G=w;
+  for(const pd of (w.parade||[])){
     const n=pd.cells.length;
     pd.pos=(pd.pos+pd.spd*dt)%n;
     pd.block.clear();
@@ -2404,6 +2428,7 @@ function updateDynamics(dt){
       pd.block.add(c2.r*GCOLS+c2.c);
     }
     /* nobody gets crushed — you just get shouldered out of the road */
+    if(!shove)continue;
     for(const p of G.players){
       if(p.fallT>0||p.gone)continue;
       const pr=Math.floor(p.y/TS),pc=Math.floor(p.x/TS);
@@ -2422,13 +2447,18 @@ function updateDynamics(dt){
       if(!collides(p.x,p.y+dy/L2*mv))p.y+=dy/L2*mv;
     }
   }
-  for(const m of (G.machines||[])){
+  G=G0;
+}
+function stepMachines(w,dt,move){
+  const G0=G;G=w;
+  for(const m of (w.machines||[])){
     if(m.ofx||m.ofy){
       const k=Math.min(1,dt*7);
       m.ofx-=m.ofx*k;m.ofy-=m.ofy*k;
       if(Math.abs(m.ofx)<0.5)m.ofx=0;
       if(Math.abs(m.ofy)<0.5)m.ofy=0;
     }
+    if(!move)continue;   /* where a machine goes is the host's call */
     m.moveT+=dt;
     if(m.moveT<2.6)continue;
     let ni=m.idx+m.dir;
@@ -2449,6 +2479,7 @@ function updateDynamics(dt){
     tf.type=tf.base||'floor';tf.item=null;tf.parts=null;tf.cook=0;tf.burn=0;tf.chopT=0;tf.dumpT=0;
     m.ofx=(from.c-to.c)*TS;m.ofy=(from.r-to.r)*TS;
   }
+  G=G0;
 }
 function fallIn(p){
   if(p.fallT>0)return;
@@ -3055,12 +3086,15 @@ const BOT_TIERS=[
   {n:'Line Cook',e:'🍳',think:0.60,dither:0.34,dash:0.00,look:2.2},
   {n:'Sous Chef', e:'🔪',think:0.24,dither:0.10,dash:0.45,look:3.5},
   {n:'Head Chef', e:'👑',think:0.04,dither:0.00,dash:1.00,look:6.0}];
-const botTier=()=>BOT_TIERS[Math.min(2,Math.max(0,SAVE.cpuDiff|0))];
+const botTier=()=>BOT_TIERS[botDiff()];
 function cpuCount(){
-  /* online games are staffed by real people; never more bots than chefs-1 */
-  if(NET.started||NET.role)return 0;
-  return Math.max(0,Math.min(chefCount(playerMode)-1,SAVE.cpu|0));
+  /* online, the CPUs are the seats the krew did not fill, and the host decides
+     how many; either way there is never a kitchen with nobody human in it */
+  const n=(NET.started||NET.role)?(NET.cpu|0):(SAVE.cpu|0);
+  return Math.max(0,Math.min(chefCount(playerMode)-1,n));
 }
+/* online the skill is the host's call, so everyone labels the same chefs alike */
+const botDiff=()=>Math.min(2,Math.max(0,((NET.started||NET.role)?NET.cpuDiff:SAVE.cpuDiff)|0));
 const slotIsBot=slot=>slot>=chefCount(playerMode)-cpuCount();
 
 /* ---- virtual keyboard: one private set of key codes per chef slot ---- */
@@ -5821,7 +5855,7 @@ function drawPlayer(p,t){
     ctx.strokeStyle='#00000080';ctx.lineWidth=3;
     let tag='P'+(p.slot+1);
     if(G.teamIdx>=0)tag=TEAM_DEFS[G.teamIdx].n[0]+(p.idx+1);
-    if(p.bot)tag=BOT_TIERS[Math.min(2,Math.max(0,SAVE.cpuDiff|0))].e+' CPU';
+    if(p.bot)tag=BOT_TIERS[botDiff()].e+' CPU';
     ctx.strokeText(tag,x,y-34);
     ctx.fillText(tag,x,y-34);
   }
@@ -6045,9 +6079,12 @@ function updateHUD(){
    if(gp){
      const on=NET.started&&NET.role==='client'&&NET.prtt>0;
      gp.style.display=on?'inline-block':'none';
-     if(on){const ms=Math.round(NET.prtt);
-       gp.textContent='📡 '+ms+'ms to host';
-       gp.className=ms<90?'':(ms<200?'mid':'bad');}
+     if(on){const ms=Math.round(NET.prtt),hz=NET.snapHz;
+       /* a host that cannot keep up is the other way a guest's game goes rough,
+          and it looks identical to lag from the outside — so name it */
+       if(hz&&hz<12){gp.textContent='🐢 host is struggling ('+hz.toFixed(0)+'/s)';gp.className='bad';}
+       else{gp.textContent='📡 '+ms+'ms to host';
+         gp.className=ms<90?'':(ms<200?'mid':'bad');}}
    }}
   $('#timer').textContent=fmtTime(G.timeLeft);
   $('#timer').classList.toggle('low',G.timeLeft<=15&&G.state==='play');
@@ -6155,6 +6192,10 @@ function showToast2(msg){/* toast outside game screen: reuse alert-free quick fl
   setTimeout(()=>{el.textContent=old;el.style.color='';},1600);
 }
 function startLevel(li){
+  /* settle the CPU count before the kitchen is built: it decides which chefs are
+     bots, and netHostStart has to hand the guests the very same number */
+  if(NET.role==='host')
+    NET.cpu=Math.max(0,Math.min(NET.cpu|0,chefCount(playerMode)-(1+NET.peers.size)));
   if(!NET.started&&!levelPlayable(li)){
     Snd.bad();G=null;VS=null;buildMap();showScreen('map');
     showToast2('👥 '+LEVELS[li].name+' is a split kitchen — it needs 2+ chefs per team.');
@@ -6193,7 +6234,8 @@ function buildRecipes(){
 /* ---------------- online play (P2P host-authoritative) ---------------- */
 const NET={role:null,ws:null,code:null,myId:0,mySlot:0,peers:new Map(),names:{},styles:{},
   keys:{},snapT:0,seq:0,lastSeq:-1,cur:null,started:false,wsURL:null,
-  beat:null,relinkT:null,relinks:0,srtt:0,prtt:0,pingT:0,pingN:0,pingAt:{}};
+  beat:null,relinkT:null,relinks:0,srtt:0,prtt:0,pingT:0,pingN:0,pingAt:{},
+  cpu:0,cpuDiff:1,snapN:0,snapW:0,snapHz:0};
 const RTC_CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 function netURL(){
   if(NET.wsURL)return NET.wsURL;
@@ -6262,6 +6304,7 @@ function netReset(){
   for(const pr of NET.peers.values()){try{pr.pc&&pr.pc.close();}catch(e){}}
   NET.role=null;NET.ws=null;NET.code=null;NET.peers=new Map();NET.names={};NET.styles={};
   NET.keys={};NET.started=false;NET.cur=null;NET.lastSeq=-1;NET.seq=0;NET.myId=0;NET.mySlot=0;NET.roster=null;
+  NET.cpu=0;NET.cpuDiff=SAVE.cpuDiff|0;NET.snapN=0;NET.snapW=0;NET.snapHz=0;
   PRED.on=false;PRED.hist.length=0;PRED.ex=0;PRED.ey=0;
 }
 function netConnect(cb){
@@ -6363,26 +6406,37 @@ function netOnWS(m){
   }
   else if(m.t==='peer'){hostAddPeer(m.id,m.name,m.style);}
   else if(m.t==='gone'){
-    /* their signaling socket blinked, not their game — if we can still reach them
-       over WebRTC they are very much still cooking, so leave the chef alone */
+    /* A socket saying someone left is a suspicion, not a verdict — it blinks for
+       reasons that have nothing to do with the player. So we knock: ping them,
+       and if nothing comes back by the time the reply is overdue, they really
+       have gone. A live guest answers well inside that, and an idle socket no
+       longer costs anybody their chef. */
     const live=m.viaPeer?null:NET.peers.get(m.id);
     if(NET.started&&live&&live.pc&&
-       (live.pc.connectionState==='connected'||live.pc.connectionState==='connecting'))return;
+       (live.pc.connectionState==='connected'||live.pc.connectionState==='connecting')){
+      if(live.doubt)return;                       /* already knocking */
+      live.doubt=performance.now();
+      netToPeer(m.id,{t:'png',n:'q'});
+      setTimeout(()=>{
+        const pr=NET.peers.get(m.id);
+        if(!pr||!pr.doubt)return;
+        if((pr.heard||0)>pr.doubt){pr.doubt=0;return;}   /* they answered: still here */
+        pr.doubt=0;netOnWS({t:'gone',id:m.id,viaPeer:1});
+      },1400);
+      return;
+    }
     const slot=NET.slots?NET.slots.indexOf(m.id):-1;
     const nm=(NET.slotNames&&slot>=0&&NET.slotNames[slot])||NET.names[m.id]||'A chef';
     NET.peers.delete(m.id);delete NET.names[m.id];delete NET.styles[m.id];
     if(NET.started&&G&&slot>=0){
       const ws=VS?VS.kitchens:[G];
       const g0=G;
-      for(const w of ws)for(const p of w.players)if(p.slot===slot){
-        p.gone=true;
-        if(NET.role==='host'){delete NET.keys[slot];
-          ['u','d','l','r','w'].forEach(k2=>Keys.down['@'+slot+k2[0]]=false);
-          Keys.down['@'+slot+'u']=Keys.down['@'+slot+'d']=Keys.down['@'+slot+'l']=Keys.down['@'+slot+'r']=Keys.down['@'+slot+'w']=false;}
-      }
+      for(const w of ws)for(const p of w.players)if(p.slot===slot)netTakeOver(p);
       G=g0;
+      /* the seat is a CPU seat now, and stays one for the rest of the session */
+      if(NET.role==='host')NET.cpu=Math.min(7,(NET.cpu|0)+1);
       const g1=G;G=VS?VS.kitchens[VS.view]:G;
-      showToast('📡 '+nm+' disconnected!');
+      showToast('🤖 '+nm+' dropped — a CPU took the station');
       G=g1;
       if(NET.role==='host')netBroadcast({t:'bye',slot,nm});
     } else if(!NET.started){
@@ -6399,6 +6453,23 @@ function netOnWS(m){
   }
   else if(m.t==='rly'){netOnGame(m.from,m.d);}
 }
+/* A chef whose player has gone used to stand in the kitchen doing nothing for the
+   rest of the service, which is worse for everyone left than any bot would be. */
+function mkBotBrain(){
+  return {t:0,hold:0,age:0,numb:0,shake:0,plan:null,focus:null,from:[],plain:[],
+          field:[],needs:new Set(),wants:[],stuck:0};
+}
+function netTakeOver(p){
+  if(!p||p.bot)return;
+  p.bot=mkBotBrain();
+  p.ctrl=botCtrl(p.slot);
+  p.remote=false;p.gone=false;p.working=false;
+  p.mx=0;p.my=0;p.dashT=0;
+  if(NET.role==='host'){
+    delete NET.keys[p.slot];
+    ['u','d','l','r','w'].forEach(k=>Keys.down['@'+p.slot+k]=false);
+  }
+}
 /* The websocket used to be the only thing that told us a player had left, which
    is backwards: the peer connection IS the game. Watch that instead. */
 function netPeerState(id,pc){
@@ -6414,6 +6485,7 @@ function netPeerState(id,pc){
 /* ---- game-level messages ---- */
 function netOnGame(from,d){
   if(NET.role==='host'){
+    const pr0=NET.peers.get(from);if(pr0)pr0.heard=performance.now();
     if(d.t==='png'){netToPeer(from,{t:'pog',n:d.n});return;}
     const slot=NET.slotOf?NET.slotOf[from]:null;
     if(slot==null||!G)return;
@@ -6447,6 +6519,8 @@ function netOnGame(from,d){
   }else{
     if(d.t==='start'){
       NET.started=true;NET.slots=d.slots;NET.mySlot=d.slots.indexOf(NET.myId);NET.slotNames=d.names||[];
+      /* set before the kitchen is built: it decides which chefs are CPUs */
+      NET.cpu=d.cpu|0;NET.cpuDiff=d.cpuDiff|0;
       TOURN=d.tourn?{rounds:d.tourn.rounds,played:d.tourn.played,totals:d.tourn.totals.slice(),seq:[],coop:!MODES[d.mode].teams}:null;
       setMode(d.mode);startLevel(d.li);
       const ws=VS?VS.kitchens:[G];
@@ -6460,8 +6534,10 @@ function netOnGame(from,d){
         VS.view=ti;G=VS.kitchens[ti];G.ordersDirty=true;
       }
     }
-    else if(d.t==='snap'){if(d.q>NET.lastSeq){NET.lastSeq=d.q;NET.cur=d;}}
+    else if(d.t==='snap'){if(d.q>NET.lastSeq){NET.lastSeq=d.q;NET.cur=d;NET.snapN++;}}
+    else if(d.t==='png'){netToHost({t:'pog',n:d.n});}
     else if(d.t==='pog'){
+      if(d.n==='q')return;   /* that was the host checking we are still here */
       const t0=NET.pingAt[d.n];if(t0==null)return;
       delete NET.pingAt[d.n];
       const rtt=performance.now()-t0;
@@ -6469,8 +6545,8 @@ function netOnGame(from,d){
     }
     else if(d.t==='bye'){
       const ws=VS?VS.kitchens:[G];
-      for(const w of (G?ws:[]))for(const p of w.players)if(p.slot===d.slot)p.gone=true;
-      showToast('📡 '+(d.nm||'A chef')+' disconnected!');
+      for(const w of (G?ws:[]))for(const p of w.players)if(p.slot===d.slot)netTakeOver(p);
+      showToast('🤖 '+(d.nm||'A chef')+' dropped — a CPU took the station');
     }
     else if(d.t==='end'){/* results come via snap state */}
   }
@@ -6540,9 +6616,20 @@ function netLobbyRender(){
   const n=list.length;
   const cnt=$('#ol-count');if(cnt)cnt.textContent='('+n+'/8)';
   if(NET.role==='host'){
-    $('#ol-modes').innerHTML=Object.keys(MODES).filter(k=>MODES[k].chefs===n)
+    /* CPU chefs count as chefs when picking a mode: two of you plus two bots is
+       a four-chef kitchen, and the room no longer has to wait for strangers */
+    NET.cpu=Math.max(0,Math.min(8-n,NET.cpu|0));
+    const seats=n+(NET.cpu|0);
+    const t=BOT_TIERS[botDiff()];
+    $('#ol-cpu-n').textContent=NET.cpu|0;
+    document.querySelectorAll('[data-olcpud]').forEach(x=>
+      x.classList.toggle('sel',+x.dataset.olcpud===botDiff()));
+    $('#ol-cpuhint').innerHTML=NET.cpu
+      ? `${NET.cpu} CPU chef${NET.cpu>1?'s':''} at <b>${t.e} ${t.n}</b> fill the last seats — ${n} of you plus ${NET.cpu} makes a <b>${seats}-chef</b> kitchen. They run on your machine, so nobody else needs to do anything.`
+      : `add CPU chefs to open up the bigger kitchens without waiting for more people`;
+    $('#ol-modes').innerHTML=Object.keys(MODES).filter(k=>MODES[k].chefs===seats)
       .map(k=>`<button class="modebtn ${MODES[k].teams?'vs':''}" data-olmode="${k}" style="width:104px;padding:7px 2px"><b>${MODES[k].n}</b><i>${MODES[k].teams?'versus':'co-op'}</i></button>`).join('')
-      ||'<span class="lbhint" style="display:block">no mode fits '+n+' chef'+(n>1?'s':'')+' yet — share the code!</span>';
+      ||'<span class="lbhint" style="display:block">no mode fits '+seats+' chef'+(seats>1?'s':'')+' yet — add a CPU or share the code!</span>';
     document.querySelectorAll('[data-olmode]').forEach(b=>b.onclick=()=>{
       setMode(+b.dataset.olmode);TOURN=null;
       if(TOURN_PICK>0){startTournament(TOURN_PICK);return;}
@@ -6554,21 +6641,29 @@ function netLobbyRender(){
 /* ---- host: start hook, slot wiring, snapshots ---- */
 function netHostStart(li){
   const ids=[0,...NET.peers.keys()];
-  NET.slots=ids;               // slot index -> peer id
-  NET.slotOf={};ids.forEach((id,slot)=>NET.slotOf[id]=slot);
+  /* CPU chefs take the trailing seats, exactly as they do on one keyboard, and
+     hold no peer id — nobody is at the other end of them */
+  const want=Math.max(0,Math.min(chefCount(playerMode)-ids.length,NET.cpu|0));
+  NET.cpu=want;
+  for(let i=0;i<want;i++)ids.push(-1);
+  NET.slots=ids;               // slot index -> peer id (-1 for a CPU)
+  NET.slotOf={};ids.forEach((id,slot)=>{if(id>=0)NET.slotOf[id]=slot;});
   NET.keys={};NET.started=true;
   netSendWS({t:'lock'});
-  const styles=ids.map(id=>NET.styles[id]||'classic');
-  const names=ids.map(id=>NET.names[id]||'Chef');
+  const tier=BOT_TIERS[botDiff()];
+  const styles=ids.map(id=>id<0?'classic':(NET.styles[id]||'classic'));
+  const names=ids.map(id=>id<0?(tier.e+' '+tier.n):(NET.names[id]||'Chef'));
   NET.slotNames=names;
-  netBroadcast({t:'start',li,mode:playerMode,slots:ids,styles,names,tourn:TOURN?{rounds:TOURN.rounds,played:TOURN.played,totals:TOURN.totals}:null});
+  netBroadcast({t:'start',li,mode:playerMode,slots:ids,styles,names,
+    cpu:want,cpuDiff:botDiff(),
+    tourn:TOURN?{rounds:TOURN.rounds,played:TOURN.played,totals:TOURN.totals}:null});
   return styles;
 }
 function netHostWire(){
   if(!G||NET.role!=='host')return;
   const ws=VS?VS.kitchens:[G];
   for(const w of ws)for(const p of w.players){
-    if(p.slot===0)continue;
+    if(p.slot===0||p.bot)continue;   /* nobody is typing for a CPU */
     const slot=p.slot;
     p.ctrl={up:['@'+slot+'u'],dn:['@'+slot+'d'],lf:['@'+slot+'l'],rt:['@'+slot+'r'],pick:['@'+slot+'p'],work:['@'+slot+'w']};
     p.remote=true;
@@ -6625,31 +6720,59 @@ function netSnap(){
 }
 function applyWorldSnap(w,s,viewed){
   const oldSc=w.score,oldSt=w.state;
-  w.state=s.st;w.cd=s.cd/10;w.timeLeft=s.tl/10;
+  w.simT=0;   /* the guest may run ahead again from here */
+  const AGREE=0.18;   /* rounding (0.05) + a snapshot interval (0.05) + slack */
+  const hold=(mine,theirs)=>(mine==null||Math.abs(mine-theirs)>AGREE)?theirs:mine;
+  w.state=s.st;
+  w.cd=hold(w.cd,s.cd/10);
+  w.timeLeft=hold(w.timeLeft,s.tl/10);
   w.score=s.sc;w.combo=s.cb;w.served=s.sv;w.missed=s.ms;w.plates=s.pl;w.dirty=s.dt;
   const od=w.orders.map(o=>o.dish).join(',');
-  w.orders=s.ords.map(o=>({dish:o[0],pat:o[1]/10,pat0:o[2]}));
+  const was=w.orders;
+  w.orders=s.ords.map((o,i)=>{
+    const prev=was[i];
+    return {dish:o[0],pat:(prev&&prev.dish===o[0])?hold(prev.pat,o[1]/10):o[1]/10,pat0:o[2]};
+  });
   if(viewed&&w.orders.map(o=>o.dish).join(',')!==od)w.ordersDirty=true;
+  /* the wipe clears stale tiles, so stash what the guest had been running
+     forward — a progress ring should keep turning, not restart every 50ms */
+  const kept={};
   for(let r=0;r<GROWS;r++)for(let c=0;c<GCOLS;c++){
     const t=w.grid[r][c];
-    if(t.netTouched){t.item=null;if(t.parts)t.parts=[];t.fire=false;t.chopT=0;t.washT=0;t.douseT=0;t.cook=0;t.burn=0;t.st='';t.netTouched=false;}
+    if(!t.netTouched)continue;
+    kept[r*GCOLS+c]={id:t.item&&t.item.id,cook:t.cook,burn:t.burn,chopT:t.chopT,washT:t.washT};
+    t.item=null;if(t.parts)t.parts=[];t.fire=false;t.chopT=0;t.washT=0;t.douseT=0;t.cook=0;t.burn=0;t.st='';t.netTouched=false;
   }
   for(const e of s.tls){
     const t=w.grid[e[0]][e[1]];if(!t)continue;
     t.item=desIt(e[2]);
     if(t.parts)t.parts=e[3]?e[3].split(','):[];else if(e[3])t.parts=e[3].split(',');
-    t.cook=e[4]/10;t.burn=e[5]/10;t.chopT=e[6]/20;t.fire=!!e[7];t.st=e[8]||'';
+    /* only carry a smooth value across if it is still the same thing cooking */
+    const pv=kept[e[0]*GCOLS+e[1]];
+    const same=pv&&pv.id===(t.item&&t.item.id);
+    t.cook=same?hold(pv.cook,e[4]/10):e[4]/10;
+    t.burn=same?hold(pv.burn,e[5]/10):e[5]/10;
+    t.chopT=same?hold(pv.chopT,e[6]/20):e[6]/20;
+    t.washT=same?hold(pv.washT,(e[10]||0)/20):(e[10]||0)/20;
+    t.fire=!!e[7];t.st=e[8]||'';
     if(e[9])t.chopAnimT=performance.now()/1000;
-    t.washT=(e[10]||0)/20;t.douseT=(e[11]||0)/20;
+    t.douseT=(e[11]||0)/20;
     t.netTouched=true;
   }
   w.projRender=s.pj||[];
   if(s.pt)s.pt.forEach((v,i)=>{const pl=(w.plats||[])[i];if(!pl)return;
-    pl.pos=v[0]/100;pl.dir=v[1];pl.waitT=v[2]/20;pl.docked=pl.waitT>0;});
+    const pos=v[0]/100,dir=v[1],wt=v[2]/20;
+    /* the guest is rolling the deck itself now; only correct a real divergence,
+       and always on a turn — a deck that stutters is a deck you miss */
+    const tol=0.06+(pl.spd||1)/20;
+    if(pl.dir!==dir||Math.abs(pl.pos-pos)>tol)pl.pos=pos;
+    pl.dir=dir;pl.waitT=wt;pl.docked=wt>0;});
   if(s.pr)s.pr.forEach((v,i)=>{
     const pd=(w.parade||[])[i];if(!pd)return;
     const n=pd.cells.length;
-    pd.pos=v[0]/100;pd.block.clear();
+    const ppos=v[0]/100;
+    if(Math.abs(pd.pos-ppos)>0.06+(pd.spd||1)/20)pd.pos=ppos;
+    pd.block.clear();
     const head=((v[1]%n)+n)%n;   /* sent outright: rounding pos here would drift a cell */
     for(let j=0;j<pd.len;j++){const c2=pd.cells[((head-j)%n+n)%n];pd.block.add(c2.r*GCOLS+c2.c);}
   });
@@ -6681,6 +6804,42 @@ function netApplySnap(s){
   }
   const oldSt=applyWorldSnap(G,s,true);
   if(oldSt!=='done'&&s.st==='done'){finishLevel();}
+}
+/* ---- the guest runs the clock too ----
+   A guest used to draw whatever the last snapshot said and nothing more, so at
+   20 snapshots a second the timer, the patience bars, the progress rings and the
+   decks all stepped rather than ran, while the host's copy of the same kitchen
+   moved at 60fps. None of that is a decision — it is only time passing — so the
+   guest runs it locally and lets the next snapshot correct the drift. It never
+   finishes anything: what a pot does when it is done stays the host's call.
+   The budget stops a guest whose host has gone quiet from inventing a future. */
+const SIM_CAP=0.25;
+function netClientSim(w,dt){
+  if(!w||!w.grid)return;
+  if(w.state==='countdown'){w.cd=Math.max(0,w.cd-dt);return;}
+  if(w.state!=='play')return;
+  if((w.simT||0)>=SIM_CAP)return;
+  w.simT=(w.simT||0)+dt;
+
+  w.timeLeft=Math.max(0,w.timeLeft-dt);
+  for(const o of w.orders)o.pat=Math.max(0,o.pat-dt);
+
+  for(const row of w.grid)for(const t of row){
+    if(t.fire)continue;
+    if(t.item){
+      if(t.type==='stove'||t.type==='fryer'||t.type==='oven'){
+        if(t.cook>0)t.cook+=dt; else if(t.burn>0)t.burn+=dt;
+      } else if(t.type==='pot'&&t.burn>0)t.burn+=dt;
+    } else if(t.type==='pot'&&t.parts&&t.parts.length&&t.cook>0)t.cook+=dt;
+    /* a chop or a wash only advances while somebody is actually stood on it */
+    if((t.chopT>0||t.washT>0)&&w.players.some(q=>q.workTile===t&&q.working&&!q.gone)){
+      if(t.chopT>0)t.chopT+=dt;
+      if(t.washT>0)t.washT+=dt;
+    }
+  }
+  stepPlats(w,dt,false);
+  stepParade(w,dt,false);
+  stepMachines(w,dt,false);
 }
 /* ---- client-side prediction ----
    A guest used to wait out the whole round trip before their own chef so much as
@@ -6722,6 +6881,8 @@ function netClientFrame(dt){
   PRED.t=(PRED.t||0)+dt;
   /* how far away is the host, really? the predictor needs the number, and so does
      anyone trying to work out whether the game or their wifi is the problem */
+  NET.snapW+=dt;
+  if(NET.snapW>=1){NET.snapHz=NET.snapN/NET.snapW;NET.snapN=0;NET.snapW=0;}
   NET.pingT+=dt;
   if(NET.pingT>=1&&NET.started){NET.pingT=0;
     const n=++NET.pingN;NET.pingAt[n]=performance.now();
@@ -6738,6 +6899,7 @@ function netClientFrame(dt){
   PRED.p=me;
   if(NET.cur){netApplySnap(NET.cur);NET.cur=null;}
   const ws=VS?VS.kitchens:[G];
+  for(const w of ws)netClientSim(w,dt);
   for(const w of ws)for(const p of w.players){
     if(p===me&&predCanRun(p,w)){
       /* walk my own chef right now, on this frame, off my own keyboard */
@@ -6804,6 +6966,10 @@ $('#btn-copy').onclick=()=>{
   const b=$('#btn-copy');b.textContent='✅ Copied!';
   setTimeout(()=>b.textContent='📋 Copy invite',1600);
 };
+$('#ol-cpu-less').onclick=()=>{Snd.init();NET.cpu=Math.max(0,(NET.cpu|0)-1);netLobbyRender();};
+$('#ol-cpu-more').onclick=()=>{Snd.init();NET.cpu=Math.min(7,(NET.cpu|0)+1);netLobbyRender();};
+document.querySelectorAll('[data-olcpud]').forEach(b=>b.onclick=()=>{
+  Snd.init();NET.cpuDiff=+b.dataset.olcpud;netLobbyRender();});
 $('#btn-chatsend').onclick=()=>chatSend('#ol-chatin');
 $('#ol-chatin').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')chatSend('#ol-chatin');};
 $('#gchatin').onkeydown=e=>{
